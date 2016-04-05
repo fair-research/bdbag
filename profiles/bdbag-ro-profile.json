@@ -1,14 +1,11 @@
 {
   "BagIt-Profile-Info":{
-    "BagIt-Profile-Identifier":"https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-ro-profile.json",
+    "BagIt-Profile-Identifier":"http://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-ro-profile.json",
     "Source-Organization":"bd2k.org",
     "External-Description":"BDDS BDBag BagIt profile that includes support for Research Objects. See https://github.com/ResearchObject/bagit-ro-ex1",
     "Version":"0.1.20160329"
    },
    "Bag-Info": {
-     "Bag-Size": {
-         "required":true
-     },
      "Payload-Oxum":{
        "required":true
      }
@@ -19,10 +16,9 @@
    "Allow-Fetch.txt": true,
    "Serialization": "required",
    "Accept-Serialization":[
-     "application/zip",
-     "application/tar",
-     "application/x-gzip",
-     "application/x-bzip2"
+     "application/x-zip-compressed",
+     "application/x-tar",
+     "application/x-tar+gzip"
    ],
    "Tag-Manifests-Required":[
      "md5", "sha256"
