@@ -31,6 +31,11 @@ DEFAULT_CONFIG = {
 }
 
 
+def get_named_exception(e):
+    exc = "".join(("[", type(e).__name__, "] "))
+    return "".join((exc, str(e)))
+
+
 def configure_logging(level=logging.INFO, logpath=None):
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
     if logpath:
@@ -60,6 +65,8 @@ def read_config(config_file):
 def read_metadata(metadata_file):
     if not metadata_file:
         return {}
+    else:
+        metadata_file = os.path.abspath(metadata_file)
 
     logger.info("Reading bag metadata from file %s" % metadata_file)
     with open(metadata_file) as mf:
@@ -87,7 +94,43 @@ def prune_manifests(bag):
             os.remove(manifest)
 
 
-def make_bag(bag_path, no_update=False, algs=None, metadata=None, metadata_file=None, config_file=DEFAULT_CONFIG_FILE):
+def is_bag(bag_path):
+    bag = None
+    try:
+        bag = bagit.Bag(bag_path)
+    except bagit.BagError, bagit.BagValidationError:
+        pass
+    return True if bag else False
+
+
+def check_payload_consistency(bag):
+    only_in_manifests, only_on_fs, only_in_fetch = bag.compare_manifests_with_fs_and_fetch()
+
+    payload_consistent = False if (only_in_manifests or only_on_fs or only_in_fetch) else True
+
+    for path in only_in_manifests:
+        e = bagit.FileMissing(path)
+        logger.warning(
+            "%s. Re-run with the \"update\" flag set in order to apply this change." % get_named_exception(e))
+    for path in only_on_fs:
+        e = bagit.UnexpectedFile(path)
+        logger.warning(
+            "%s. Re-run with the \"update\" flag set in order to apply this change." % get_named_exception(e))
+    for path in only_in_fetch:
+        e = bagit.UnexpectedRemoteFile(path)
+        logger.warning(
+            "%s. Re-run with the \"update\" flag set in order to apply this change." % get_named_exception(e))
+
+    return payload_consistent
+
+
+def make_bag(bag_path, update=False, algs=None, metadata=None, metadata_file=None, config_file=DEFAULT_CONFIG_FILE):
+    bag = None
+    try:
+        bag = bagit.Bag(bag_path)
+    except bagit.BagError, bagit.BagValidationError:
+        pass
+
     config = read_config(config_file)
     bag_config = config['bag_config']
 
@@ -105,27 +148,22 @@ def make_bag(bag_path, no_update=False, algs=None, metadata=None, metadata_file=
     if 'Bag-Software-Agent' not in bag_metadata:
         bag_metadata['Bag-Software-Agent'] = 'bdbag.py <http://github.com/ini-bdds/bdbag>'
 
-    bag = None
-    try:
-        bag = bagit.Bag(bag_path)
-        bag.info = bag_metadata
-        bag.algs = bag_algorithms
-    except bagit.BagError:
-        pass
-    except bagit.BagValidationError:
-        pass
-
     if bag:
-        if not no_update:
+        if update:
             try:
                 logger.info("Updating bag: %s" % bag_path)
+                bag.info = bag_metadata
+                bag.algs = bag_algorithms
                 prune_manifests(bag)
                 bag.save(bag_processes, manifests=True)
             except Exception as e:
                 logger.fatal("Exception while updating bag manifests: %s", e)
                 raise e
+        else:
+            logger.info("The directory %s is already a bag." % bag_path)
+
     else:
-        bag = bagit.make_bag(bag_path, bag_metadata, bag_processes, bag_algorithms)
+        bagit.make_bag(bag_path, bag_metadata, bag_processes, bag_algorithms)
         logger.info('Created bag: %s' % bag_path)
 
 
@@ -135,6 +173,8 @@ def archive_bag(bag_path, bag_archiver):
     try:
         logger.info("Verifying bag structure: %s" % bag_path)
         bag = bagit.Bag(bag_path)
+        if not check_payload_consistency(bag):
+            raise RuntimeError("Inconsistent bag payload state.")
     except Exception as e:
         logger.fatal("Exception while archiving bag: %s", e)
         raise e
@@ -211,7 +251,7 @@ def extract_temp_bag(bag_path):
     return bag_path
 
 
-def validate_bag(bag_path, config_file=DEFAULT_CONFIG_FILE):
+def validate_bag(bag_path, fast=False, config_file=DEFAULT_CONFIG_FILE):
     config = read_config(config_file)
     bag_config = config['bag_config']
     bag_processes = bag_config.get('bag_processes', 1)
@@ -219,7 +259,7 @@ def validate_bag(bag_path, config_file=DEFAULT_CONFIG_FILE):
     try:
         logger.info("Validating bag: %s" % bag_path)
         bag = bagit.Bag(bag_path)
-        bag.validate(bag_processes, fast=False)
+        bag.validate(bag_processes, fast=fast)
         logger.info("Bag %s is valid" % bag_path)
     except bagit.BagIncompleteError as e:
         logger.warn("BagIncompleteError: %s %s", e,
@@ -228,11 +268,10 @@ def validate_bag(bag_path, config_file=DEFAULT_CONFIG_FILE):
                     "Resolve remote file references (if any) and re-validate.")
         raise e
     except bagit.BagValidationError as e:
-        logger.error("BagValidationError:", e)
+        errors = list()
         for d in e.details:
-            if isinstance(d, bagit.ChecksumMismatch):
-                raise RuntimeError("Bag %s was expected to have %s checksum of %s but found %s" %
-                                   (d.path, d.algorithm, d.expected, d.found))
+            errors.append(get_named_exception(d))
+        raise RuntimeError('\nError: '.join(errors))
     except Exception as e:
         raise RuntimeError("Unhandled exception while validating bag: %s" % e)
 

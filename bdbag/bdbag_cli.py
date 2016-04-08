@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import logging
 import bagit
 import bdbag
 
@@ -26,39 +27,51 @@ def parse_cli():
     parser = argparse.ArgumentParser(description=description)
     standard_args = parser.add_argument_group('Standard arguments')
 
+    update_arg = standard_args.add_argument(
+        '--update', action="store_true", help="Update (regenerate manifests) an existing bag dir.")
+
     standard_args.add_argument(
-        "--archiver", choices=['zip', 'tar', 'tgz', 'bz2'], help="archive format to use")
+        "--archiver", choices=['zip', 'tar', 'tgz'], help="Archive a bag using the specified format.")
 
     checksum_arg = standard_args.add_argument(
-        "--checksum", action='append', choices=['md5', 'sha1', 'sha256', 'sha512'],
-        help="checksum to use, can be specified multiple times with different values")
+        "--checksum", action='append', choices=['md5', 'sha1', 'sha256', 'sha512', 'all'],
+        help="Checksum algorithm to use: can be specified multiple times with different values. "
+             "If \'all\' is specified, every supported checksum will be generated")
 
     standard_args.add_argument(
-        '--config-file', default=bdbag.DEFAULT_CONFIG_FILE)
-
-    metadata_arg = standard_args.add_argument(
-        '--metadata-file', help="JSON formatted metadata file")
-
-    no_update_arg = standard_args.add_argument(
-        '--no-update', action="store_true", help="do not update (regenerate manifests) an existing bag dir")
+        '--resolve-fetch', action="store_true", help="Download remote files listed in the bag's fetch.txt file.")
 
     standard_args.add_argument(
-        '--quiet', action="store_true", help="suppress logging output")
-
-    remote_manifest_arg = standard_args.add_argument(
-        '--remote-manifest-file', help="remote manifest configuration file used to generate fetch.txt")
-
-    standard_args.add_argument(
-        '--resolve-fetch', action="store_true", help="download remote files listed in the bag's fetch.txt file")
+        '--validate', choices=['fast', 'full'],
+        help="Validate a bag directory or bag archive. If \"fast\" is specified, Payload-Oxum (if present) will be "
+             "used to check that the payload files are present and accounted for. Otherwise if \"full\" is specified, "
+             "all checksums will be regenerated and compared to the corresponding entries in the manifest")
 
     standard_args.add_argument(
-        '--validate', action="store_true", help="validate a bag directory or bag archive")
+        '--validate-profile', action="store_true",
+        help="Validate a bag against the profile specified by the bag's "
+             "\"BagIt-Profile-Identifier\" metadata field, if present.")
 
     standard_args.add_argument(
-        '--validate-profile', action="store_true", help="validate a bag against it's profile")
+        '--config-file', default=bdbag.DEFAULT_CONFIG_FILE, metavar='<file>',
+        help="Optional path to a configuration file. If this argument is not specified, the configuration file "
+             "defaults to: %s " % bdbag.DEFAULT_CONFIG_FILE)
+
+    metadata_file_arg = standard_args.add_argument(
+        '--metadata-file', metavar='<file>', help="Optional path to a JSON formatted metadata file")
 
     standard_args.add_argument(
-        'path', nargs="?", help="path to a bag directory or bag archive file")
+        '--remote-manifest-file', metavar='<file>',
+        help="Remote manifest configuration file used to generate fetch.txt.")
+
+    standard_args.add_argument(
+        '--quiet', action="store_true", help="Suppress logging output.")
+
+    standard_args.add_argument(
+        '--debug', action="store_true", help="Enable debug logging output.")
+
+    standard_args.add_argument(
+        'path', nargs="?", help="Path to a bag directory or bag archive file.")
 
     metadata_args = parser.add_argument_group('Bag metadata arguments')
     for header in bagit.STANDARD_BAG_INFO_HEADERS:
@@ -67,31 +80,38 @@ def parse_cli():
     args = parser.parse_args()
 
     if not args.path:
-        print "Error: A path to a bag directory or bag archive file is required."
-#        parser.print_help()
+        sys.stderr.write("Error: A path to a bag directory or bag archive file is required.")
         sys.exit(-1)
 
-    if args.archiver and os.path.isfile(os.path.abspath(args.path)):
-        print("Error: A bag archive cannot be created from an existing bag archive.")
-#        parser.print_help()
+    path = os.path.abspath(args.path)
+
+    if args.archiver and os.path.isfile(path):
+        sys.stderr.write("Error: A bag archive cannot be created from an existing bag archive.")
         sys.exit(-1)
 
-    if args.checksum and os.path.isfile(os.path.abspath(args.path)):
-        print("Error: A checksum update cannot be added to an existing bag archive. "
-              "The bag must be extracted, updated, and re-archived.")
-#        parser.print_help()
+    if args.checksum and os.path.isfile(path):
+        sys.stderr.write("Error: A checksum manifest cannot be added to an existing bag archive. "
+                         "The bag must be extracted, updated, and re-archived.")
         sys.exit(-1)
 
-    if args.no_update and (args.checksum or args.metadata_file or args.remote_manifest_file):
-        update_args = list()
-        if args.checksum:
-            update_args.append(checksum_arg.option_strings)
-        if args.metadata_file:
-            update_args.append(metadata_arg.option_strings)
-        if args.remote_manifest_file:
-            update_args.append(remote_manifest_arg.option_strings)
-        print "Error: The argument %s is not compatible with the following arguments: %s" % \
-              (no_update_arg.option_strings, update_args)
+    if args.update and os.path.isfile(path):
+        sys.stderr.write("Error: An existing bag archive cannot be updated in-place. "
+                         "The bag must first be extracted and then updated.")
+        sys.exit(-1)
+
+    if args.checksum and not args.update and bdbag.is_bag(path):
+        sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
+                         "to apply the changes." % (checksum_arg.option_strings, update_arg.option_strings))
+        sys.exit(-1)
+
+    if args.metadata_file and not args.update and bdbag.is_bag(path):
+        sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
+                         "to apply the changes." % (metadata_file_arg.option_strings, update_arg.option_strings))
+        sys.exit(-1)
+
+    if BAG_METADATA and not args.update and bdbag.is_bag(path):
+        sys.stderr.write("Error: Specifying additional metadata %s for an existing bag requires the %s argument "
+                         "in order to apply the change." % (BAG_METADATA, update_arg.option_strings))
         sys.exit(-1)
 
     return args
@@ -103,24 +123,31 @@ def main():
 
     archive = None
     temp_path = None
-    path = os.path.abspath(args.path)
+    error = None
+    result = 0
 
-    if not args.quiet:
-        bdbag.configure_logging()
+    bdbag.configure_logging(level=logging.ERROR if args.quiet else (logging.DEBUG if args.debug else logging.INFO))
 
     try:
+        path = os.path.abspath(args.path)
         if not os.path.isfile(path):
-            bdbag.make_bag(path,
-                           args.no_update,
-                           args.checksum,
-                           BAG_METADATA,
-                           args.metadata_file,
-                           args.config_file)
+            # do not try to create or update the bag if the user just wants to validate an existing bag
+            if not ((args.validate or args.validate_profile) and not args.update and bdbag.is_bag(path)):
+                if args.checksum and 'all' in args.checksum:
+                    args.checksum = ['md5', 'sha1', 'sha256', 'sha512']
+                bdbag.make_bag(path,
+                               args.update,
+                               args.checksum,
+                               BAG_METADATA if BAG_METADATA else None,
+                               args.metadata_file,
+                               args.config_file)
 
         if args.validate:
             if os.path.isfile(path):
                 temp_path = bdbag.extract_temp_bag(path)
-            bdbag.validate_bag(temp_path if temp_path else path, args.config_file)
+            bdbag.validate_bag(temp_path if temp_path else path,
+                               True if args.validate == 'fast' else False,
+                               args.config_file)
 
         if args.archiver:
             archive = bdbag.archive_bag(path, args.archiver)
@@ -135,10 +162,16 @@ def main():
             profile = bdbag.validate_bag_profile(temp_path if temp_path else path)
             bdbag.validate_bag_serialization(archive if archive else path, profile)
 
+        result = 0
+
     except Exception as e:
-        print "Error: %s" % e
-        sys.exit(-1)
+        result = -1
+        error = "Error: %s" % bdbag.get_named_exception(e)
 
     finally:
         if temp_path:
             bdbag.cleanup_bag(temp_path)
+        if result != 0:
+            sys.stderr.write(error)
+
+    sys.exit(result)
