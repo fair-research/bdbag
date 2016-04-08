@@ -79,38 +79,42 @@ def parse_cli():
 
     args = parser.parse_args()
 
+    bdbag.configure_logging(level=logging.ERROR if args.quiet else (logging.DEBUG if args.debug else logging.INFO))
+
     if not args.path:
         sys.stderr.write("Error: A path to a bag directory or bag archive file is required.")
         sys.exit(-1)
 
     path = os.path.abspath(args.path)
 
-    if args.archiver and os.path.isfile(path):
+    is_file = os.path.isfile(path)
+    if args.archiver and is_file:
         sys.stderr.write("Error: A bag archive cannot be created from an existing bag archive.")
         sys.exit(-1)
 
-    if args.checksum and os.path.isfile(path):
+    if args.checksum and is_file:
         sys.stderr.write("Error: A checksum manifest cannot be added to an existing bag archive. "
                          "The bag must be extracted, updated, and re-archived.")
         sys.exit(-1)
 
-    if args.update and os.path.isfile(path):
+    if args.update and is_file:
         sys.stderr.write("Error: An existing bag archive cannot be updated in-place. "
                          "The bag must first be extracted and then updated.")
         sys.exit(-1)
 
-    if args.checksum and not args.update and bdbag.is_bag(path):
+    is_bag = bdbag.is_bag(path)
+    if args.checksum and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
                          "to apply the changes." % (checksum_arg.option_strings, update_arg.option_strings))
         sys.exit(-1)
 
-    if args.metadata_file and not args.update and bdbag.is_bag(path):
+    if args.metadata_file and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
                          "to apply the changes." % (metadata_file_arg.option_strings, update_arg.option_strings))
         sys.exit(-1)
 
-    if BAG_METADATA and not args.update and bdbag.is_bag(path):
-        sys.stderr.write("Error: Specifying additional metadata %s for an existing bag requires the %s argument "
+    if BAG_METADATA and not args.update and is_bag:
+        sys.stderr.write("Error: Adding or modifying metadata %s for an existing bag requires the %s argument "
                          "in order to apply the change." % (BAG_METADATA, update_arg.option_strings))
         sys.exit(-1)
 
@@ -125,8 +129,6 @@ def main():
     temp_path = None
     error = None
     result = 0
-
-    bdbag.configure_logging(level=logging.ERROR if args.quiet else (logging.DEBUG if args.debug else logging.INFO))
 
     try:
         path = os.path.abspath(args.path)

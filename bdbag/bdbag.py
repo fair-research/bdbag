@@ -81,6 +81,7 @@ def cleanup_bag(bag_path):
 
 
 def prune_manifests(bag):
+    manifests_pruned = False
     manifests = list(bag.manifest_files())
     manifests += list(bag.tagmanifest_files())
     for manifest in manifests:
@@ -92,6 +93,9 @@ def prune_manifests(bag):
         if alg not in bag.algs:
             logger.info("Removing unused manifest from bag: %s" % manifest)
             os.remove(manifest)
+            manifests_pruned = True
+
+    return manifests_pruned
 
 
 def is_bag(bag_path):
@@ -103,23 +107,31 @@ def is_bag(bag_path):
     return True if bag else False
 
 
-def check_payload_consistency(bag):
+def check_payload_consistency(bag, skip_remote=False, quiet=False):
     only_in_manifests, only_on_fs, only_in_fetch = bag.compare_manifests_with_fs_and_fetch()
 
-    payload_consistent = False if (only_in_manifests or only_on_fs or only_in_fetch) else True
+    payload_consistent = False if (only_in_manifests or only_on_fs) else True
+    payload_consistent = False if not skip_remote and only_in_fetch else payload_consistent
 
     for path in only_in_manifests:
         e = bagit.FileMissing(path)
-        logger.warning(
-            "%s. Re-run with the \"update\" flag set in order to apply this change." % get_named_exception(e))
+        if not quiet:
+            logger.warning(
+                "%s. Resolve this file reference or re-run with the \"update\" flag set in order to remove this file "
+                "from the manifest." % get_named_exception(e))
     for path in only_on_fs:
         e = bagit.UnexpectedFile(path)
-        logger.warning(
-            "%s. Re-run with the \"update\" flag set in order to apply this change." % get_named_exception(e))
-    for path in only_in_fetch:
-        e = bagit.UnexpectedRemoteFile(path)
-        logger.warning(
-            "%s. Re-run with the \"update\" flag set in order to apply this change." % get_named_exception(e))
+        if not quiet:
+            logger.warning(
+                "%s. Re-run with the \"update\" flag set in order to add this file to the manifest."
+                % get_named_exception(e))
+    if not skip_remote:
+        for path in only_in_fetch:
+            e = bagit.UnexpectedRemoteFile(path)
+            if not quiet:
+                logger.warning(
+                    "%s. Ensure that any remote file references from fetch.txt are also present in the manifest and "
+                    "re-run with the \"update\" flag set in order to apply this change." % get_named_exception(e))
 
     return payload_consistent
 
@@ -152,12 +164,13 @@ def make_bag(bag_path, update=False, algs=None, metadata=None, metadata_file=Non
         if update:
             try:
                 logger.info("Updating bag: %s" % bag_path)
-                bag.info = bag_metadata
+                bag.info.update(bag_metadata)
                 bag.algs = bag_algorithms
-                prune_manifests(bag)
-                bag.save(bag_processes, manifests=True)
+                manifests = True if (prune_manifests(bag) or
+                                     not check_payload_consistency(bag, skip_remote=True, quiet=True)) else False
+                bag.save(bag_processes, manifests=manifests)
             except Exception as e:
-                logger.fatal("Exception while updating bag manifests: %s", e)
+                logger.error("Exception while updating bag manifests: %s", e)
                 raise e
         else:
             logger.info("The directory %s is already a bag." % bag_path)
@@ -173,10 +186,10 @@ def archive_bag(bag_path, bag_archiver):
     try:
         logger.info("Verifying bag structure: %s" % bag_path)
         bag = bagit.Bag(bag_path)
-        if not check_payload_consistency(bag):
-            raise RuntimeError("Inconsistent bag payload state.")
+        if not check_payload_consistency(bag, skip_remote=True):
+            raise RuntimeError("Inconsistent payload state.")
     except Exception as e:
-        logger.fatal("Exception while archiving bag: %s", e)
+        logger.error("Error while archiving bag: %s", e)
         raise e
 
     logger.info("Archiving bag (%s): %s" % (bag_archiver, bag_path))
