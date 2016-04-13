@@ -5,4 +5,4 @@ import sys
 from bdbag import bdbag_cli
 
 if __name__ == '__main__':
-    bdbag_cli.main()
+    sys.exit(bdbag_cli.main())

@@ -14,12 +14,11 @@ setup(
     url='https://github.com/ini-bdds/bdbag/',
     maintainer='USC Information Sciences Institute ISR Division',
     maintainer_email='misd-support@isi.edu',
-    version="0.1-prerelease",
+    version="0.1.prerelease",
     packages=find_packages(),
     package_data={'bdbag': ['profiles/*.*']},
     scripts=['bin/bdbag'],
     requires=[
-        'cookielib',
         'csv',
         'datetime',
         'json',
@@ -36,6 +35,7 @@ setup(
         'xml'],
     install_requires=['ordereddict',
                       'requests',
+                      'certifi',
                       'bagit==1.5.4.dev',
                       'bagit-profile==1.0.2'],
     dependency_links=[
@@ -48,7 +48,6 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
     ])
 

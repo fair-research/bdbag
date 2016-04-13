@@ -1,5 +1,4 @@
 import os
-import getpass
 import logging
 import json
 import ordereddict
@@ -10,33 +9,14 @@ import tarfile
 import zipfile
 import bagit
 import bagit_profile
+import bdbag
+from fetch import fetcher
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser('~'), '.bdbag')
-DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.cfg')
-DEFAULT_CONFIG = {
-    'bag_config':
-    {
-        'bag_algorithms': ['md5', 'sha256'],
-        'bag_archiver': 'zip',
-        'bag_processes': 1,
-        'bag_metadata':
-        {
-            'Contact-Name': getpass.getuser(),
-            'BagIt-Profile-Identifier':
-                'https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json'
-        }
-    }
-}
-
-
-def get_named_exception(e):
-    exc = "".join(("[", type(e).__name__, "] "))
-    return "".join((exc, str(e)))
-
 
 def configure_logging(level=logging.INFO, logpath=None):
+    logging.captureWarnings(True)
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
     if logpath:
         logging.basicConfig(filename=logpath, level=level, format=log_format)
@@ -45,15 +25,15 @@ def configure_logging(level=logging.INFO, logpath=None):
 
 
 def create_default_config():
-    if not os.path.isdir(DEFAULT_CONFIG_PATH):
-        os.makedirs(DEFAULT_CONFIG_PATH)
-    with open(DEFAULT_CONFIG_FILE, 'w') as cf:
-        cf.write(json.dumps(DEFAULT_CONFIG, sort_keys=True, indent=4, separators=(',', ': ')))
+    if not os.path.isdir(bdbag.DEFAULT_CONFIG_PATH):
+        os.makedirs(bdbag.DEFAULT_CONFIG_PATH)
+    with open(bdbag.DEFAULT_CONFIG_FILE, 'w') as cf:
+        cf.write(json.dumps(bdbag.DEFAULT_CONFIG, sort_keys=True, indent=4, separators=(',', ': ')))
         cf.close()
 
 
 def read_config(config_file):
-    if config_file == DEFAULT_CONFIG_FILE and not os.path.isfile(config_file):
+    if config_file == bdbag.DEFAULT_CONFIG_FILE and not os.path.isfile(config_file):
         logger.info("No default configuration file found, creating one")
         create_default_config()
     with open(config_file) as cf:
@@ -118,25 +98,31 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
         if not quiet:
             logger.warning(
                 "%s. Resolve this file reference or re-run with the \"update\" flag set in order to remove this file "
-                "from the manifest." % get_named_exception(e))
+                "from the manifest." % bdbag.get_named_exception(e))
     for path in only_on_fs:
         e = bagit.UnexpectedFile(path)
         if not quiet:
             logger.warning(
                 "%s. Re-run with the \"update\" flag set in order to add this file to the manifest."
-                % get_named_exception(e))
+                % bdbag.get_named_exception(e))
     if not skip_remote:
         for path in only_in_fetch:
             e = bagit.UnexpectedRemoteFile(path)
             if not quiet:
                 logger.warning(
                     "%s. Ensure that any remote file references from fetch.txt are also present in the manifest and "
-                    "re-run with the \"update\" flag set in order to apply this change." % get_named_exception(e))
+                    "re-run with the \"update\" flag set in order to apply this change." % bdbag.get_named_exception(e))
 
     return payload_consistent
 
 
-def make_bag(bag_path, update=False, algs=None, metadata=None, metadata_file=None, config_file=DEFAULT_CONFIG_FILE):
+def make_bag(bag_path,
+             update=False,
+             algs=None,
+             metadata=None,
+             metadata_file=None,
+             remote_manifest_file=None,
+             config_file=bdbag.DEFAULT_CONFIG_FILE):
     bag = None
     try:
         bag = bagit.Bag(bag_path)
@@ -166,8 +152,14 @@ def make_bag(bag_path, update=False, algs=None, metadata=None, metadata_file=Non
                 logger.info("Updating bag: %s" % bag_path)
                 bag.info.update(bag_metadata)
                 bag.algs = bag_algorithms
+                if remote_manifest_file:
+                    add_remote_files_to_bag(
+                        bag, generate_remote_files_from_manifest(remote_manifest_file, bag_algorithms))
+
                 manifests = True if (prune_manifests(bag) or
-                                     not check_payload_consistency(bag, skip_remote=True, quiet=True)) else False
+                                     not check_payload_consistency(
+                                         bag, skip_remote=True if not remote_manifest_file else False, quiet=True)) \
+                    else False
                 bag.save(bag_processes, manifests=manifests)
             except Exception as e:
                 logger.error("Exception while updating bag manifests: %s", e)
@@ -176,7 +168,10 @@ def make_bag(bag_path, update=False, algs=None, metadata=None, metadata_file=Non
             logger.info("The directory %s is already a bag." % bag_path)
 
     else:
-        bagit.make_bag(bag_path, bag_metadata, bag_processes, bag_algorithms)
+        remote_files = None
+        if remote_manifest_file:
+            remote_files = generate_remote_files_from_manifest(remote_manifest_file, bag_algorithms)
+        bagit.make_bag(bag_path, bag_metadata, bag_processes, bag_algorithms, remote_files)
         logger.info('Created bag: %s' % bag_path)
 
 
@@ -264,7 +259,7 @@ def extract_temp_bag(bag_path):
     return bag_path
 
 
-def validate_bag(bag_path, fast=False, config_file=DEFAULT_CONFIG_FILE):
+def validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE):
     config = read_config(config_file)
     bag_config = config['bag_config']
     bag_processes = bag_config.get('bag_processes', 1)
@@ -283,7 +278,7 @@ def validate_bag(bag_path, fast=False, config_file=DEFAULT_CONFIG_FILE):
     except bagit.BagValidationError as e:
         errors = list()
         for d in e.details:
-            errors.append(get_named_exception(d))
+            errors.append(bdbag.get_named_exception(d))
         raise RuntimeError('\nError: '.join(errors))
     except Exception as e:
         raise RuntimeError("Unhandled exception while validating bag: %s" % e)
@@ -296,7 +291,10 @@ def validate_bag_profile(bag_path, profile_path=None):
 
     # Instantiate a profile, supplying its URI.
     if not profile_path:
-        profile_path = bag.info['BagIt-Profile-Identifier']
+        profile_path = bag.info.get('BagIt-Profile-Identifier', None)
+        if not profile_path:
+            raise bagit_profile.ProfileValidationError("Bag does not contain a BagIt-Profile-Identifier")
+
     logger.info("Retrieving profile: %s" % profile_path)
     profile = bagit_profile.Profile(profile_path)
 
@@ -319,3 +317,32 @@ def validate_bag_serialization(bag_path, bag_profile):
     except Exception as e:
         logger.error("Bag serialization does not conform to specified profile. Error: %s" % e)
         raise e
+
+
+def generate_remote_files_from_manifest(remote_file_manifest, algs):
+    logger.info("Generating remote file references from %s" % remote_file_manifest)
+    remote_files = dict()
+    with open(remote_file_manifest, 'rb') as fetch_in:
+        fetch = json.load(fetch_in, object_pairs_hook=ordereddict.OrderedDict)
+        for row in fetch:
+            row['filename'] = ''.join(['data', '/', row['filename']])
+            for alg in algs:
+                # url, length, filename, alg, digest
+                if alg in row:
+                    bagit.add_remote_file_entry(
+                        remote_files, row['filename'], row['url'], row['length'], alg, row[alg])
+        fetch_in.close()
+
+    return remote_files
+
+
+def add_remote_files_to_bag(bag, remote_files):
+    for (rfk, rfv) in remote_files.items():
+        bag.add_remote_file(rfk, rfv['url'], rfv['length'], rfv['alg'], rfv['digest'])
+
+
+def resolve_fetch(bag_path, force=False):
+    bag = bagit.Bag(bag_path)
+    if force or not check_payload_consistency(bag, skip_remote=False, quiet=True):
+        logger.info("Attempting to resolve remote file references from fetch.txt...")
+        fetcher.fetch_bag_files(bag)
