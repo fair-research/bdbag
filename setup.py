@@ -37,7 +37,8 @@ setup(
                       'requests',
                       'certifi',
                       'bagit==1.5.4.dev',
-                      'bagit-profile==1.0.2'],
+                      'bagit-profile==1.0.2',
+                      'globusonline-transfer-api-client'],
     dependency_links=[
          "http://github.com/ini-bdds/bagit-python/archive/master.zip#egg=bagit-1.5.4.dev",
          "http://github.com/ini-bdds/bagit-profiles-validator/archive/master.zip#egg=bagit-profiles-validator-1.0.2"
