@@ -39,7 +39,7 @@ def create_default_keychain():
         os.makedirs(DEFAULT_KEYCHAIN_PATH)
     with open(DEFAULT_KEYCHAIN_FILE, 'w') as kf:
         kf.write(json.dumps(DEFAULT_KEYCHAIN, sort_keys=True, indent=4, separators=(',', ': ')))
-    os.chmod(DEFAULT_KEYCHAIN_PATH, stat.S_IRUSR | stat.S_IWUSR)
+    os.chmod(DEFAULT_KEYCHAIN_FILE, stat.S_IRUSR | stat.S_IWUSR)
 
 
 def read_config(keychain_file):
