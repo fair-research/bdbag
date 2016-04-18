@@ -17,13 +17,25 @@ SCHEME_ARK = 'ark'
 
 def fetch_bag_files(bag):
 
+    success = True
     for url, size, path in bag.fetch_entries():
-        scheme = urlparse.urlsplit(url, True).scheme.lower()
         output_path = os.path.normpath(os.path.join(bag.path, path))
-        logger.info("Transferring file %s to %s" % (url, output_path))
-        if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
-            fetch_http.get_file(url, output_path)
-        elif SCHEME_GLOBUS == scheme:
-            fetch_globus.get_file(url, output_path)
-        else:
-            logger.warn(UNIMPLEMENTED % scheme)
+        success = fetch_file(url, size, output_path)
+    return success
+
+
+def fetch_file(url, size, path):
+
+    scheme = urlparse.urlsplit(url, True).scheme.lower()
+    if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
+        return fetch_http.get_file(url, path)
+    elif SCHEME_GLOBUS == scheme:
+        return fetch_globus.get_file(url, path)
+    elif SCHEME_ARK == scheme:
+        for url in fetch_ark.resolve(url):
+            if fetch_file(url, size, path):
+                return True
+        return False
+    else:
+        logger.warn(UNIMPLEMENTED % scheme)
+        return False

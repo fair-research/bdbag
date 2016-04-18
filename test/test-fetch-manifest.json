@@ -5,5 +5,11 @@
     "filename":"bdbag-profile.json",
     "md5":"9faccdb6f9a47a10d9a00bd2b13f7ab3",
     "sha256":"eb42cbc9682e953a03fe83c5297093d95eec045e814517a4e891437b9b993139"
+  },
+  {
+    "url":"ark:/88120/r8059v",
+    "length": 632860,
+    "filename": "minid_v0.1_Nov_2015.pdf",
+    "sha256": "cacc1abf711425d3c554277a5989df269cefaa906d27f1aaa72205d30224ed5f"
   }
 ]

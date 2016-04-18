@@ -37,7 +37,9 @@ def parse_cli():
     standard_args = parser.add_argument_group('Standard arguments')
 
     update_arg = standard_args.add_argument(
-        '--update', action="store_true", help="Update (regenerate manifests) an existing bag dir.")
+        '--update', metavar="prune", nargs="?", const=True, default=None,
+        help="Update an existing bag dir, regenerating manifests and fetch.txt if necessary. If \"prune\" is specified,"
+             " any existing checksum manifests not explicitly configured will be deleted from the bag.")
 
     standard_args.add_argument(
         "--archiver", choices=['zip', 'tar', 'tgz'], help="Archive a bag using the specified format.")
@@ -72,9 +74,10 @@ def parse_cli():
     metadata_file_arg = standard_args.add_argument(
         '--metadata-file', metavar='<file>', help="Optional path to a JSON formatted metadata file")
 
-    remote_manifest_file_arg = standard_args.add_argument(
-        '--remote-manifest-file', metavar='<file>',
-        help="Remote manifest configuration file (JSON) used to create fetch.txt.")
+    remote_file_manifest_arg = standard_args.add_argument(
+        '--remote-file-manifest', metavar='<file>',
+        help="Optional path to a JSON formatted remote file manifest configuration file used to add remote file entries"
+             " to the bag manifest(s) and create the bag fetch.txt file.")
 
     standard_args.add_argument(
         '--quiet', action="store_true", help="Suppress logging output.")
@@ -116,25 +119,30 @@ def parse_cli():
                          (update_arg.option_strings, fetch_arg.option_strings))
         sys.exit(2)
 
-    if args.remote_manifest_file and args.resolve_fetch:
+    if args.remote_file_manifest and args.resolve_fetch:
         sys.stderr.write("Error: The %s argument is not compatible with the %s argument." %
-                         (remote_manifest_file_arg.option_strings, fetch_arg.option_strings))
+                         (remote_file_manifest_arg.option_strings, fetch_arg.option_strings))
         sys.exit(2)
 
     is_bag = bdb.is_bag(path)
     if args.checksum and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
-                         "to apply the changes." % (checksum_arg.option_strings, update_arg.option_strings))
+                         "to apply any changes." % (checksum_arg.option_strings, update_arg.option_strings))
+        sys.exit(2)
+
+    if args.remote_file_manifest and not args.update and is_bag:
+        sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
+                         "to apply any changes." % (remote_file_manifest_arg.option_strings, update_arg.option_strings))
         sys.exit(2)
 
     if args.metadata_file and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
-                         "to apply the changes." % (metadata_file_arg.option_strings, update_arg.option_strings))
+                         "to apply any changes." % (metadata_file_arg.option_strings, update_arg.option_strings))
         sys.exit(2)
 
     if BAG_METADATA and not args.update and is_bag:
         sys.stderr.write("Error: Adding or modifying metadata %s for an existing bag requires the %s argument "
-                         "in order to apply the change." % (BAG_METADATA, update_arg.option_strings))
+                         "in order to apply any changes." % (BAG_METADATA, update_arg.option_strings))
         sys.exit(2)
 
     return args
@@ -142,6 +150,7 @@ def parse_cli():
 
 def main():
 
+    print
     args = parse_cli()
 
     archive = None
@@ -166,7 +175,7 @@ def main():
                              args.checksum,
                              BAG_METADATA if BAG_METADATA else None,
                              args.metadata_file,
-                             args.remote_manifest_file,
+                             args.remote_file_manifest,
                              args.config_file)
 
         if args.resolve_fetch:
@@ -204,6 +213,6 @@ def main():
         if temp_path:
             bdb.cleanup_bag(temp_path)
         if result != 0:
-            sys.stderr.write(error)
+            sys.stderr.write("\n%s\n" % error)
 
     return result

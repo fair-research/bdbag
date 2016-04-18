@@ -88,10 +88,23 @@ def is_bag(bag_path):
 
 
 def check_payload_consistency(bag, skip_remote=False, quiet=False):
-    only_in_manifests, only_on_fs, only_in_fetch = bag.compare_manifests_with_fs_and_fetch()
 
-    payload_consistent = False if (only_in_manifests or only_on_fs) else True
-    payload_consistent = False if not skip_remote and only_in_fetch else payload_consistent
+    only_in_manifests, only_on_fs, only_in_fetch = bag.compare_manifests_with_fs_and_fetch()
+    payload_consistent = not only_on_fs
+    if not skip_remote:
+        updated_remote_files = sorted(bag.remote_entries.keys())
+        existing_remote_files = sorted(list(bag.files_to_be_fetched(False)))
+        modified_remote_files = list(set(updated_remote_files) - set(existing_remote_files))
+        normalized_updated_remote_files = set()
+        for filename in updated_remote_files:
+            normalized_updated_remote_files.add(os.path.normpath(filename))
+        unresolved_manifest_files = list(set(only_in_manifests) - normalized_updated_remote_files)
+        if modified_remote_files or only_in_fetch:
+            payload_consistent = False
+        if unresolved_manifest_files:
+            payload_consistent = False
+    else:
+        payload_consistent = not only_in_manifests
 
     for path in only_in_manifests:
         e = bagit.FileMissing(path)
@@ -121,7 +134,7 @@ def make_bag(bag_path,
              algs=None,
              metadata=None,
              metadata_file=None,
-             remote_manifest_file=None,
+             remote_file_manifest=None,
              config_file=bdbag.DEFAULT_CONFIG_FILE):
     bag = None
     try:
@@ -152,14 +165,12 @@ def make_bag(bag_path,
                 logger.info("Updating bag: %s" % bag_path)
                 bag.info.update(bag_metadata)
                 bag.algs = bag_algorithms
-                if remote_manifest_file:
-                    add_remote_files_to_bag(
-                        bag, generate_remote_files_from_manifest(remote_manifest_file, bag_algorithms))
-
-                manifests = True if (prune_manifests(bag) or
-                                     not check_payload_consistency(
-                                         bag, skip_remote=True if not remote_manifest_file else False, quiet=True)) \
-                    else False
+                if remote_file_manifest:
+                    bag.remote_entries.update(
+                        generate_remote_files_from_manifest(remote_file_manifest, bag_algorithms))
+                skip_remote = True if not remote_file_manifest else False
+                manifests = True if ((prune_manifests(bag) if update == 'prune' else False) or
+                                     not check_payload_consistency(bag, skip_remote, quiet=True)) else False
                 bag.save(bag_processes, manifests=manifests)
             except Exception as e:
                 logger.error("Exception while updating bag manifests: %s", e)
@@ -169,8 +180,8 @@ def make_bag(bag_path,
 
     else:
         remote_files = None
-        if remote_manifest_file:
-            remote_files = generate_remote_files_from_manifest(remote_manifest_file, bag_algorithms)
+        if remote_file_manifest:
+            remote_files = generate_remote_files_from_manifest(remote_file_manifest, bag_algorithms)
         bagit.make_bag(bag_path, bag_metadata, bag_processes, bag_algorithms, remote_files)
         logger.info('Created bag: %s' % bag_path)
 
@@ -319,26 +330,25 @@ def validate_bag_serialization(bag_path, bag_profile):
         raise e
 
 
-def generate_remote_files_from_manifest(remote_file_manifest, algs):
+def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False):
     logger.info("Generating remote file references from %s" % remote_file_manifest)
     remote_files = dict()
     with open(remote_file_manifest, 'rb') as fetch_in:
         fetch = json.load(fetch_in, object_pairs_hook=ordereddict.OrderedDict)
         for row in fetch:
             row['filename'] = ''.join(['data', '/', row['filename']])
-            for alg in algs:
-                # url, length, filename, alg, digest
+            add = True
+            for alg in bagit.CHECKSUM_ALGOS:
                 if alg in row:
-                    bagit.add_remote_file_entry(
-                        remote_files, row['filename'], row['url'], row['length'], alg, row[alg])
+                    if strict and alg not in algs:
+                        add = False
+                    if add:
+                        bagit.make_remote_file_entry(
+                            remote_files, row['filename'], row['url'], row['length'], alg, row[alg])
+
         fetch_in.close()
 
     return remote_files
-
-
-def add_remote_files_to_bag(bag, remote_files):
-    for (rfk, rfv) in remote_files.items():
-        bag.add_remote_file(rfk, rfv['url'], rfv['length'], rfv['alg'], rfv['digest'])
 
 
 def resolve_fetch(bag_path, force=False):

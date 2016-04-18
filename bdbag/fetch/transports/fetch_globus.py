@@ -117,6 +117,7 @@ def get_file(url, output_path, token=None, dest_endpoint=None):
         task_id = data["task_id"]
 
         logger.info("Globus transfer started with ID %s" % task_id)
+        logger.debug("Transferring file %s to %s" % (url, output_path))
         return True
 
     except Exception as e:

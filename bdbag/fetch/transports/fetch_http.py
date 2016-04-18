@@ -95,6 +95,7 @@ def get_file(url, output_path=None, headers=None, session=None):
             logger.error("Host %s responded:\n\n%s" % (urlparse.urlsplit(url).netloc,  r.text))
             logger.warn('File [%s] transfer failed. ' % output_path)
         else:
+            logger.debug("Transferring file %s to %s" % (url, output_path))
             with open(output_path, 'wb') as data_file:
                 for chunk in r.iter_content(CHUNK_SIZE):
                     data_file.write(chunk)
