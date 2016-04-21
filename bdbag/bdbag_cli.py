@@ -150,7 +150,8 @@ def parse_cli():
 
 def main():
 
-    print
+    sys.stderr.write('\n')
+
     args = parse_cli()
 
     archive = None
@@ -213,6 +214,8 @@ def main():
         if temp_path:
             bdb.cleanup_bag(temp_path)
         if result != 0:
-            sys.stderr.write("\n%s\n" % error)
+            sys.stderr.write("\n%s" % error)
+
+    sys.stderr.write('\n')
 
     return result

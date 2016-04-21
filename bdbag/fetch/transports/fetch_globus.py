@@ -40,10 +40,10 @@ def authenticate(url):
             if not validate_auth_config(auth):
                 continue
 
-            auth_type = auth.auth_type if keychain.has_auth_attr(auth, 'auth_type', quiet=True) else 'basic'
+            auth_type = auth.auth_type if keychain.has_auth_attr(auth, 'auth_type', quiet=True) else 'http-basic'
             auth_method = auth.auth_method.lower() if keychain.has_auth_attr(auth, 'auth_type', quiet=True) else 'get'
 
-            if auth_type == 'basic':
+            if auth_type == 'http-basic':
                 if auth.auth_params.password in TOKENS:
                     token, endpoint = TOKENS[auth.auth_params.password]
                     return token, endpoint

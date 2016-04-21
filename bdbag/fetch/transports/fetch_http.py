@@ -54,14 +54,14 @@ def get_session(url):
             else:
                 session = requests.session()
 
-            if auth.auth_type == 'basic':
+            if auth.auth_type == 'http-basic':
                 session.auth = (auth.auth_params.username, auth.auth_params.password)
                 auth_method = auth.auth_method.lower()
                 if auth_method == 'post':
                     response = session.post(auth.auth_uri, auth=session.auth)
                 elif auth_method == 'get':
                     response = session.get(auth.auth_uri, auth=session.auth)
-            elif auth.auth_type == 'form':
+            elif auth.auth_type == 'http-form':
                 response = session.post(auth.auth_uri,
                                         {auth.auth_params.username_field: auth.auth_params.username,
                                          auth.auth_params.password_field: auth.auth_params.password})

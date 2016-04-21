@@ -13,7 +13,7 @@ DEFAULT_KEYCHAIN = [
     {
         "uri": "https://",
         "auth_uri": "",
-        "auth_type": "form",
+        "auth_type": "http-form",
         "auth_method": "post",
         "auth_params": {
             "username": "",
@@ -25,6 +25,8 @@ DEFAULT_KEYCHAIN = [
     {
         "uri": "globus://",
         "auth_uri": "https://nexus.api.globusonline.org/goauth/token?grant_type=client_credentials",
+        "auth_type": "http-basic",
+        "auth_method": "get",
         "auth_params": {
             "username": "",
             "password": "",
