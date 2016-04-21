@@ -60,7 +60,7 @@ def cleanup_bag(bag_path):
     shutil.rmtree(bag_path)
 
 
-def prune_manifests(bag):
+def prune_bag_manifests(bag):
     manifests_pruned = False
     manifests = list(bag.manifest_files())
     manifests += list(bag.tagmanifest_files())
@@ -132,6 +132,7 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
 def make_bag(bag_path,
              update=False,
              algs=None,
+             prune_manifests=False,
              metadata=None,
              metadata_file=None,
              remote_file_manifest=None,
@@ -164,13 +165,21 @@ def make_bag(bag_path,
             try:
                 logger.info("Updating bag: %s" % bag_path)
                 bag.info.update(bag_metadata)
-                bag.algs = bag_algorithms
+                manifests = False
+                if not prune_manifests:
+                    manifests = not all(x in bag.algs for x in bag_algorithms)
+                    if manifests:
+                        bag.algs = list(set(bag.algs).union(bag_algorithms))
+                else:
+                    bag.algs = bag_algorithms
                 if remote_file_manifest:
                     bag.remote_entries.update(
-                        generate_remote_files_from_manifest(remote_file_manifest, bag_algorithms))
+                        generate_remote_files_from_manifest(remote_file_manifest, bag.algs))
                 skip_remote = True if not remote_file_manifest else False
-                manifests = True if ((prune_manifests(bag) if update == 'prune' else False) or
-                                     not check_payload_consistency(bag, skip_remote, quiet=True)) else False
+                if prune_manifests:
+                    manifests = prune_bag_manifests(bag)
+                if not manifests:
+                    manifests = not check_payload_consistency(bag, skip_remote, quiet=True)
                 bag.save(bag_processes, manifests=manifests)
             except Exception as e:
                 logger.error("Exception while updating bag manifests: %s", e)
@@ -235,28 +244,31 @@ def archive_bag(bag_path, bag_archiver):
     return archive
 
 
-def extract_temp_bag(bag_path):
+def extract_bag(bag_path, output_path=None, temp=False):
     if not os.path.exists(bag_path):
         raise RuntimeError("Specified bag path not found: %s" % bag_path)
 
     if os.path.isfile(bag_path):
-        bag_tempdir = tempfile.mkdtemp(prefix='bag_')
+        if temp:
+            output_path = tempfile.mkdtemp(prefix='bag_')
+        elif not output_path:
+            output_path = os.path.pardir(bag_path)
         if zipfile.is_zipfile(bag_path):
             logger.info("Extracting ZIP archived bag file: %s" % bag_path)
             bag_file = file(bag_path, 'rb')
             zipped = zipfile.ZipFile(bag_file)
-            zipped.extractall(bag_tempdir)
+            zipped.extractall(output_path)
             zipped.close()
         elif tarfile.is_tarfile(bag_path):
             logger.info("Extracting TAR/GZ/BZ2 archived bag file: %s" % bag_path)
             tarred = tarfile.open(bag_path)
-            tarred.extractall(bag_tempdir)
+            tarred.extractall(output_path)
             tarred.close()
         else:
             raise RuntimeError("Archive format not supported for bag file: %s"
                                "\nSupported archive formats are ZIP or TAR/GZ/BZ2" % bag_path)
 
-        for dirpath, dirnames, filenames in os.walk(bag_tempdir):
+        for dirpath, dirnames, filenames in os.walk(output_path):
             if len(dirnames) > 1:
                 # According to the spec there should only ever be one base bag directory at the base of a
                 # deserialized archive. It is not clear if other non-bag directories are allowed.

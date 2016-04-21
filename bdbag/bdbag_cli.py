@@ -37,9 +37,8 @@ def parse_cli():
     standard_args = parser.add_argument_group('Standard arguments')
 
     update_arg = standard_args.add_argument(
-        '--update', metavar="prune", nargs="?", const=True, default=None,
-        help="Update an existing bag dir, regenerating manifests and fetch.txt if necessary. If \"prune\" is specified,"
-             " any existing checksum manifests not explicitly configured will be deleted from the bag.")
+        '--update', action="store_true",
+        help="Update an existing bag dir, regenerating manifests and fetch.txt if necessary.")
 
     standard_args.add_argument(
         "--archiver", choices=['zip', 'tar', 'tgz'], help="Archive a bag using the specified format.")
@@ -49,10 +48,17 @@ def parse_cli():
         help="Checksum algorithm to use: can be specified multiple times with different values. "
              "If \'all\' is specified, every supported checksum will be generated")
 
+    prune_manifests_arg = standard_args.add_argument(
+        "--prune-manifests", action='store_true',
+        help="If specified, any existing checksum manifests not explicitly configured via either"
+             " the \"checksum\" argument(s) or configuration file will be deleted from the bag during an update.")
+
     fetch_arg = standard_args.add_argument(
-        '--resolve-fetch', metavar="force", nargs='?', const='noforce', default=None,
+        '--resolve-fetch', choices=['all', 'missing'],
         help="Download remote files listed in the bag's fetch.txt file. "
-             "The \"force\" option causes all fetch files to be re-acquired,"
+             "The \"missing\" option only attempts to fetch files that do not "
+             "already exist in the bag payload directory. "
+             "The \"all\" option causes all fetch files to be re-acquired,"
              " even if they already exist in the bag payload directory.")
 
     standard_args.add_argument(
@@ -140,6 +146,11 @@ def parse_cli():
                          "to apply any changes." % (metadata_file_arg.option_strings, update_arg.option_strings))
         sys.exit(2)
 
+    if args.prune_manifests and not args.update and is_bag:
+        sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
+                         "to apply any changes." % (prune_manifests_arg.option_strings, update_arg.option_strings))
+        sys.exit(2)
+
     if BAG_METADATA and not args.update and is_bag:
         sys.stderr.write("Error: Adding or modifying metadata %s for an existing bag requires the %s argument "
                          "in order to apply any changes." % (BAG_METADATA, update_arg.option_strings))
@@ -174,6 +185,7 @@ def main():
                 bdb.make_bag(path,
                              args.update,
                              args.checksum,
+                             args.prune_manifests,
                              BAG_METADATA if BAG_METADATA else None,
                              args.metadata_file,
                              args.remote_file_manifest,
@@ -182,11 +194,11 @@ def main():
         if args.resolve_fetch:
             if args.validate == 'full':
                 sys.stderr.write(ASYNC_TRANSFER_VALIDATION_WARNING)
-            bdb.resolve_fetch(path, True if args.resolve_fetch == 'force' else False)
+            bdb.resolve_fetch(path, True if args.resolve_fetch == 'all' else False)
 
         if args.validate:
             if os.path.isfile(path):
-                temp_path = bdb.extract_temp_bag(path)
+                temp_path = bdb.extract_bag(path, temp=True)
             bdb.validate_bag(temp_path if temp_path else path,
                              True if args.validate == 'fast' else False,
                              args.config_file)
@@ -200,7 +212,7 @@ def main():
         if args.validate_profile:
             if os.path.isfile(path):
                 if not temp_path:
-                    temp_path = bdb.extract_temp_bag(path)
+                    temp_path = bdb.extract_bag(path, temp=True)
             profile = bdb.validate_bag_profile(temp_path if temp_path else path)
             bdb.validate_bag_serialization(archive if archive else path, profile)
 
