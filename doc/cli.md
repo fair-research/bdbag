@@ -7,7 +7,9 @@ supported format, such as ZIP, TAR, or TGZ. Different functions are available ba
 path.  Therefore, when invoking *bdbag*, some command-line arguments may either be incompatible with other specified
 arguments, or may be invalid in the context of the bag path specified.  In such cases, the program will notify the user
 with an error message indicating the incompatibility.
+
 ----
+
 ### Usage
 The only mandatory argument is `--bag-path`, all other arguments are optional.
 
@@ -45,6 +47,7 @@ These extended arguments are mapped directly to metadata fields in bag-info.txt:
 [--bagit-profile-identifier BAGIT_PROFILE_IDENTIFIER]
 ```
 ----
+
 ### Argument descriptions:
 
 ----
