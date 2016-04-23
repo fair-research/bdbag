@@ -63,7 +63,7 @@ the default configuration file location `~/.bdbag/bdbag.cfg`, and that file does
 <a name="read_metadata"></a>
 #### read_metadata(metadata_file) ⇒ `dict`
 Reads the configuration file specified by `metadata_file` into a dictionary object.  The format of `metadata_file` is
-described [here](./doc/config.md#metadata).
+described [here](./config.md#metadata).
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -132,9 +132,9 @@ Creates or updates the bag denoted by the `bag_path` argument.
 |algs|`list`|A list of checksum algorithms to use for calculating file fixities. When creating a bag, only the checksums present in this variable will be used. When updating a bag, this function will take the union of any existing bag algorithms and what is specified by this parameter, ***except*** when the `prune_manifests` parameter is specified, in which case then only the algorithms specifed by this parameter will be used.
 |prune_manifests|`boolean`|Removes any file and tagfile manifests for checksums that are not listed in the `algs` variable.  This parameter is only meaningful during update operations, otherwise it is ignored.
 |metadata|`dict`|A dictionary of key-value pairs that will be written directly to the bag's 'bag-info.txt' file.
-|metadata_file|`string`|A JSON file representation of metadata that will be written directly to the bag's 'bag-info.txt' file. The format of this metadata is described [here](./doc/config.md#metadata).
-|remote_file_manifest|`string`|A JSON file representation of remote file entries that will be used to add remote files to the bag file manifest(s) and used to create the bag's `fetch.txt`. The format of this file is described [here](./doc/config.md/#remote-file-manifest).
-|config_file|`string`|A JSON file representation of configuration data that is used during bag creation and update. The format of this file is described [here](./doc/config.md#bdbag.cfg).
+|metadata_file|`string`|A JSON file representation of metadata that will be written directly to the bag's 'bag-info.txt' file. The format of this metadata is described [here](./config.md#metadata).
+|remote_file_manifest|`string`|A JSON file representation of remote file entries that will be used to add remote files to the bag file manifest(s) and used to create the bag's `fetch.txt`. The format of this file is described [here](./config.md/#remote-file-manifest).
+|config_file|`string`|A JSON file representation of configuration data that is used during bag creation and update. The format of this file is described [here](./config.md#bdbag.cfg).
 
 **Returns**: `bag` - An instantiated [bagit-python](https://github.com/ini-bdds/bagit-python/blob/master/bagit.py) `bag` class object.
 
@@ -147,7 +147,7 @@ scheme of the URL field in `fetch.txt`.  Note that not all file transfer protoco
 
 Additionally, some URLs may require authentication in order to retrieve protected files.  In this case, the
 `keychain.cfg` configuration file must be configured with the appropriate authentication mechanism and credentials to
-use for a given base URL. The documentation for `keychain.cfg` can be found [here](./doc/config.md#keychain.cfg).
+use for a given base URL. The documentation for `keychain.cfg` can be found [here](./config.md#keychain.cfg).
 
 | Param | Type | Description |
 | --- | --- | --- |

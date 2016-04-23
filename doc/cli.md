@@ -5,14 +5,14 @@
 The *bdbag* command-line program is designed to operate on either bag directories or single file archives of bags in a
 supported format, such as ZIP, TAR, or TGZ. Different functions are available based on the context of the input bag
 path.  Therefore, when invoking *bdbag*, some command-line arguments may either be incompatible with other specified
-arguments, or may be invalid in the context of the bag path specified.  In such cases, the program will notify the user with an
-error message indicating the incompatibility.
+arguments, or may be invalid in the context of the bag path specified.  In such cases, the program will notify the user
+with an error message indicating the incompatibility.
 ----
 ### Usage
 The only mandatory argument is `--bag-path`, all other arguments are optional.
 
 #### Basic arguments:
-```sh
+```
 usage: bdbag --bag-path <path>
 
 [--update [prune]]
@@ -31,7 +31,7 @@ usage: bdbag --bag-path <path>
 
 #### Extended arguments:
 These extended arguments are mapped directly to metadata fields in bag-info.txt:
-```sh
+```
 [--source-organization SOURCE_ORGANIZATION]
 [--organization-address ORGANIZATION_ADDRESS]
 [--contact-name CONTACT_NAME] [--contact-phone CONTACT_PHONE]
@@ -91,18 +91,18 @@ Validate a bag against the profile specified by the bag's `BagIt-Profile-Identif
 ----
 ##### `--config-file <file>`
 Optional path to a *bdbag* configuration file. The configuration file format is described
-[here](./doc/config.md#bdbag.cfg).
+[here](./config.md#bdbag.cfg).
 If this argument is not specified, the configuration file defaults to: `~/.bdbag/bdbag.cfg`
 
 ----
 ##### `--metadata-file <file>`
 Optional path to a JSON formatted metadata file. The configuration file format is described
-[here](./doc/config.md#metadata).
+[here](./config.md#metadata).
 
 ----
 ##### `--remote-file-manifest <file>`
 Optional path to a JSON formatted remote file manifest. The configuration file format is described
-[here](./doc/config.md#remote-file-manifest).
+[here](./config.md#remote-file-manifest).
 This configuration file is used to add remote file entries to the bag manifest(s) and create the bag fetch.txt file.
 
 ----
@@ -142,7 +142,7 @@ This following table enumerates the various arguments and compatibility modes.
 ##### 1. Creating a bag:
 The simplest invocation of *bdbag* is to create a bag in-place by specifying an input directory. For example, given a
 directory like this:
-```sh
+```
 [mdarcy@bdds-dev ~]$ ls -lagR test_bag/
 test_bag/:
 total 12
@@ -153,7 +153,7 @@ drwxr-xr-x. 24 mdarcy 4096 Apr 20 19:53 ..
 ```
 
 Executing `bdbag --bag-path ./test_bag` generates the following output:
-```sh
+```
 
 [mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/
 
@@ -178,7 +178,7 @@ Executing `bdbag --bag-path ./test_bag` generates the following output:
 ```
 
 The resulting bag directory now looks like the following:
-```sh
+```
 [mdarcy@bdds-dev ~]$ ls -lagR test_bag/
 test_bag/:
 total 32
@@ -205,7 +205,7 @@ order to validate and package the bag up for transport and publication.  However
 together into a single invocation when creating or updating a bag, and it is generally more efficient to do so.
 
 Here's how that would be done using the same starting bag directory:
-```sh
+```
 [mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --validate fast --validate-profile --archive tgz
 
 2016-04-20 20:19:18,869 - INFO - creating bag for directory /home/mdarcy/test_bag
@@ -245,7 +245,7 @@ Maybe we would also like to change the checksum algorithms being used.  Finally,
 encoding to ZIP format.  While it is possible to perform all of these operations  individually with multiple invocations of `--update`, they can also be combined together into a single command.
 
 First, add or remove files from the bag data directory as desired. In this example we'll just add a file called `test3.txt`:
-```sh
+```
 
 [mdarcy@bdds-dev ~]$ ls -lagR test_bag/
 test_bag/:
@@ -268,8 +268,8 @@ drwxrwxr-x. 3 mdarcy 4096 Apr 20 20:19 ..
 -rw-rw-r--. 1 mdarcy   56 Apr 20 19:53 test2.txt
 -rw-rw-r--. 1 mdarcy   43 Apr 20 21:03 test3.txt
 ```
-Now we can execute an `--update` command to pick up the additonal file.  We can also add a new checksum manifest with `--checksum sha1` and change the archive encoding to ZIP format:
-```sh
+Now we can execute an `--update` command to pick up the additional file.  We can also add a new checksum manifest with `--checksum sha1` and change the archive encoding to ZIP format:
+```
 [mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --update --checksum sha1 --archive zip
 
 2016-04-21 15:55:09,880 - INFO - Updating bag: /home/mdarcy/test_bag
@@ -299,7 +299,7 @@ Now we can execute an `--update` command to pick up the additonal file.  We can 
 ----
 ##### 3. Adding additional metadata:
 Arbitrary metadata can be added to `bag-info.txt` by specifying a metadata configuration file to the `--metadata-file`
-argument. The format of the metadata file is described [here](./doc/config.md#metadata). Metadata files can be specified
+argument. The format of the metadata file is described [here](./config.md#metadata). Metadata files can be specified
 when creating or updating a bag.
 
 For example, given the contents of the following metadata file called "test-metadata.json":
@@ -309,12 +309,12 @@ For example, given the contents of the following metadata file called "test-meta
     "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
     "External-Description": "Simple bdbag test",
     "Source-Organization": "BD2K - BDDS Team",
-    "Contact-Name": "Mike D'Arcy",
+    "Contact-Name": "mdarcy",
     "Arbitrary-Metadata-Value": "Some arbitrary value"
 }
 ```
 Creating a bag that includes this metadata would be executed like this:
-```sh
+```
 [mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --metadata-file ./test-metadata.json
 
 2016-04-22 11:54:19,705 - INFO - Reading bag metadata from file /home/mdarcy/test-metadata.json
@@ -339,14 +339,14 @@ Creating a bag that includes this metadata would be executed like this:
 ```
 The resulting `bag-info.txt` will now contain the metadata from the `test-metadata.json` file, in addition to the
 required metadata that is automatically added by the bagging software:
-```sh
+```
 [mdarcy@bdds-dev ~]$ cat test_bag/bag-info.txt
 
 Arbitrary-Metadata-Value: Some arbitrary value
 Bag-Software-Agent: bdbag.py <http://github.com/ini-bdds/bdbag>
 BagIt-Profile-Identifier: https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json
 Bagging-Date: 2016-04-22
-Contact-Name: Mike D'Arcy
+Contact-Name: mdarcy
 External-Description: Simple bdbag test
 Payload-Oxum: 101.2
 Source-Organization: BD2K - BDDS Team
@@ -361,7 +361,7 @@ The locations of remote files are listed in a bag's `fetch.txt` file.
 Adding remote file references is similar to adding metadata. The `--remote-file-manifest` argument is used to specify
 the file that will be used by *bdbag* to generate the manifest entries for the remote files, in addition to generating
 the `fetch.txt` file that lists the location information for these files.  The format of the `remote-file-manifest` is
-described [here](./doc/config.md#remote-file-manifest).
+described [here](./config.md#remote-file-manifest).
 
 Here's an example of what a `remote-file-manifest` looks like:
 ```json
@@ -382,7 +382,7 @@ Here's an example of what a `remote-file-manifest` looks like:
 ]
 ```
 Updating our previously created bag to add these remote files would be done like this:
-```sh
+```
 [mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --update --remote-file-manifest ./test-fetch-manifest.json
 
 2016-04-22 12:16:30,412 - INFO - Updating bag: /home/mdarcy/test_bag
@@ -401,7 +401,7 @@ Updating our previously created bag to add these remote files would be done like
 2016-04-22 12:16:30,416 - INFO - writing /home/mdarcy/test_bag/tagmanifest-md5.txt
 ```
 The result of this command is a `fetch.txt` file in our bag directory, along with manifest entries for the remote files:
-```sh
+```
 [mdarcy@bdds-dev ~]$ ls -lagR test_bag/
 test_bag/:
 total 36
@@ -453,7 +453,7 @@ The `all` option causes all fetch files to be re-acquired, even if they already 
 For any given bag, it is important to establish the bag's validity before making use of the
 contents. If one were to receive, for example, the bag containing remote file references from the previous sample and
 attempt to validate it, the following output would be produced:
-```sh
+```
 [mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --validate fast
 
 2016-04-22 12:39:57,781 - INFO - Validating bag: /home/mdarcy/test_bag
@@ -462,7 +462,7 @@ attempt to validate it, the following output would be produced:
 Error: [BagIncompleteError] Found 2 files and 101 bytes on disk; expected 4 files and 633684 bytes.
 ```
 Resolving remote references on the example bag would yield:
-```sh
+```
 [mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --resolve-fetch all
 
 2016-04-22 12:33:20,045 - INFO - Attempting to resolve remote file references from fetch.txt...
@@ -476,7 +476,7 @@ Resolving remote references on the example bag would yield:
 2016-04-22 12:33:21,159 - INFO - File [/home/mdarcy/test_bag/data/minid_v0.1_Nov_2015.pdf] transfer successful.
 ```
 The bag directory would now contain the following files:
-```sh
+```
 [mdarcy@bdds-dev ~]$ ls -lagR test_bag/
 test_bag/:
 total 36
@@ -501,7 +501,7 @@ drwxrwxr-x. 3 mdarcy   4096 Apr 22 12:16 ..
 -rw-rw-r--. 1 mdarcy     56 Apr 20 19:53 test2.txt
 ```
 Finally, we can run `--validate full` on the bag in order to verify that the bag is now both complete and valid:
-```sh
+```
 [mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --validate full
 
 2016-04-22 12:37:52,317 - INFO - Validating bag: /home/mdarcy/test_bag
