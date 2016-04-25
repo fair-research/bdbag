@@ -3,19 +3,6 @@ from Tkinter import *
 from tkFileDialog import askopenfilename
 
 
-def main():
-    try:
-        root = Tk()
-        app = BDBagGUI(root)
-        app.pack(expand='yes', fill='both')
-        root.geometry('640x480+10+10')
-        root.title('bdbag')
-        root.mainloop()
-    except Exception as e:
-        sys.stderr.write(str(e))
-        return 1
-
-
 class BDBagGUI(Frame):
 
     def __init__(self, master=None, **kw):
@@ -34,8 +21,23 @@ class BDBagGUI(Frame):
         self._Frame1.pack(side='top')
 
     def _on__bdbag_path_browse_command(self, event=None):
-        Tk().withdraw()  
-        filename = askopenfilename() 
+        Tk().withdraw()
+        filename = askopenfilename()
         self._bdbag_path.set(os.path.normpath(filename))
 
 
+def main():
+    try:
+        root = Tk()
+        app = BDBagGUI(root)
+        app.pack(expand='yes', fill='both')
+        root.geometry('640x480+10+10')
+        root.title('bdbag')
+        root.mainloop()
+    except Exception as e:
+        sys.stderr.write(str(e))
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

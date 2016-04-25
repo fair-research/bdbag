@@ -232,3 +232,6 @@ def main():
     sys.stderr.write('\n')
 
     return result
+
+if __name__ == '__main__':
+    sys.exit(main())

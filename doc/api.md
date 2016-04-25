@@ -67,7 +67,7 @@ described [here](./config.md#metadata).
 
 | Param | Type | Description |
 | --- | --- | --- |
-|config_file|`string`|A normalized, absolute path to a metadata file.
+|metadata_file|`string`|A normalized, absolute path to a metadata file.
 
 **Returns**: `dict` - The metadata.
 

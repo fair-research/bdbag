@@ -17,9 +17,10 @@ The only mandatory argument is `--bag-path`, all other arguments are optional.
 ```
 usage: bdbag --bag-path <path>
 
-[--update [prune]]
+[--update]
 [--archiver {zip,tar,tgz}]
 [--checksum {md5,sha1,sha256,sha512,all}]
+[--prune-manifests]
 [--resolve-fetch {all,missing}]
 [--validate {fast,full}]
 [--validate-profile]
