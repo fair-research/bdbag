@@ -52,9 +52,12 @@ These extended arguments are mapped directly to metadata fields in bag-info.txt:
 
 ----
 ##### `--bag-path <path>`
-Mandatory path to a bag directory or bag archive file. If the target path is a directory and no bag structure exists in
-that path, a bag structure will be created "in-place". In order for a bag to be created in-place, the calling user must
-have write permissions for the specified directory.
+Mandatory path to a bag directory or bag archive file.
+
+If the target path is a directory and no bag structure exists in that path, a bag structure will be created "in-place".
+In order for a bag to be created in-place, the calling user must have write permissions for the specified directory.
+
+If the target path is an archive file and no other conflicting arguments are specified, the archive file will be extracted.
 
 ----
 ##### `--update`

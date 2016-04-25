@@ -3,6 +3,7 @@ import logging
 import json
 import ordereddict
 import shutil
+import time
 import datetime
 import tempfile
 import tarfile
@@ -252,7 +253,8 @@ def extract_bag(bag_path, output_path=None, temp=False):
         if temp:
             output_path = tempfile.mkdtemp(prefix='bag_')
         elif not output_path:
-            output_path = os.path.pardir(bag_path)
+            output_path = os.path.splitext(bag_path)[0]
+            output_path = ''.join([output_path, '-', time.strftime("%Y-%m-%d_%H_%M_%S")])
         if zipfile.is_zipfile(bag_path):
             logger.info("Extracting ZIP archived bag file: %s" % bag_path)
             bag_file = file(bag_path, 'rb')
@@ -276,10 +278,12 @@ def extract_bag(bag_path, output_path=None, temp=False):
                 raise RuntimeError(
                     "Invalid bag serialization: Multiple base directories found in extracted archive.")
             else:
-                bag_path = os.path.abspath(os.path.join(dirpath, dirnames[0]))
+                output_path = os.path.abspath(os.path.join(dirpath, dirnames[0]))
                 break
 
-    return bag_path
+    logger.info("File %s was successfully extracted to directory %s" % (bag_path, output_path))
+
+    return output_path
 
 
 def validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE):
