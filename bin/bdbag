@@ -1,8 +1,0 @@
-#!/usr/bin/python
-
-import sys
-
-from bdbag import bdbag_cli
-
-if __name__ == '__main__':
-    sys.exit(bdbag_cli.main())
