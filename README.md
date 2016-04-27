@@ -2,8 +2,8 @@
 
 #### BDDS Big Data Bag Utilities
 
-The *bdbag* utilities are a collection of software programs for working with Bagit packages that conform the BDDS Bagit
-and BDDS Bagit/RO profiles.
+The *bdbag* utilities are a collection of software programs for working with
+[BagIt](https://datatracker.ietf.org/doc/draft-kunze-bagit/) packages that conform the BDDS Bagit and BDDS Bagit/RO profiles.
 
 These utilities combine various other components such as the BDDS forks of the
 [Bagit-Python](https://github.com/ini-bdds/bagit-python) bag creation utility and the BDDS
