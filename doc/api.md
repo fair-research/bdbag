@@ -43,14 +43,14 @@ Set the logging level and optional output path for log statements.
 
 <a name="create_default_config"></a>
 #### create_default_config()
-Creates the default configuration file `bdbag.cfg` if it does not already exist.
+Creates the default configuration file `bdbag.json` if it does not already exist.
 
 -----
 
 <a name="read_config"></a>
 #### read_config(config_file) ⇒ `dict`
 Reads the configuration file specified by `config_file` into a dictionary object. If the file path specified is
-the default configuration file location `~/.bdbag/bdbag.cfg`, and that file does not already exist, it is created.
+the default configuration file location `~/.bdbag/bdbag.json`, and that file does not already exist, it is created.
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -134,7 +134,7 @@ Creates or updates the bag denoted by the `bag_path` argument.
 |metadata|`dict`|A dictionary of key-value pairs that will be written directly to the bag's 'bag-info.txt' file.
 |metadata_file|`string`|A JSON file representation of metadata that will be written directly to the bag's 'bag-info.txt' file. The format of this metadata is described [here](./config.md#metadata).
 |remote_file_manifest|`string`|A JSON file representation of remote file entries that will be used to add remote files to the bag file manifest(s) and used to create the bag's `fetch.txt`. The format of this file is described [here](./config.md/#remote-file-manifest).
-|config_file|`string`|A JSON file representation of configuration data that is used during bag creation and update. The format of this file is described [here](./config.md#bdbag.cfg).
+|config_file|`string`|A JSON file representation of configuration data that is used during bag creation and update. The format of this file is described [here](./config.md#bdbag.json).
 
 **Returns**: `bag` - An instantiated [bagit-python](https://github.com/ini-bdds/bagit-python/blob/master/bagit.py) `bag` class object.
 
@@ -146,8 +146,8 @@ Attempt to download files listed in the bag's `fetch.txt` file.  The method of t
 scheme of the URL field in `fetch.txt`.  Note that not all file transfer protocols are supported at this time.
 
 Additionally, some URLs may require authentication in order to retrieve protected files.  In this case, the
-`keychain.cfg` configuration file must be configured with the appropriate authentication mechanism and credentials to
-use for a given base URL. The documentation for `keychain.cfg` can be found [here](./config.md#keychain.cfg).
+`keychain.json` configuration file must be configured with the appropriate authentication mechanism and credentials to
+use for a given base URL. The documentation for `keychain.json` can be found [here](./config.md#keychain.json).
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -161,7 +161,8 @@ use for a given base URL. The documentation for `keychain.cfg` can be found [her
 #### archive_bag(bag_path, bag_archiver) ⇒ `string`
 Creates a single, serialized bag archive file from the directory specified by `bag_path` using the format specified by
 `bag_archiver`. The resulting archive file is BagIt spec
-compliant, i.e., complies with the rules of **"Section 4: Serialization"** of the [BagIt Specification](https://datatracker.ietf.org/doc/draft-kunze-bagit/).
+compliant, i.e., complies with the rules of **"Section 4: Serialization"** of the
+[BagIt Specification](https://datatracker.ietf.org/doc/draft-kunze-bagit/).
 
 | Param | Type | Description |
 | --- | --- | --- |

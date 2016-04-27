@@ -2,7 +2,7 @@
 
 Some components of the **bdbag** software are configured via JSON-formatted configuration files.
 
-There are two global configuration files: [bdbag.cfg](#bdbag.cfg) and [keychain.cfg](#keychain.cfg). Skeleton versions of
+There are two global configuration files: [bdbag.json](#bdbag.json) and [keychain.json](#keychain.json). Skeleton versions of
 these files with simple default values are automatically created in
 the current user's home directory the first time a bag is created or opened.
 
@@ -10,13 +10,13 @@ Additionally, two JSON-formatted configuration files can be passed as arguments 
 for certain bag creation and update functions.  These files are known as [metadata](#metadata) and
 [remote-file-manifest](#remote-file-manifest) configurations.
 
-<a name="bdbag.cfg"></a>
-## *bdbag.cfg*
+<a name="bdbag.json"></a>
+## *bdbag.json*
 
-The file `bdbag.cfg` is a global configuration file that allows the user to specify a set of parameters to be used as
+The file `bdbag.json` is a global configuration file that allows the user to specify a set of parameters to be used as
 defaults when performing various bag manipulation functions.
 
-The format of *bdbag.cfg* is a single JSON object containing a set of JSON child objects (used as
+The format of *bdbag.json* is a single JSON object containing a set of JSON child objects (used as
 configuration sub-sections) which control various default behaviors of the software. Currently, only the sub-section `bag_config` is supported.
 
 | Parameter | Description | Parent Object|
@@ -27,7 +27,7 @@ configuration sub-sections) which control various default behaviors of the softw
 |*bag_metadata*|This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.|*bag_config*
 |*bag_processes*|This is a numeric value representing the default number of concurrent processes to use when calculating checksums.|*bag_config*
 |||
-Below is a sample *bdbag.cfg* file:
+Below is a sample *bdbag.json* file:
 ```json
 {
     "bag_config": {
@@ -45,24 +45,24 @@ Below is a sample *bdbag.cfg* file:
 }
 ```
 
-<a name="keychain.cfg"></a>
-## *keychain.cfg*
-The file `keychain.cfg` is used to specify the authentication mechanisms and credentials for the various URLs that might
+<a name="keychain.json"></a>
+## *keychain.json*
+The file `keychain.json` is used to specify the authentication mechanisms and credentials for the various URLs that might
 be encountered while trying to resolve (download) the files listed in a bag's fetch.txt file.
 
-The format of `keychain.cfg` is a JSON array containing a list of JSON objects, each of which specify a set of parameters used to
+The format of `keychain.json` is a JSON array containing a list of JSON objects, each of which specify a set of parameters used to
 configure the authentication method and credentials to use for a specifed base URL.
 
 | Parameter | Description |
 | --- | --- |
-|*uri*|This is the base URI used to specify when authentication should be used.  When a URI reference is encountered in fetch.txt, an attempt will be made to match it against all base URIs specified in *keychain.cfg* and if a match is found, the request will be authenticated before file retrieval is attempted.
+|*uri*|This is the base URI used to specify when authentication should be used.  When a URI reference is encountered in fetch.txt, an attempt will be made to match it against all base URIs specified in *keychain.json* and if a match is found, the request will be authenticated before file retrieval is attempted.
 |*auth_uri*|This is the authentication URI used to establish an authenticated session for the specified *uri*.  This is currently assumed to be an HTTP(s) protocol URL.
 |*auth_type*|This is the authentication type used by the server specified by *auth_uri*.  Currently, only the values "http-basic" and "http-form" are supported using the HTTP(S) protocol.
 |*auth_method*|This is the authentication-specific method to use during session establishment.  Currently only the values "get" and "post" are supported when using the *auth_type* of "http-basic" or "http-form".
 |*auth_params*|This is a child object containing authentication-type specific parameters used in session establishment.  It will generally contain credential information such as a username and password or certificate parameters, but could also contain other parameters required for authentication using the given *auth_type* mechanism.
 |||
 
-Below is a sample *keychain.cfg* file:
+Below is a sample *keychain.json* file:
 ```json
 [
     {

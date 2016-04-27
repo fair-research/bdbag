@@ -8,7 +8,7 @@ from bdbag import DEFAULT_CONFIG_PATH as DEFAULT_KEYCHAIN_PATH
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_KEYCHAIN_FILE = os.path.join(DEFAULT_KEYCHAIN_PATH, 'keychain.cfg')
+DEFAULT_KEYCHAIN_FILE = os.path.join(DEFAULT_KEYCHAIN_PATH, 'keychain.json')
 DEFAULT_KEYCHAIN = [
     {
         "uri": "https://",

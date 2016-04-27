@@ -2,7 +2,7 @@ import os
 import getpass
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser('~'), '.bdbag')
-DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.cfg')
+DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')
 DEFAULT_CONFIG = {
     'bag_config':
     {

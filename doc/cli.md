@@ -76,7 +76,7 @@ every supported checksum will be generated.
 ----
 ##### `--prune-manifests`
 If specified, any
-existing checksum manifests not explicitly configured (either by the `--checksum` argument or in `bdbag.cfg`)
+existing checksum manifests not explicitly configured (either by the `--checksum` argument or in `bdbag.json`)
 will be deleted from the bag during an update.
 
 ----
@@ -98,8 +98,8 @@ Validate a bag against the profile specified by the bag's `BagIt-Profile-Identif
 ----
 ##### `--config-file <file>`
 Optional path to a *bdbag* configuration file. The configuration file format is described
-[here](./config.md#bdbag.cfg).
-If this argument is not specified, the configuration file defaults to: `~/.bdbag/bdbag.cfg`
+[here](./config.md#bdbag.json).
+If this argument is not specified, the configuration file defaults to: `~/.bdbag/bdbag.json`
 
 ----
 ##### `--metadata-file <file>`
