@@ -104,7 +104,7 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
             payload_consistent = False
         if unresolved_manifest_files:
             payload_consistent = False
-    else:
+    elif payload_consistent:
         payload_consistent = not only_in_manifests
 
     for path in only_in_manifests:
