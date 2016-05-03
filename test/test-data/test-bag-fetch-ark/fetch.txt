@@ -1,0 +1,2 @@
+URL	LENGTH	FILENAME
+ark:/88120/r8059v	632860	data/minid_v0.1_Nov_2015.pdf

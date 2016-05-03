@@ -56,9 +56,14 @@ def read_metadata(metadata_file):
         return json.loads(metadata, object_pairs_hook=ordereddict.OrderedDict)
 
 
-def cleanup_bag(bag_path):
+def cleanup_bag(bag_path, save=False):
     logger.info("Cleaning up bag dir: %s" % bag_path)
-    shutil.rmtree(bag_path)
+    if save:
+        saved_bag_path = ''.join([bag_path, '_', time.strftime("%Y-%m-%d_%H.%M.%S")])
+        logger.info("Moving bag %s to %s" % (bag_path, saved_bag_path))
+        shutil.move(bag_path, saved_bag_path)
+    else:
+        shutil.rmtree(bag_path)
 
 
 def prune_bag_manifests(bag):
@@ -83,7 +88,7 @@ def is_bag(bag_path):
     bag = None
     try:
         bag = bagit.Bag(bag_path)
-    except bagit.BagError, bagit.BagValidationError:
+    except (bagit.BagError, bagit.BagValidationError):
         pass
     return True if bag else False
 
@@ -130,9 +135,31 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
     return payload_consistent
 
 
+def should_update_manifests(bag, bag_algorithms, prune_manifests, remote_file_manifest):
+    save_manifests = False
+
+    if not prune_manifests:
+        save_manifests = not all(x in bag.algs for x in bag_algorithms)
+        if save_manifests:
+            bag.algs = list(set(bag.algs).union(bag_algorithms))
+    else:
+        bag.algs = bag_algorithms
+    if remote_file_manifest:
+        bag.remote_entries.update(
+            generate_remote_files_from_manifest(remote_file_manifest, bag.algs))
+    skip_remote = True if not remote_file_manifest else False
+    if prune_manifests:
+        save_manifests = prune_bag_manifests(bag)
+    if not save_manifests:
+        save_manifests = not check_payload_consistency(bag, skip_remote, quiet=True)
+
+    return save_manifests
+
+
 def make_bag(bag_path,
-             update=False,
              algs=None,
+             update=False,
+             save_manifests=True,
              prune_manifests=False,
              metadata=None,
              metadata_file=None,
@@ -141,7 +168,7 @@ def make_bag(bag_path,
     bag = None
     try:
         bag = bagit.Bag(bag_path)
-    except bagit.BagError, bagit.BagValidationError:
+    except (bagit.BagError, bagit.BagValidationError):
         pass
 
     config = read_config(config_file)
@@ -166,22 +193,11 @@ def make_bag(bag_path,
             try:
                 logger.info("Updating bag: %s" % bag_path)
                 bag.info.update(bag_metadata)
-                manifests = False
-                if not prune_manifests:
-                    manifests = not all(x in bag.algs for x in bag_algorithms)
-                    if manifests:
-                        bag.algs = list(set(bag.algs).union(bag_algorithms))
-                else:
-                    bag.algs = bag_algorithms
-                if remote_file_manifest:
-                    bag.remote_entries.update(
-                        generate_remote_files_from_manifest(remote_file_manifest, bag.algs))
-                skip_remote = True if not remote_file_manifest else False
-                if prune_manifests:
-                    manifests = prune_bag_manifests(bag)
-                if not manifests:
-                    manifests = not check_payload_consistency(bag, skip_remote, quiet=True)
-                bag.save(bag_processes, manifests=manifests)
+                manifests_update = should_update_manifests(bag, bag_algorithms, prune_manifests, remote_file_manifest)
+                if manifests_update and not save_manifests:
+                    logger.warn("Manifests must be updated due to bag payload change or checksum configuration change.")
+                    save_manifests = True
+                bag.save(bag_processes, manifests=save_manifests)
             except Exception as e:
                 logger.error("Exception while updating bag manifests: %s", e)
                 raise e
@@ -192,8 +208,10 @@ def make_bag(bag_path,
         remote_files = None
         if remote_file_manifest:
             remote_files = generate_remote_files_from_manifest(remote_file_manifest, bag_algorithms)
-        bagit.make_bag(bag_path, bag_metadata, bag_processes, bag_algorithms, remote_files)
+        bag = bagit.make_bag(bag_path, bag_metadata, bag_processes, bag_algorithms, remote_files)
         logger.info('Created bag: %s' % bag_path)
+
+    return bag
 
 
 def archive_bag(bag_path, bag_archiver):
@@ -306,7 +324,7 @@ def validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE):
         errors = list()
         for d in e.details:
             errors.append(bdbag.get_named_exception(d))
-        raise RuntimeError('\nError: '.join(errors))
+        raise bagit.BagValidationError('\nError: '.join(errors))
     except Exception as e:
         raise RuntimeError("Unhandled exception while validating bag: %s" % e)
 
@@ -334,7 +352,14 @@ def validate_bag_profile(bag_path, profile_path=None):
     return profile
 
 
-def validate_bag_serialization(bag_path, bag_profile):
+def validate_bag_serialization(bag_path, bag_profile=None, bag_profile_path=None):
+
+    if not bag_profile:
+        if not bag_profile_path:
+            raise bagit_profile.ProfileValidationError(
+                "Unable to instantiate profile, no bag profile or profile path found")
+        logger.info("Retrieving profile: %s" % bag_profile_path)
+        bag_profile = bagit_profile.Profile(bag_profile_path)
 
     # Validate 'Serialization' and 'Accept-Serialization'.
     logger.info("Validating bag serialization: %s" % bag_path)

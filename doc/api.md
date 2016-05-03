@@ -128,8 +128,9 @@ Creates or updates the bag denoted by the `bag_path` argument.
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
-|update|`boolean`|If `bag_path` represents an existing bag, update it. If this parameter is not specified when invoking this function on an existing bag, the function is essentially a NOOP and will emit a logging message to that effect.
 |algs|`list`|A list of checksum algorithms to use for calculating file fixities. When creating a bag, only the checksums present in this variable will be used. When updating a bag, this function will take the union of any existing bag algorithms and what is specified by this parameter, ***except*** when the `prune_manifests` parameter is specified, in which case then only the algorithms specifed by this parameter will be used.
+|update|`boolean`|If `bag_path` represents an existing bag, update it. If this parameter is not specified when invoking this function on an existing bag, the function is essentially a NOOP and will emit a logging message to that effect.
+|save_manifests|`boolean`|Defaults to `True`. If true, saves all manifests, recalculating  all checksums and regenerating `fetch.txt`. If false, only tagfile manifest checksums are recalculated.  Use this flag as an optimization (to avoid recalculating payload file checksums) when only the bag metadata has been changed. This parameter is only meaningful during update operations, otherwise it is ignored.
 |prune_manifests|`boolean`|Removes any file and tagfile manifests for checksums that are not listed in the `algs` variable.  This parameter is only meaningful during update operations, otherwise it is ignored.
 |metadata|`dict`|A dictionary of key-value pairs that will be written directly to the bag's 'bag-info.txt' file.
 |metadata_file|`string`|A JSON file representation of metadata that will be written directly to the bag's 'bag-info.txt' file. The format of this metadata is described [here](./config.md#metadata).

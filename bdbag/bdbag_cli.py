@@ -33,7 +33,8 @@ class AddMetadataAction(argparse.Action):
 def parse_cli():
     description = 'BD2K BDBag utility for working with Bagit/RO archives'
 
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(
+        description=description, epilog="For more information see: http://github.com/ini-bdds/bdbag")
     standard_args = parser.add_argument_group('Standard arguments')
 
     update_arg = standard_args.add_argument(
@@ -47,6 +48,12 @@ def parse_cli():
         "--checksum", action='append', choices=['md5', 'sha1', 'sha256', 'sha512', 'all'],
         help="Checksum algorithm to use: can be specified multiple times with different values. "
              "If \'all\' is specified, every supported checksum will be generated")
+
+    skip_manifests_arg = standard_args.add_argument(
+        "--skip-manifests", action='store_true',
+        help=str("If \'skip-manifests\' is specified in conjunction with %s, only tagfile manifests will be "
+                 "regenerated, with payload manifests and fetch.txt (if any) left as is. This argument should be used "
+                 "when only bag metadata has changed." % update_arg.option_strings))
 
     prune_manifests_arg = standard_args.add_argument(
         "--prune-manifests", action='store_true',
@@ -154,6 +161,11 @@ def parse_cli():
                          "to apply any changes.\n\n" % (prune_manifests_arg.option_strings, update_arg.option_strings))
         sys.exit(2)
 
+    if args.skip_manifests and not args.update and is_bag:
+        sys.stderr.write("Error: Specifying %s requires the %s argument.\n\n" %
+                         (skip_manifests_arg.option_strings, update_arg.option_strings))
+        sys.exit(2)
+
     if BAG_METADATA and not args.update and is_bag:
         sys.stderr.write("Error: Adding or modifying metadata %s for an existing bag requires the %s argument "
                          "in order to apply any changes.\n\n" % (BAG_METADATA, update_arg.option_strings))
@@ -181,17 +193,21 @@ def main():
                     not (args.update and bdb.is_bag(path))):
                 if args.checksum and 'all' in args.checksum:
                     args.checksum = ['md5', 'sha1', 'sha256', 'sha512']
+                # create or update the bag depending on the input arguments
                 bdb.make_bag(path,
-                             args.update,
                              args.checksum,
+                             args.update,
+                             args.skip_manifests,
                              args.prune_manifests,
                              BAG_METADATA if BAG_METADATA else None,
                              args.metadata_file,
                              args.remote_file_manifest,
                              args.config_file)
+
         # otherwise just extract the bag if it is an archive and no other conflicting options specified
         elif not (args.validate or args.validate_profile or args.resolve_fetch):
             bdb.extract_bag(path)
+            sys.stderr.write('\n')
             return result
 
         if args.resolve_fetch:
@@ -225,7 +241,7 @@ def main():
 
     finally:
         if temp_path:
-            bdb.cleanup_bag(temp_path)
+            bdb.cleanup_bag(os.path.dirname(temp_path))
         if result != 0:
             sys.stderr.write("\n%s" % error)
 

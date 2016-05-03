@@ -20,6 +20,7 @@ usage: bdbag --bag-path <path>
 [--update]
 [--archiver {zip,tar,tgz}]
 [--checksum {md5,sha1,sha256,sha512,all}]
+[--skip-manifests]
 [--prune-manifests]
 [--resolve-fetch {all,missing}]
 [--validate {fast,full}]
@@ -74,10 +75,15 @@ Checksum algorithm(s) to use: can be specified multiple times with different val
 every supported checksum will be generated.
 
 ----
+##### `--skip-manifests`
+If specified in conjunction with `--update`, only tagfile manifests will be regenerated, with payload manifests and
+fetch.txt (if any) left as is. This argument should be used as an optimization (to avoid recalculating payload file
+checksums) when only the bag metadata has been changed.
+
+----
 ##### `--prune-manifests`
-If specified, any
-existing checksum manifests not explicitly configured (either by the `--checksum` argument or in `bdbag.json`)
-will be deleted from the bag during an update.
+If specified, any existing checksum manifests not explicitly configured (either by the `--checksum` argument or in
+`bdbag.json`) will be deleted from the bag during an update.
 
 ----
 ##### `--resolve-fetch {missing,all}`

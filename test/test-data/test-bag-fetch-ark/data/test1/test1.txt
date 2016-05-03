@@ -1,0 +1,1 @@
+This is some simple content for a bdbag test.
