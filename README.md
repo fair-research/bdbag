@@ -1,4 +1,5 @@
 # bdbag
+[![Build Status](https://travis-ci.org/ini-bdds/bdbag.svg)](https://travis-ci.org/ini-bdds/bdbag)
 
 #### BDDS Big Data Bag Utilities
 
