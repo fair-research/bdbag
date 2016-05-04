@@ -1,3 +1,4 @@
+import atexit
 import unittest
 import subprocess
 from os.path import join as ospj
@@ -5,6 +6,7 @@ from test.test_common import BaseTest
 
 ARGS = ['python', 'bdbag/bdbag_cli.py', '--bag-path']
 logfile = open('test_cli.log', mode='w')
+atexit.register(logfile.close)
 
 
 class TestCli(BaseTest):
@@ -82,7 +84,7 @@ class TestCliArgParsing(BaseTest):
             output = subprocess.check_output(args, stderr=subprocess.STDOUT, universal_newlines=True)
         except subprocess.CalledProcessError as e:
             output = e.output
-            self.assertEquals(2, e.returncode)
+            self.assertEqual(2, e.returncode)
         finally:
             logfile.writelines(output)
             self.assertExpectedMessages(expected, output)
