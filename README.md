@@ -41,6 +41,12 @@ python setup.py install
 Note that you may want to run this command as **root** or using **sudo** if you are on a Unix-based system and want to
 make **bdbag** available to all users.
 
+### Testing
+The unit tests can be run by invoking the following command from the root of the **bdbag** source code directory:
+```sh
+python setup.py test
+```
+
 ### Configuration
 
 See the [Configuration guide](./doc/config.md).
