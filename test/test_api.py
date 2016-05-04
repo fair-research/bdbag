@@ -9,7 +9,7 @@ from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb
-from test_common import BaseTest
+from test.test_common import BaseTest
 
 if sys.version_info > (3,):
     from io import StringIO

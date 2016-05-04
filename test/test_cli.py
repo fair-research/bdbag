@@ -1,7 +1,7 @@
 import unittest
 import subprocess
 from os.path import join as ospj
-from test_common import BaseTest
+from test.test_common import BaseTest
 
 ARGS = ['python', 'bdbag/bdbag_cli.py', '--bag-path']
 logfile = open('test_cli.log', mode='w')
