@@ -1,7 +1,11 @@
 import os
 import logging
-import urlparse
-from transports import *
+from bdbag.fetch.transports import *
+
+if sys.version_info > (3,):
+    from urllib.parse import urlsplit
+else:
+    from urlparse import urlsplit
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +30,15 @@ def fetch_bag_files(bag):
 
 def fetch_file(url, size, path):
 
-    scheme = urlparse.urlsplit(url, True).scheme.lower()
+    scheme = urlsplit(url, allow_fragments=True).scheme.lower()
     if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
         return fetch_http.get_file(url, path)
     elif SCHEME_GLOBUS == scheme:
-        return fetch_globus.get_file(url, path)
+        if "bdbag.fetch.transports.fetch_globus" in sys.modules:
+            return fetch_globus.get_file(url, path)
+        else:
+            logger.warning("A Globus transfer URL [%s] was found in fetch.txt but the Globus Transfer Client API module"
+                           " is not currently loaded." % url)
     elif SCHEME_ARK == scheme:
         for url in fetch_ark.resolve(url):
             if fetch_file(url, size, path):

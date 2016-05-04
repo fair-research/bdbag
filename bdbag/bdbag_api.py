@@ -1,7 +1,7 @@
+import sys
 import os
 import logging
 import json
-import ordereddict
 import shutil
 import time
 import datetime
@@ -11,7 +11,13 @@ import zipfile
 import bagit
 import bagit_profile
 import bdbag
-from fetch import fetcher
+from bdbag.fetch import fetcher
+
+if sys.version_info > (3,):
+    from collections import OrderedDict
+else:
+    from ordereddict import OrderedDict
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +46,7 @@ def read_config(config_file):
     with open(config_file) as cf:
         config = cf.read()
         cf.close()
-        return json.loads(config, object_pairs_hook=ordereddict.OrderedDict)
+        return json.loads(config, object_pairs_hook=OrderedDict)
 
 
 def read_metadata(metadata_file):
@@ -53,7 +59,7 @@ def read_metadata(metadata_file):
     with open(metadata_file) as mf:
         metadata = mf.read()
         mf.close()
-        return json.loads(metadata, object_pairs_hook=ordereddict.OrderedDict)
+        return json.loads(metadata, object_pairs_hook=OrderedDict)
 
 
 def cleanup_bag(bag_path, save=False):
@@ -180,7 +186,8 @@ def make_bag(bag_path,
     # bag metadata merge order: config->metadata_file->metadata
     bag_metadata = bag_config.get('bag_metadata', {}).copy()
     bag_metadata.update(read_metadata(metadata_file))
-    bag_metadata.update(metadata)
+    if metadata:
+        bag_metadata.update(metadata)
 
     if 'Bagging-Date' not in bag_metadata:
         bag_metadata['Bagging-Date'] = datetime.date.strftime(datetime.date.today(), "%Y-%m-%d")
@@ -275,10 +282,10 @@ def extract_bag(bag_path, output_path=None, temp=False):
             output_path = ''.join([output_path, '-', time.strftime("%Y-%m-%d_%H_%M_%S")])
         if zipfile.is_zipfile(bag_path):
             logger.info("Extracting ZIP archived bag file: %s" % bag_path)
-            bag_file = file(bag_path, 'rb')
-            zipped = zipfile.ZipFile(bag_file)
-            zipped.extractall(output_path)
-            zipped.close()
+            with open(bag_path, 'rb') as bag_file:
+                zipped = zipfile.ZipFile(bag_file)
+                zipped.extractall(output_path)
+                zipped.close()
         elif tarfile.is_tarfile(bag_path):
             logger.info("Extracting TAR/GZ/BZ2 archived bag file: %s" % bag_path)
             tarred = tarfile.open(bag_path)
@@ -315,10 +322,10 @@ def validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE):
         bag.validate(bag_processes, fast=fast)
         logger.info("Bag %s is valid" % bag_path)
     except bagit.BagIncompleteError as e:
-        logger.warn("BagIncompleteError: %s %s", e,
-                    "This validation error may be transient if the bag contains unresolved remote file references "
-                    "from a fetch.txt file. In this case the bag is incomplete but not necessarily invalid. "
-                    "Resolve remote file references (if any) and re-validate.")
+        logger.warning("BagIncompleteError: %s %s", e,
+                       "This validation error may be transient if the bag contains unresolved remote file references "
+                       "from a fetch.txt file. In this case the bag is incomplete but not necessarily invalid. "
+                       "Resolve remote file references (if any) and re-validate.")
         raise e
     except bagit.BagValidationError as e:
         errors = list()
@@ -374,8 +381,8 @@ def validate_bag_serialization(bag_path, bag_profile=None, bag_profile_path=None
 def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False):
     logger.info("Generating remote file references from %s" % remote_file_manifest)
     remote_files = dict()
-    with open(remote_file_manifest, 'rb') as fetch_in:
-        fetch = json.load(fetch_in, object_pairs_hook=ordereddict.OrderedDict)
+    with open(remote_file_manifest) as fetch_in:
+        fetch = json.load(fetch_in, object_pairs_hook=OrderedDict)
         for row in fetch:
             row['filename'] = ''.join(['data', '/', row['filename']])
             add = True

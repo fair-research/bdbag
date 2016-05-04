@@ -1,10 +1,15 @@
 import os
+import sys
 import logging
 import requests
 import certifi
-import urlparse
 import bdbag
 import bdbag.fetch.auth.keychain as keychain
+
+if sys.version_info > (3,):
+    from urllib.parse import urlsplit
+else:
+    from urlparse import urlsplit
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +97,7 @@ def get_file(url, output_path=None, headers=None, session=None):
             r = session.get(url, headers=headers, stream=True, verify=certifi.where())
         if r.status_code != 200:
             logger.error('HTTP GET Failed for url: %s' % url)
-            logger.error("Host %s responded:\n\n%s" % (urlparse.urlsplit(url).netloc,  r.text))
+            logger.error("Host %s responded:\n\n%s" % (urlsplit(url).netloc,  r.text))
             logger.warn('File [%s] transfer failed. ' % output_path)
         else:
             logger.debug("Transferring file %s to %s" % (url, output_path))
@@ -100,6 +105,7 @@ def get_file(url, output_path=None, headers=None, session=None):
                 for chunk in r.iter_content(CHUNK_SIZE):
                     data_file.write(chunk)
                 data_file.flush()
+            r.close()
             logger.info('File [%s] transfer successful.' % output_path)
             return True
 

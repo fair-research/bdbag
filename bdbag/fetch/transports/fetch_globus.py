@@ -1,12 +1,17 @@
 import os
+import sys
 import platform
 import logging
 import json
-import urlparse
 import requests
 import bdbag
 import bdbag.fetch.auth.keychain as keychain
 from globusonline.transfer.api_client import TransferAPIClient, Transfer
+
+if sys.version_info > (3,):
+    from urllib.parse import urlsplit
+else:
+    from urlparse import urlsplit
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +78,8 @@ def authenticate(url):
 def get_file(url, output_path, token=None, dest_endpoint=None):
 
     try:
-        src_endpoint = urlparse.urlsplit(url).hostname
-        src_path = urlparse.urlsplit(url).path
+        src_endpoint = urlsplit(url).hostname
+        src_path = urlsplit(url).path
         if platform.system() == "Windows":
             dest_path = ''.join(('/', output_path.replace('\\', '/').replace(':', '')))
         else:

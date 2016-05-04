@@ -1,5 +1,5 @@
 import os
-import StringIO
+import sys
 import logging
 import unittest
 import bagit
@@ -11,6 +11,11 @@ from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb
 from test_common import BaseTest
 
+if sys.version_info > (3,):
+    from io import StringIO
+else:
+    from StringIO import StringIO
+
 logging.basicConfig(filename='test_api.log', filemode='w', level=logging.DEBUG)
 logger = logging.getLogger()
 
@@ -19,7 +24,7 @@ class TestAPI(BaseTest):
 
     def setUp(self):
         super(TestAPI, self).setUp()
-        self.stream = StringIO.StringIO()
+        self.stream = StringIO()
         self.handler = logging.StreamHandler(self.stream)
         logger.addHandler(self.handler)
 

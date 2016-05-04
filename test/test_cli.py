@@ -4,7 +4,7 @@ from os.path import join as ospj
 from test_common import BaseTest
 
 ARGS = ['python', 'bdbag/bdbag_cli.py', '--bag-path']
-logfile = open('test_cli.log', mode='wb')
+logfile = open('test_cli.log', mode='w')
 
 
 class TestCli(BaseTest):
@@ -19,7 +19,7 @@ class TestCli(BaseTest):
     def _test_successful_invocation(self, args, expected=None):
         output = ''
         try:
-            output = subprocess.check_output(args, stderr=subprocess.STDOUT)
+            output = subprocess.check_output(args, stderr=subprocess.STDOUT, universal_newlines=True)
         except subprocess.CalledProcessError as e:
             output = e.output
             self.fail(output)
@@ -79,7 +79,7 @@ class TestCliArgParsing(BaseTest):
     def _test_bad_argument_error_handling(self, args, expected):
         output = ''
         try:
-            output = subprocess.check_output(args, stderr=subprocess.STDOUT)
+            output = subprocess.check_output(args, stderr=subprocess.STDOUT, universal_newlines=True)
         except subprocess.CalledProcessError as e:
             output = e.output
             self.assertEquals(2, e.returncode)
@@ -92,7 +92,7 @@ class TestCliArgParsing(BaseTest):
         logfile.writelines(self.getTestHeader('create bag already exists', args))
         output = ''
         try:
-            output = subprocess.check_output(args, stderr=subprocess.STDOUT)
+            output = subprocess.check_output(args, stderr=subprocess.STDOUT, universal_newlines=True)
         except subprocess.CalledProcessError as e:
             output = e.output
             self.fail(output)

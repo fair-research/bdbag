@@ -1,9 +1,15 @@
+import sys
 import json
 import logging
-import ordereddict
 import requests
-import urlparse
 import bdbag
+
+if sys.version_info > (3,):
+    from urllib.parse import urlsplit
+    from collections import OrderedDict
+else:
+    from urlparse import urlsplit
+    from ordereddict import OrderedDict
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +27,12 @@ def resolve(ark):
     r = requests.get(resolver_url, headers={'accept': 'application/json'})
     if r.status_code != 200:
         logger.error('HTTP GET Failed for: %s' % r.url)
-        logger.error("Host %s responded:\n\n%s" % (urlparse.urlsplit(r.url).netloc, r.text))
+        logger.error("Host %s responded:\n\n%s" % (urlsplit(r.url).netloc, r.text))
     else:
         info = {}
         try:
-            info = json.loads(r.text, object_pairs_hook=ordereddict.OrderedDict)
+            info = json.loads(r.text, object_pairs_hook=OrderedDict)
+            r.close()
         except Exception as e:
             logger.warn("Unable to parse ARK resolution result, a MINID or other supported JSON metadata structure "
                         "was not found. Exception: %s" % bdbag.get_named_exception(e))
