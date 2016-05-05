@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 CHUNK_SIZE = 1024 * 1024
 SESSIONS = dict()
 KEYCHAIN = keychain.read_config(keychain.DEFAULT_KEYCHAIN_FILE)
+HEADERS = {'Connection': 'close'}
 
 
 def validate_auth_config(auth):
@@ -91,6 +92,10 @@ def get_file(url, output_path=None, headers=None, session=None):
         output_dir = os.path.dirname(os.path.abspath(output_path))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
+        if not headers:
+            headers = HEADERS
+        else:
+            headers.update(HEADERS)
         r = session.get(url, headers=headers, stream=True, verify=certifi.where())
         if r.status_code == 401:
             session = get_session(url)
@@ -105,7 +110,6 @@ def get_file(url, output_path=None, headers=None, session=None):
                 for chunk in r.iter_content(CHUNK_SIZE):
                     data_file.write(chunk)
                 data_file.flush()
-            r.close()
             logger.info('File [%s] transfer successful.' % output_path)
             return True
 

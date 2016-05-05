@@ -24,7 +24,7 @@ def resolve(ark):
     urls = []
     resolver_url = ''.join((RESOLVER_URL, '/', ark))
     logger.info("Attempting to resolve %s into a valid set of URLs." % ark)
-    r = requests.get(resolver_url, headers={'accept': 'application/json'})
+    r = requests.get(resolver_url, headers={'accept': 'application/json', 'Connection': 'close'})
     if r.status_code != 200:
         logger.error('HTTP GET Failed for: %s' % r.url)
         logger.error("Host %s responded:\n\n%s" % (urlsplit(r.url).netloc, r.text))
@@ -32,7 +32,6 @@ def resolve(ark):
         info = {}
         try:
             info = json.loads(r.text, object_pairs_hook=OrderedDict)
-            r.close()
         except Exception as e:
             logger.warn("Unable to parse ARK resolution result, a MINID or other supported JSON metadata structure "
                         "was not found. Exception: %s" % bdbag.get_named_exception(e))

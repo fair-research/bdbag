@@ -273,9 +273,9 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_named_exception(e))
 
-    def test_resolve_fetch_http_auth(self):
-        # TODO
-        pass
+#    def test_resolve_fetch_http_auth(self):
+#        # TODO
+#        pass
 
     def test_resolve_fetch_ark(self):
         logger.info(self.getTestHeader('test resolve fetch ark'))
@@ -286,9 +286,9 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_named_exception(e))
 
-    def test_resolve_fetch_globus(self):
-        # TODO
-        pass
+#    def test_resolve_fetch_globus(self):
+#        # TODO
+#        pass
 
 
 if __name__ == '__main__':
