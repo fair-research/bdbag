@@ -35,11 +35,14 @@ git clone https://github.com/ini-bdds/bdbag
 ```
 From the root of the **bdbag** source code directory execute the following command:
 ```sh
-python setup.py install
+python setup.py install --user
 ```
 
-Note that you may want to run this command as **root** or using **sudo** if you are on a Unix-based system and want to
-make **bdbag** available to all users.
+Note that if you want to make **bdbag** available to all users on the system, you should run the following command:
+```sh
+python setup.py install
+```
+If you are on a Unix-based system (including MacOS) you should execute the above command as **root** or use **sudo**.
 
 ### Testing
 The unit tests can be run by invoking the following command from the root of the **bdbag** source code directory:
