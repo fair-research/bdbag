@@ -23,7 +23,7 @@ Enhanced bag support includes:
 ### Dependencies
 
 * [Python 2.7](https://www.python.org/downloads/release/python-2711/) is the minimum Python version required.
-* The code and dependencies are currently compatible with Python 3.  Globus Transfer is not currently supported using Python 3.
+* The code and dependencies are currently compatible with Python 3.
 
 
 ### Installation
