@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 from bdbag.fetch.transports import *
 
@@ -34,11 +35,7 @@ def fetch_file(url, size, path):
     if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
         return fetch_http.get_file(url, path)
     elif SCHEME_GLOBUS == scheme:
-        if "bdbag.fetch.transports.fetch_globus" in sys.modules:
-            return fetch_globus.get_file(url, path)
-        else:
-            logger.warning("A Globus transfer URL [%s] was found in fetch.txt but the Globus Transfer Client API module"
-                           " is not currently loaded." % url)
+        return fetch_globus.get_file(url, path)
     elif SCHEME_ARK == scheme:
         for url in fetch_ark.resolve(url):
             if fetch_file(url, size, path):

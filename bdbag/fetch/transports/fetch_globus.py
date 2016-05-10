@@ -2,8 +2,6 @@ import os
 import sys
 import platform
 import logging
-import json
-import requests
 import bdbag
 import bdbag.fetch.auth.keychain as keychain
 import globus_sdk
@@ -19,9 +17,11 @@ KEYCHAIN = keychain.read_config(keychain.DEFAULT_KEYCHAIN_FILE)
 
 
 def validate_auth_config(auth):
+    if not keychain.has_auth_attr(auth, 'auth_type'):
+        return False
     if not keychain.has_auth_attr(auth, 'auth_params'):
         return False
-    if not keychain.has_auth_attr(auth.auth_params, 'token'):
+    if not keychain.has_auth_attr(auth.auth_params, 'transfer_token'):
         return False
     if not keychain.has_auth_attr(auth.auth_params, 'local_endpoint'):
         return False
@@ -35,7 +35,8 @@ def authenticate(url):
         try:
             if not validate_auth_config(auth):
                 continue
-            return auth.auth_params.token, auth.auth_params.local_endpoint
+            if auth.auth_type == 'token':
+                return auth.auth_params.transfer_token, auth.auth_params.local_endpoint
         except Exception as e:
             logger.warn("Unhandled exception getting Globus token: %s" % bdbag.get_named_exception(e))
 
@@ -79,9 +80,10 @@ def get_file(url, output_path, token=None, dest_endpoint=None):
         label = "".join(("BDBag Fetch -- ", filename.replace('.', '_')))
 
         # get a unique ID for this transfer
-        tdata = globus_sdk.TransferData(client, src_endpoint,
-                                            dest_endpoint,
-                                            label=label)
+        tdata = globus_sdk.TransferData(client,
+                                        src_endpoint,
+                                        dest_endpoint,
+                                        label=label)
 
         tdata.add_item(src_path, dest_path, recursive=False)
 

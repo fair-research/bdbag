@@ -14,7 +14,7 @@ setup(
     url='https://github.com/ini-bdds/bdbag/',
     maintainer='USC Information Sciences Institute ISR Division',
     maintainer_email='misd-support@isi.edu',
-    version="0.8.4",
+    version="0.8.5",
     packages=find_packages(),
     package_data={'bdbag': ['profiles/*.*']},
     test_suite='test',
@@ -45,7 +45,7 @@ setup(
                       'certifi',
                       'bagit==1.5.4.dev',
                       'bagit-profile==1.0.2.dev',
-                      'globusonline-transfer-api-client'],
+                      'globus-sdk'],
     dependency_links=[
          "http://github.com/ini-bdds/bagit-python/archive/master.zip#egg=bagit-1.5.4.dev",
          "http://github.com/ini-bdds/bagit-profiles-validator/archive/master.zip#egg=bagit-profile-1.0.2.dev"
@@ -63,6 +63,7 @@ setup(
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-    ])
+        'Programming Language :: Python :: 3.5'
+    ]
+)
 

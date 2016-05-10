@@ -114,6 +114,6 @@ def get_file(url, output_path=None, headers=None, session=None):
             return True
 
     except requests.exceptions.RequestException as e:
-        logger.error('HTTP Request Exception: %s %s' % (e.errno, e.message))
+        logger.error('HTTP Request Exception: %s' % (bdbag.get_named_exception(e)))
 
     return False

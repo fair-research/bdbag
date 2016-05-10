@@ -24,13 +24,10 @@ DEFAULT_KEYCHAIN = [
     },
     {
         "uri": "globus://",
-        "auth_uri": "https://nexus.api.globusonline.org/goauth/token?grant_type=client_credentials",
-        "auth_type": "http-basic",
-        "auth_method": "get",
+        "auth_type": "token",
         "auth_params": {
-            "username": "",
-            "password": "",
-            "local_endpoint": ""
+            "local_endpoint": "",
+            "transfer_token": ""
         }
     }
 ]
