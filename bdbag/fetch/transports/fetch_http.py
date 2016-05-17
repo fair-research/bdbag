@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 CHUNK_SIZE = 1024 * 1024
 SESSIONS = dict()
-KEYCHAIN = keychain.read_config(keychain.DEFAULT_KEYCHAIN_FILE)
 HEADERS = {'Connection': 'close'}
 
 
@@ -40,12 +39,12 @@ def validate_auth_config(auth):
     return True
 
 
-def get_session(url):
+def get_session(url, auth_config):
 
     session = None
     response = None
 
-    for auth in list((entry for entry in KEYCHAIN if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
+    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
 
         try:
             if not validate_auth_config(auth):
@@ -84,11 +83,11 @@ def get_session(url):
     return session if session else requests.session()
 
 
-def get_file(url, output_path=None, headers=None, session=None):
+def get_file(url, output_path, auth_config, headers=None, session=None):
 
     try:
         if not session:
-            session = get_session(url)
+            session = get_session(url, auth_config)
         output_dir = os.path.dirname(os.path.abspath(output_path))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)

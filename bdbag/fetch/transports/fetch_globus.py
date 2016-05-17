@@ -13,8 +13,6 @@ else:
 
 logger = logging.getLogger(__name__)
 
-KEYCHAIN = keychain.read_config(keychain.DEFAULT_KEYCHAIN_FILE)
-
 
 def validate_auth_config(auth):
     if not keychain.has_auth_attr(auth, 'auth_type'):
@@ -29,9 +27,9 @@ def validate_auth_config(auth):
     return True
 
 
-def authenticate(url):
+def authenticate(url, auth_config):
 
-    for auth in list((entry for entry in KEYCHAIN if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
+    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
         try:
             if not validate_auth_config(auth):
                 continue
@@ -43,7 +41,7 @@ def authenticate(url):
     return None, None
 
 
-def get_file(url, output_path, token=None, dest_endpoint=None):
+def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
 
     try:
         src_endpoint = urlsplit(url).hostname
@@ -54,7 +52,7 @@ def get_file(url, output_path, token=None, dest_endpoint=None):
             dest_path = os.path.abspath(output_path)
 
         if not token:
-            token, dest_endpoint = authenticate(url)
+            token, dest_endpoint = authenticate(url, auth_config)
         if token is None:
             logger.warn("A valid Globus access token is required to create transfers. "
                         "Check keychain.cfg for valid parameters.")

@@ -35,7 +35,6 @@ Below is a sample *bdbag.json* file:
             "md5",
             "sha256"
         ],
-        "bag_archiver": "zip",
         "bag_metadata": {
             "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
             "Contact-Name": "Mike D'Arcy"
@@ -79,11 +78,10 @@ Below is a sample *keychain.json* file:
     },
     {
         "uri":"globus://",
-        "auth_uri":"https://nexus.api.globusonline.org/goauth/token?grant_type=client_credentials",
+        "auth_type": "token",
         "auth_params": {
-            "username": "me",
-            "password": "mypassword",
-            "local_endpoint": "my#desktop"
+            "local_endpoint": "b06c5a10-0b17-11e7-a73f-22000bf2d559",
+            "transfer_token": "AQBXNMizAAAAAAADPIg9SoyPk_dm0BOFcWT7pe-52fQKv2Je6zi-hEvJ5xkfXw8rLaL9mVg8RtOY-vy4qrQd"
         }
     }
 ]

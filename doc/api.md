@@ -17,7 +17,7 @@ The command-line interface is built upon the API in this manner and can be used 
     * [prune_bag_manifests(bag)](#prune_bag_manifests)
     * [check_payload_consistency(bag, skip_remote=False, quiet=False)](#check_payload_consistency)
     * [make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE)](#make_bag)
-    * [resolve_fetch(bag_path, force=False)](#resolve_fetch)
+    * [resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE)](#resolve_fetch)
     * [archive_bag(bag_path, bag_archiver)](#archive_bag)
     * [extract_bag(bag_path, output_path=None, temp=False)](#extract_bag)
     * [validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE)](#validate_bag)
@@ -142,7 +142,7 @@ Creates or updates the bag denoted by the `bag_path` argument.
 -----
 
 <a name="resolve_fetch"></a>
-#### resolve_fetch(bag_path, force=False) ⇒ `boolean`
+#### resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE) ⇒ `boolean`
 Attempt to download files listed in the bag's `fetch.txt` file.  The method of transfer is dependent on the protocol
 scheme of the URL field in `fetch.txt`.  Note that not all file transfer protocols are supported at this time.
 
@@ -154,6 +154,7 @@ use for a given base URL. The documentation for `keychain.json` can be found [he
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
 |force|`boolean`|A `boolean` value indicating whether to retrieve all listed files in `fetch.txt` or only those which are not currently found in the bag payload directory.
+|keychain_file|`string`|A normalized, absolute path to a `keychain.json` file, or if not specified, the default location will be used: `~/.bdbag/keychain.json`
 **Returns**: `boolean` - If all remote files were resolved successfully or not. Also returns `True` if the function invocation resulted in a NOOP.
 
 -----

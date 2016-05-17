@@ -26,6 +26,7 @@ usage: bdbag --bag-path <path>
 [--validate {fast,full}]
 [--validate-profile]
 [--config-file <file>]
+[--keychain-file <file>]
 [--metadata-file <file>]
 [--remote-file-manifest <file>]
 [--quiet]
@@ -108,6 +109,12 @@ Optional path to a *bdbag* configuration file. The configuration file format is 
 If this argument is not specified, the configuration file defaults to: `~/.bdbag/bdbag.json`
 
 ----
+##### `--keychain-file <file>`
+Optional path to a *keychain* configuration file. The configuration file format is described
+[here](./config.md#keychain.json).
+If this argument is not specified, the configuration file defaults to: `~/.bdbag/keychain.json`
+
+----
 ##### `--metadata-file <file>`
 Optional path to a JSON formatted metadata file. The configuration file format is described
 [here](./config.md#metadata).
@@ -141,10 +148,12 @@ This following table enumerates the various arguments and compatibility modes.
 |`--archiver`|bag dir only|A bag archive cannot be created from an existing bag archive.
 |`--checksum`|bag dir only|A checksum manifest cannot be added to an existing bag archive. The bag must be extracted, updated, and re-archived.
 |`--prune-manifests`|bag dir only, update only|Unused manifests may only be pruned from an existing bag during an update operation.
+|`--skip-manifests`|bag dir only, update only|Skipping the recalculation of payload checksums may only be performed on an existing bag during an update operation.
 |`--resolve-fetch`|bag dir only, no create or update|The resolution (download) of files listed in fetch.txt cannot be executed when creating or updating a bag.
 |`--validate`|all|A bag directory or a bag archive can be validated.  If a bag archive is to be validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.
 |`--validate-profile`|all|A bag directory or a bag archive can have its profile validated.  If a bag archive is to have its profile validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.
 |`--config-file`|bag dir only, create or update only|A config-file override can be specified whenever a bag is created or updated.
+|`--keychain-file`|bag dir only, used only when `--resolve-fetch` is specified|This argument is only meaningful in the context of remote file resolution.
 |`--metadata-file`|bag dir only, create or update only|A metadata config file can be specified whenever a bag is created or updated.
 |`--remote-file-manifest`|bag dir only, create or update only|A remote-file-manifest can be specified whenever a bag is created or updated.
 |any extended argument|bag dir only, create or update only|Any of the standard bag metadata extended arguments, e.g., `--source-organization` or `--contact-email` may be specified during create or update of a bag directory, but not a bag archive.

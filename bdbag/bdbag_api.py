@@ -1,5 +1,6 @@
 import sys
 import os
+import errno
 import logging
 import json
 import shutil
@@ -12,12 +13,12 @@ import bagit
 import bagit_profile
 import bdbag
 from bdbag.fetch import fetcher
+from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
 if sys.version_info > (3,):
     from collections import OrderedDict
 else:
     from ordereddict import OrderedDict
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,20 +34,30 @@ def configure_logging(level=logging.INFO, logpath=None):
 
 def create_default_config():
     if not os.path.isdir(bdbag.DEFAULT_CONFIG_PATH):
-        os.makedirs(bdbag.DEFAULT_CONFIG_PATH)
+        try:
+            os.makedirs(bdbag.DEFAULT_CONFIG_PATH)
+        except OSError as error:
+            if error.errno != errno.EEXIST:
+                raise
     with open(bdbag.DEFAULT_CONFIG_FILE, 'w') as cf:
         cf.write(json.dumps(bdbag.DEFAULT_CONFIG, sort_keys=True, indent=4, separators=(',', ': ')))
         cf.close()
 
 
-def read_config(config_file):
-    if config_file == bdbag.DEFAULT_CONFIG_FILE and not os.path.isfile(config_file):
-        logger.info("No default configuration file found, creating one")
-        create_default_config()
-    with open(config_file) as cf:
-        config = cf.read()
-        cf.close()
-        return json.loads(config, object_pairs_hook=OrderedDict)
+def read_config(config_file, create_default=True):
+    config = json.dumps(bdbag.DEFAULT_CONFIG)
+    if config_file == bdbag.DEFAULT_CONFIG_FILE and not os.path.isfile(config_file) and create_default:
+        logger.debug("No default configuration file found, attempting to create one.")
+        try:
+            create_default_config()
+        except Exception as e:
+            logger.debug("Unable to create default configuration file %s. Using internal defaults. %s" %
+                         (bdbag.DEFAULT_CONFIG_FILE, bdbag.get_named_exception(e)))
+    if os.path.isfile(config_file):
+        with open(config_file) as cf:
+            config = cf.read()
+
+    return json.loads(config, object_pairs_hook=OrderedDict)
 
 
 def read_metadata(metadata_file):
@@ -399,10 +410,10 @@ def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False
     return remote_files
 
 
-def resolve_fetch(bag_path, force=False):
+def resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE):
     bag = bagit.Bag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=True):
         logger.info("Attempting to resolve remote file references from fetch.txt...")
-        return fetcher.fetch_bag_files(bag)
+        return fetcher.fetch_bag_files(bag, keychain_file)
     else:
         return True

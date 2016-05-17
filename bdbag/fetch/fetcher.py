@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 from bdbag.fetch.transports import *
+from bdbag.fetch.auth.keychain import *
 
 if sys.version_info > (3,):
     from urllib.parse import urlsplit
@@ -20,25 +21,26 @@ SCHEME_SFTP = 'sftp'
 SCHEME_ARK = 'ark'
 
 
-def fetch_bag_files(bag):
+def fetch_bag_files(bag, keychain_file):
 
     success = True
+    auth = read_keychain(keychain_file)
     for url, size, path in bag.fetch_entries():
         output_path = os.path.normpath(os.path.join(bag.path, path))
-        success = fetch_file(url, size, output_path)
+        success = fetch_file(url, size, output_path, auth)
     return success
 
 
-def fetch_file(url, size, path):
+def fetch_file(url, size, path, auth):
 
     scheme = urlsplit(url, allow_fragments=True).scheme.lower()
     if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
-        return fetch_http.get_file(url, path)
+        return fetch_http.get_file(url, path, auth)
     elif SCHEME_GLOBUS == scheme:
-        return fetch_globus.get_file(url, path)
+        return fetch_globus.get_file(url, path, auth)
     elif SCHEME_ARK == scheme:
         for url in fetch_ark.resolve(url):
-            if fetch_file(url, size, path):
+            if fetch_file(url, size, path, auth):
                 return True
         return False
     else:

@@ -5,7 +5,8 @@ import logging
 import bagit
 import bdbag
 from bdbag import bdbag_api as bdb
-from bdbag import DEFAULT_CONFIG_FILE as DEFAULT_CONFIG_FILE
+from bdbag import DEFAULT_CONFIG_FILE
+from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
 BAG_METADATA = dict()
 
@@ -83,6 +84,11 @@ def parse_cli():
         '--config-file', default=DEFAULT_CONFIG_FILE, metavar='<file>',
         help="Optional path to a configuration file. If this argument is not specified, the configuration file "
              "defaults to: %s " % DEFAULT_CONFIG_FILE)
+
+    standard_args.add_argument(
+        '--keychain-file', default=DEFAULT_KEYCHAIN_FILE, metavar='<file>',
+        help="Optional path to a keychain file. If this argument is not specified, the keychain file "
+             "defaults to: %s " % DEFAULT_KEYCHAIN_FILE)
 
     metadata_file_arg = standard_args.add_argument(
         '--metadata-file', metavar='<file>', help="Optional path to a JSON formatted metadata file")
@@ -213,7 +219,7 @@ def main():
         if args.resolve_fetch:
             if args.validate == 'full':
                 sys.stderr.write(ASYNC_TRANSFER_VALIDATION_WARNING)
-            bdb.resolve_fetch(path, True if args.resolve_fetch == 'all' else False)
+            bdb.resolve_fetch(path, True if args.resolve_fetch == 'all' else False, args.keychain_file)
 
         if args.validate:
             if is_file:
