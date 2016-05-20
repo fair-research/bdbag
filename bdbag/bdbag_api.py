@@ -12,13 +12,9 @@ import zipfile
 import bagit
 import bagit_profile
 import bdbag
+from collections import OrderedDict
 from bdbag.fetch import fetcher
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
-
-if sys.version_info > (3,):
-    from collections import OrderedDict
-else:
-    from ordereddict import OrderedDict
 
 logger = logging.getLogger(__name__)
 

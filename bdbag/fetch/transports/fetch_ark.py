@@ -3,13 +3,12 @@ import json
 import logging
 import requests
 import bdbag
+from collections import OrderedDict
 
 if sys.version_info > (3,):
     from urllib.parse import urlsplit
-    from collections import OrderedDict
 else:
     from urlparse import urlsplit
-    from ordereddict import OrderedDict
 
 logger = logging.getLogger(__name__)
 
