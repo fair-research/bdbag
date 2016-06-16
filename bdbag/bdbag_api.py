@@ -113,6 +113,7 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
     if not skip_remote:
         updated_remote_files = sorted(bag.remote_entries.keys())
         existing_remote_files = sorted(list(bag.files_to_be_fetched(False)))
+        unresolved_fetch_files = set(bag.files_to_be_fetched()) - set(bag.payload_files())
         modified_remote_files = list(set(updated_remote_files) - set(existing_remote_files))
         normalized_updated_remote_files = set()
         for filename in updated_remote_files:
@@ -122,6 +123,8 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
             payload_consistent = False
         if unresolved_manifest_files:
             payload_consistent = False
+        if unresolved_fetch_files:
+            payload_consistent = False
     elif payload_consistent:
         payload_consistent = not only_in_manifests
 
@@ -129,8 +132,9 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
         e = bagit.FileMissing(path)
         if not quiet:
             logger.warning(
-                "%s. Resolve this file reference or re-run with the \"update\" flag set in order to remove this file "
-                "from the manifest." % bdbag.get_named_exception(e))
+                "%s. Resolve this file reference by either 1) adding the missing file to the bag payload or 2) adding "
+                "a remote file reference in fetch.txt. or 3) re-run with the \"update\" flag set in order to remove "
+                "this file from the bag manifest." % bdbag.get_named_exception(e))
     for path in only_on_fs:
         e = bagit.UnexpectedFile(path)
         if not quiet:
