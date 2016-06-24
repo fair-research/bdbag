@@ -1,6 +1,7 @@
 import os
 import json
-import datetime
+from datetime import datetime
+from tzlocal import get_localzone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -150,6 +151,9 @@ def _make_user_ref(name, uri=None, orcid=None):
 
 def _make_isoformat_date(date=None):
     if date:
+        date = date.replace(microsecond=0)
         return date.isoformat()
     else:
-        return datetime.datetime.now().isoformat()
+        now = datetime.now(tz=get_localzone())
+        now = now.replace(microsecond=0)
+        return now.isoformat()
