@@ -14,7 +14,7 @@ setup(
     url='https://github.com/ini-bdds/bdbag/',
     maintainer='USC Information Sciences Institute ISR Division',
     maintainer_email='misd-support@isi.edu',
-    version="0.8.8",
+    version="0.8.9",
     packages=find_packages(),
     package_data={'bdbag': ['profiles/*.*']},
     test_suite='test',
@@ -42,11 +42,11 @@ setup(
         'urlparse'],
     install_requires=['requests',
                       'certifi',
-                      'bagit==1.5.4.dev-1',
+                      'bagit==1.5.4.dev-2',
                       'bagit-profile==1.0.2.dev',
                       'globus-sdk'],
     dependency_links=[
-         "http://github.com/ini-bdds/bagit-python/archive/master.zip#egg=bagit-1.5.4.dev-1",
+         "http://github.com/ini-bdds/bagit-python/archive/master.zip#egg=bagit-1.5.4.dev-2",
          "http://github.com/ini-bdds/bagit-profiles-validator/archive/master.zip#egg=bagit-profile-1.0.2.dev"
     ],
     license='Apache 2.0',

@@ -8,7 +8,7 @@ import unittest
 class BaseTest(unittest.TestCase):
 
     def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = tempfile.mkdtemp(prefix="bdbag_test_")
         shutil.copytree(os.path.abspath(os.path.join('test', 'test-data')), os.path.join(self.tmpdir, 'test-data'))
 
         self.test_data_dir = os.path.join(self.tmpdir, 'test-data', 'test-dir')
