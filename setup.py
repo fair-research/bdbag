@@ -14,13 +14,14 @@ setup(
     url='https://github.com/ini-bdds/bdbag/',
     maintainer='USC Information Sciences Institute ISR Division',
     maintainer_email='misd-support@isi.edu',
-    version="0.9.0",
+    version="0.9.1",
     packages=find_packages(),
     package_data={'bdbag': ['profiles/*.*']},
     test_suite='test',
     entry_points={
         'console_scripts': [
-            'bdbag = bdbag.bdbag_cli:main'
+            'bdbag = bdbag.bdbag_cli:main',
+            'bdbag-utils = bdbag.bdbag_utils:main'
         ],
         'gui_scripts': [
           #  'bdbag-gui = bdbag.bdbag_gui:main',

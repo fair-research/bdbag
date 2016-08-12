@@ -19,6 +19,7 @@ SCHEME_GLOBUS = 'globus'
 SCHEME_FTP = 'ftp'
 SCHEME_SFTP = 'sftp'
 SCHEME_ARK = 'ark'
+SCHEME_TAG = 'tag'
 
 
 def fetch_bag_files(bag, keychain_file):
@@ -43,6 +44,11 @@ def fetch_file(url, size, path, auth):
             if fetch_file(url, size, path, auth):
                 return True
         return False
+    elif SCHEME_TAG == scheme:
+        logger.info("The fetch entry for file %s specifies the tag URL %s. Tag URLs generally represent files that are "
+                    "not directly addressable by URL and therefore cannot be automatically fetched. Such files must be "
+                    "resolved outside of the context of this software." % (path, url))
+        return True
     else:
-        logger.warn(UNIMPLEMENTED % scheme)
+        logger.warning(UNIMPLEMENTED % scheme)
         return False
