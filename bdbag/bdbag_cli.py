@@ -136,6 +136,12 @@ def parse_cli():
                          "The bag must first be extracted and then updated.\n\n")
         sys.exit(2)
 
+    if args.resolve_fetch and is_file:
+        sys.stderr.write("Error: It is not possible to resolve remote files directly into a bag archive. "
+                         "The bag must first be extracted before the %s argument can be specified.\n\n" %
+                         fetch_arg.option_strings)
+        sys.exit(2)
+
     if args.update and args.resolve_fetch:
         sys.stderr.write("Error: The %s argument is not compatible with the %s argument.\n\n" %
                          (update_arg.option_strings, fetch_arg.option_strings))
