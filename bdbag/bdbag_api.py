@@ -290,7 +290,11 @@ def extract_bag(bag_path, output_path=None, temp=False):
             output_path = tempfile.mkdtemp(prefix='bag_')
         elif not output_path:
             output_path = os.path.splitext(bag_path)[0]
-            output_path = ''.join([output_path, '-', time.strftime("%Y-%m-%d_%H_%M_%S")])
+            if os.path.exists(output_path):
+                newpath = ''.join([output_path, '-', time.strftime("%Y-%m-%d_%H_%M_%S")])
+                logger.info("Specified output path %s already exists, moving existing directory to %s" %
+                            (output_path, newpath))
+                shutil.move(output_path, newpath)
         if zipfile.is_zipfile(bag_path):
             logger.info("Extracting ZIP archived bag file: %s" % bag_path)
             with open(bag_path, 'rb') as bag_file:
