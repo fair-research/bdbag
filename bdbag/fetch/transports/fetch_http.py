@@ -2,6 +2,8 @@ import os
 import sys
 import logging
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 import certifi
 import bdbag
 import bdbag.fetch.auth.keychain as keychain
@@ -57,7 +59,7 @@ def get_session(url, auth_config):
                 session = SESSIONS[auth.uri]
                 break
             else:
-                session = requests.session()
+                session = get_new_session()
 
             if auth.auth_type == 'http-basic':
                 session.auth = (auth.auth_params.username, auth.auth_params.password)
@@ -80,7 +82,20 @@ def get_session(url, auth_config):
         except Exception as e:
             logger.warn("Unhandled exception during HTTP(S) authentication: %s" % bdbag.get_named_exception(e))
 
-    return session if session else requests.session()
+    return session if session else get_new_session()
+
+
+def get_new_session():
+    session = requests.session()
+    retries = Retry(connect=5,
+                    read=5,
+                    backoff_factor=1.0,
+                    status_forcelist=[500, 502, 503, 504])
+
+    session.mount('http://', HTTPAdapter(max_retries=retries))
+    session.mount('https://', HTTPAdapter(max_retries=retries))
+
+    return session
 
 
 def get_file(url, output_path, auth_config, headers=None, session=None):
@@ -96,7 +111,7 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
         else:
             headers.update(HEADERS)
         logger.info("Attempting HTTP GET of file from URL: %s" % url)
-        r = session.get(url, headers=headers, stream=True, verify=certifi.where())
+        r = session.get(url, headers=headers, stream=True, verify=certifi.where(), timeout=(5, 30))
         if r.status_code == 401:
             session = get_session(url)
             r = session.get(url, headers=headers, stream=True, verify=certifi.where())
