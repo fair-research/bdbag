@@ -111,9 +111,9 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
         else:
             headers.update(HEADERS)
         logger.info("Attempting HTTP GET of file from URL: %s" % url)
-        r = session.get(url, headers=headers, stream=True, verify=certifi.where(), timeout=(5, 30))
+        r = session.get(url, headers=headers, stream=True, verify=certifi.where())
         if r.status_code == 401:
-            session = get_session(url)
+            session = get_session(url, auth_config)
             r = session.get(url, headers=headers, stream=True, verify=certifi.where())
         if r.status_code != 200:
             logger.error('HTTP GET Failed for URL: %s' % url)
