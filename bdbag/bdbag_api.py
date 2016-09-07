@@ -256,7 +256,7 @@ def archive_bag(bag_path, bag_archiver):
         tarmode = 'w:bz2'
     elif bag_archiver == 'zip':
         zfp = os.path.join(os.path.dirname(bag_path), fn)
-        zf = zipfile.ZipFile(zfp, 'w', allowZip64=True)
+        zf = zipfile.ZipFile(zfp, 'w', compression=zipfile.ZIP_DEFLATED, allowZip64=True)
         for dirpath, dirnames, filenames in os.walk(bag_path):
             for name in filenames:
                 filepath = os.path.normpath(os.path.join(dirpath, name))
