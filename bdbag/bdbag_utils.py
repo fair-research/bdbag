@@ -33,8 +33,12 @@ def create_remote_file_manifest(args):
                                               filename=fn)
                 rfm_entry["length"] = os.path.getsize(input_file)
                 rfm_entry.update(calculate_file_hashes(input_file, args.checksum))
-                rfm.append(rfm_entry)
-        rfm_file.write(json.dumps(rfm, indent=4))
+                if args.streaming_json:
+                    rfm_file.writelines(''.join([json.dumps(rfm_entry), '\n']))
+                else:
+                    rfm.append(rfm_entry)
+        if not args.streaming_json:
+            rfm_file.write(json.dumps(rfm, indent=4))
         logger.info("Successfully created remote file manifest: %s" % args.output_file)
 
 
@@ -99,9 +103,9 @@ def parse_cli():
 
     subparsers = parser.add_subparsers( dest="subparser", help="sub-command help")
     parser_crfm = \
-        subparsers.add_parser('create-remote-file-manifest',
-                              aliases=['create-rfm'],
-                              help='create-remote-file-manifest help')
+        subparsers.add_parser('create-rfm',
+                              description="Create a remote file manifest by recursively scanning a directory.",
+                              help='create-rfm help')
 
     parser_crfm.add_argument(
         '--input-path', metavar="<path>", required=True,
@@ -137,6 +141,12 @@ def parse_cli():
              " the %s argument. If \'append-path\' is specified, only the filename will be appended. If \"none\" is "
              "specified, the %s argument will be used as-is." %
              (base_url_arg.option_strings, base_url_arg.option_strings))
+
+    streaming_json_arg = parser_crfm.add_argument(
+        "--streaming-json", action='store_true', default=False,
+        help=str("If \'streaming-json\' is specified, one JSON tuple object per line will be output to the output file."
+                 "Enable this option if the default behavior produces a file that is prohibitively large to parse "
+                 "entirely into system memory."))
 
     parser_crfm.set_defaults(func=create_remote_file_manifest)
 

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 CHUNK_SIZE = 1024 * 1024
 SESSIONS = dict()
-HEADERS = {'Connection': 'close'}
+HEADERS = {'Connection': 'keep-alive'}
 
 
 def validate_auth_config(auth):
@@ -110,7 +110,7 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
             headers = HEADERS
         else:
             headers.update(HEADERS)
-        logger.info("Attempting HTTP GET of file from URL: %s" % url)
+        logger.info("Attempting GET from URL: %s" % url)
         r = session.get(url, headers=headers, stream=True, verify=certifi.where())
         if r.status_code == 401:
             session = get_session(url, auth_config)
@@ -118,14 +118,14 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
         if r.status_code != 200:
             logger.error('HTTP GET Failed for URL: %s' % url)
             logger.error("Host %s responded:\n\n%s" % (urlsplit(url).netloc,  r.text))
-            logger.warn('File [%s] transfer failed. ' % output_path)
+            logger.warn('File transfer failed: [%s]' % output_path)
         else:
             logger.debug("Transferring file %s to %s" % (url, output_path))
             with open(output_path, 'wb') as data_file:
                 for chunk in r.iter_content(CHUNK_SIZE):
                     data_file.write(chunk)
                 data_file.flush()
-            logger.info('File [%s] transfer successful.' % output_path)
+            logger.info('File transfer successful: [%s]' % output_path)
             return True
 
     except requests.exceptions.RequestException as e:

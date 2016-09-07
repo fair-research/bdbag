@@ -396,18 +396,30 @@ def validate_bag_serialization(bag_path, bag_profile=None, bag_profile_path=None
 def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False):
     logger.info("Generating remote file references from %s" % remote_file_manifest)
     remote_files = dict()
-    with open(remote_file_manifest) as fetch_in:
-        fetch = json.load(fetch_in, object_pairs_hook=OrderedDict)
-        for row in fetch:
-            row['filename'] = ''.join(['data', '/', row['filename']])
+    with open(remote_file_manifest, "r") as fetch_in:
+        line = fetch_in.readline().lstrip()
+        fetch_in.seek(0)
+        is_json_stream = False
+        if line.startswith('{'):
+            fetch = fetch_in
+            is_json_stream = True
+        else:
+            fetch = json.load(fetch_in, object_pairs_hook=OrderedDict)
+
+        for entry in fetch:
+            if is_json_stream:
+                entry = json.loads(entry, object_pairs_hook=OrderedDict)
+
+            entry['filename'] = ''.join(['data', '/', entry['filename']])
+
             add = True
             for alg in bagit.CHECKSUM_ALGOS:
-                if alg in row:
+                if alg in entry:
                     if strict and alg not in algs:
                         add = False
                     if add:
                         bagit.make_remote_file_entry(
-                            remote_files, row['filename'], row['url'], row['length'], alg, row[alg])
+                            remote_files, entry['filename'], entry['url'], entry['length'], alg, entry[alg])
 
         fetch_in.close()
 
