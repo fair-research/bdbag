@@ -40,6 +40,8 @@ def add_provenance(obj, created_on=None, created_by=None, authored_on=None, auth
     if retrieved_by:
         obj.update(retrieved_by)
 
+    return obj
+
 
 def add_aggregate(obj, uri, mediatype=None, conforms_to=None, bundled_as=None):
 
@@ -59,6 +61,8 @@ def add_aggregate(obj, uri, mediatype=None, conforms_to=None, bundled_as=None):
     aggregates.append(aggregate)
     obj['aggregates'] = aggregates
 
+    return aggregate
+
 
 def add_annotation(obj, about, uri=None, content=None):
 
@@ -75,6 +79,8 @@ def add_annotation(obj, about, uri=None, content=None):
 
     annotations.append(annotation)
     obj['annotations'] = annotations
+
+    return annotation
 
 
 def make_bundled_as(obj, uri, folder=None, filename=None):
@@ -94,6 +100,8 @@ def make_bundled_as(obj, uri, folder=None, filename=None):
         bundled_as['folder'] = folder
 
     obj['bundledAs'] = bundled_as
+
+    return bundled_as
 
 
 def make_created_by(name, uri=None, orcid=None):
