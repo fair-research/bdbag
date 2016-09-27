@@ -358,7 +358,7 @@ def validate_bag_profile(bag_path, profile_path=None):
 
     # Instantiate a profile, supplying its URI.
     if not profile_path:
-        profile_path = bag.info.get('BagIt-Profile-Identifier', None)
+        profile_path = bag.info.get(bdbag.BAG_PROFILE_TAG, None)
         if not profile_path:
             raise bagit_profile.ProfileValidationError("Bag does not contain a BagIt-Profile-Identifier")
 
