@@ -430,6 +430,6 @@ def resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE):
     bag = bagit.Bag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=True):
         logger.info("Attempting to resolve remote file references from fetch.txt...")
-        return fetcher.fetch_bag_files(bag, keychain_file)
+        return fetcher.fetch_bag_files(bag, keychain_file, force)
     else:
         return True

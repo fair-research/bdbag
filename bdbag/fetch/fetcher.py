@@ -22,11 +22,14 @@ SCHEME_ARK = 'ark'
 SCHEME_TAG = 'tag'
 
 
-def fetch_bag_files(bag, keychain_file):
+def fetch_bag_files(bag, keychain_file, force=False):
 
     success = True
     auth = read_keychain(keychain_file)
+    unresolved_fetch_files = set(bag.files_to_be_fetched()) - set(bag.payload_files())
     for url, size, path in bag.fetch_entries():
+        if not force and (os.path.normpath(path) not in unresolved_fetch_files):
+            continue
         output_path = os.path.normpath(os.path.join(bag.path, path))
         success = fetch_file(url, size, output_path, auth)
     cleanup_transports()
