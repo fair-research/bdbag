@@ -29,6 +29,7 @@ def fetch_bag_files(bag, keychain_file):
     for url, size, path in bag.fetch_entries():
         output_path = os.path.normpath(os.path.join(bag.path, path))
         success = fetch_file(url, size, output_path, auth)
+    cleanup_transports()
     return success
 
 
@@ -52,3 +53,7 @@ def fetch_file(url, size, path, auth):
     else:
         logger.warning(UNIMPLEMENTED % scheme)
         return False
+
+
+def cleanup_transports():
+    fetch_http.cleanup()

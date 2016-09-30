@@ -82,7 +82,15 @@ def get_session(url, auth_config):
         except Exception as e:
             logger.warn("Unhandled exception during HTTP(S) authentication: %s" % bdbag.get_named_exception(e))
 
-    return session if session else get_new_session()
+    if not session:
+        url_parts = urlsplit(url)
+        base_url = str("%s://%s" % (url_parts.scheme, url_parts.netloc))
+        session = SESSIONS.get(base_url, None)
+        if not session:
+            session = get_new_session()
+            SESSIONS[base_url] = session
+
+    return session
 
 
 def get_new_session():
@@ -132,3 +140,7 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
         logger.error('HTTP Request Exception: %s' % (bdbag.get_named_exception(e)))
 
     return False
+
+
+def cleanup():
+    SESSIONS.clear()
