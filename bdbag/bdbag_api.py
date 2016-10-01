@@ -125,6 +125,10 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
             payload_consistent = False
         if unresolved_fetch_files:
             payload_consistent = False
+        for url, size, path in bag.fetch_entries():
+            output_path = os.path.normpath(os.path.join(bag.path, path))
+            if os.path.exists(output_path) and os.path.getsize(output_path) != int(size):
+                payload_consistent = False
     elif payload_consistent:
         payload_consistent = not only_in_manifests
 
