@@ -1,4 +1,3 @@
-import sys
 import os
 import errno
 import logging
@@ -198,8 +197,11 @@ def make_bag(bag_path,
     bag_algorithms = algs if algs else bag_config.get('bag_algorithms', ['md5', 'sha256'])
     bag_processes = bag_config.get('bag_processes', 1)
 
-    # bag metadata merge order: config->metadata_file->metadata
-    bag_metadata = bag_config.get('bag_metadata', {}).copy()
+    # bag metadata merge order: config(if new, else if update use existing)->metadata_file->metadata
+    if not update:
+        bag_metadata = bag_config.get('bag_metadata', {}).copy()
+    else:
+        bag_metadata = bag.info
     bag_metadata.update(read_metadata(metadata_file))
     if metadata:
         bag_metadata.update(metadata)
