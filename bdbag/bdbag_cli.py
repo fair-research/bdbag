@@ -225,14 +225,16 @@ def main():
         if args.resolve_fetch:
             if args.validate == 'full':
                 sys.stderr.write(ASYNC_TRANSFER_VALIDATION_WARNING)
-            bdb.resolve_fetch(path, True if args.resolve_fetch == 'all' else False, args.keychain_file)
+            bdb.resolve_fetch(path,
+                              force=True if args.resolve_fetch == 'all' else False,
+                              keychain_file=args.keychain_file)
 
         if args.validate:
             if is_file:
                 temp_path = bdb.extract_bag(path, temp=True)
             bdb.validate_bag(temp_path if temp_path else path,
-                             True if args.validate == 'fast' else False,
-                             args.config_file)
+                             fast=True if args.validate == 'fast' else False,
+                             config_file=args.config_file)
 
         if args.archiver:
             archive = bdb.archive_bag(path, args.archiver)

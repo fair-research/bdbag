@@ -1,4 +1,3 @@
-import os
 import sys
 import logging
 from bdbag.fetch.transports import *
@@ -22,15 +21,25 @@ SCHEME_ARK = 'ark'
 SCHEME_TAG = 'tag'
 
 
-def fetch_bag_files(bag, keychain_file, force=False):
+def fetch_bag_files(bag, keychain_file, force=False, callback=None):
 
     success = True
     auth = read_keychain(keychain_file)
+    current = 0
+    total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     for url, size, path in bag.fetch_entries():
         output_path = os.path.normpath(os.path.join(bag.path, path))
         if not force and os.path.exists(output_path) and os.path.getsize(output_path) == int(size):
-            continue
-        success = fetch_file(url, size, output_path, auth)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Not fetching already present file: %s" % output_path)
+            pass
+        else:
+            success = fetch_file(url, size, output_path, auth)
+        if callback:
+            current += 1
+            if not callback(current, total):
+                logger.warn("Fetch cancelled by user...")
+                break
     cleanup_transports()
     return success
 

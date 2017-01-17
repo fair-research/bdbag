@@ -332,7 +332,7 @@ def extract_bag(bag_path, output_path=None, temp=False):
     return output_path
 
 
-def validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE):
+def validate_bag(bag_path, fast=False, callback=None, config_file=bdbag.DEFAULT_CONFIG_FILE):
     config = read_config(config_file)
     bag_config = config['bag_config']
     bag_processes = bag_config.get('bag_processes', 1)
@@ -340,7 +340,7 @@ def validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE):
     try:
         logger.info("Validating bag: %s" % bag_path)
         bag = bagit.Bag(bag_path)
-        bag.validate(bag_processes, fast=fast)
+        bag.validate(bag_processes if not callback else 1, fast=fast, callback=callback)
         logger.info("Bag %s is valid" % bag_path)
     except bagit.BagIncompleteError as e:
         logger.warning("BagIncompleteError: %s %s", e,
@@ -353,6 +353,9 @@ def validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE):
         for d in e.details:
             errors.append(bdbag.get_named_exception(d))
         raise bagit.BagValidationError('\nError: '.join(errors))
+    except bagit.InterruptedError as e:
+        logger.warn(bdbag.get_named_exception(e))
+        raise e
     except Exception as e:
         raise RuntimeError("Unhandled exception while validating bag: %s" % e)
 
@@ -432,10 +435,10 @@ def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False
     return remote_files
 
 
-def resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE):
+def resolve_fetch(bag_path, force=False, callback=None, keychain_file=DEFAULT_KEYCHAIN_FILE):
     bag = bagit.Bag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=True):
         logger.info("Attempting to resolve remote file references from fetch.txt...")
-        return fetcher.fetch_bag_files(bag, keychain_file, force)
+        return fetcher.fetch_bag_files(bag, keychain_file, force, callback)
     else:
         return True
