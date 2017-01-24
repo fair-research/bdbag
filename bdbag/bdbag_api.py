@@ -78,6 +78,25 @@ def cleanup_bag(bag_path, save=False):
         shutil.rmtree(bag_path)
 
 
+def revert_bag(bag_path):
+    if not is_bag(bag_path):
+        logger.warn("Cannot revert the bag %s because it is not a bag directory!")
+        return
+
+    for path in os.listdir(bag_path):
+        if os.path.basename(os.path.abspath(path)) != 'data':
+            if path.startswith(("bag-info", "bagit", "fetch", "manifest-", "tagmanifest-")):
+                os.remove(os.path.join(bag_path, path))
+
+    data_path = os.path.join(bag_path, 'data')
+    for path in os.listdir(data_path):
+        old_path = os.path.join(data_path, path)
+        new_path = os.path.join(bag_path, path)
+        logger.debug("Bag revert: moving payload file %s to %s", old_path, new_path)
+        os.rename(old_path, new_path)
+    os.rmdir(data_path)
+
+
 def prune_bag_manifests(bag):
     manifests_pruned = False
     manifests = list(bag.manifest_files())

@@ -42,6 +42,12 @@ def parse_cli():
         '--update', action="store_true",
         help="Update an existing bag dir, regenerating manifests and fetch.txt if necessary.")
 
+    revert_arg = standard_args.add_argument(
+        '--revert', action="store_true",
+        help="Revert an existing bag directory back to a normal directory, deleting all bag metadata files. "
+             "Payload files in the \'data\' directory will be copied back to the directory root, and the \'data\' "
+             "directory will be deleted.")
+
     standard_args.add_argument(
         "--archiver", choices=['zip', 'tar', 'tgz'], help="Archive a bag using the specified format.")
 
@@ -136,6 +142,11 @@ def parse_cli():
                          "The bag must first be extracted and then updated.\n\n")
         sys.exit(2)
 
+    if args.revert and is_file:
+        sys.stderr.write("Error: An existing bag archive cannot be reverted in-place. "
+                         "The bag must first be extracted and then reverted.\n\n")
+        sys.exit(2)
+
     if args.resolve_fetch and is_file:
         sys.stderr.write("Error: It is not possible to resolve remote files directly into a bag archive. "
                          "The bag must first be extracted before the %s argument can be specified.\n\n" %
@@ -181,6 +192,15 @@ def parse_cli():
     if BAG_METADATA and not args.update and is_bag:
         sys.stderr.write("Error: Adding or modifying metadata %s for an existing bag requires the %s argument "
                          "in order to apply any changes.\n\n" % (BAG_METADATA, update_arg.option_strings))
+        sys.exit(2)
+
+    if args.revert and not is_bag:
+        sys.stderr.write("Error: The directory %s is not a bag and therefore cannot be reverted.\n\n" % path)
+        sys.exit(2)
+
+    if args.revert and args.update and is_bag:
+        sys.stderr.write("Error: The %s argument is not compatible with the %s argument.\n\n" %
+                         (revert_arg.option_strings, update_arg.option_strings))
         sys.exit(2)
 
     return args, is_bag, is_file
@@ -248,6 +268,9 @@ def main():
                     temp_path = bdb.extract_bag(path, temp=True)
             profile = bdb.validate_bag_profile(temp_path if temp_path else path)
             bdb.validate_bag_serialization(archive if archive else path, profile)
+
+        if args.revert:
+            bdb.revert_bag(path)
 
     except Exception as e:
         result = 1

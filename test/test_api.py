@@ -60,6 +60,28 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_named_exception(e))
 
+    def test_revert_bag(self):
+        logger.info(self.getTestHeader('revert bag'))
+        try:
+            bdb.revert_bag(self.test_bag_dir)
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'bag-info.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'bagit.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'manifest-sha1.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'manifest-md5.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'manifest-sha1.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'manifest-sha256.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'manifest-sha512.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'tagmanifest-md5.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'tagmanifest-sha1.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'tagmanifest-sha256.txt')))
+            self.assertFalse(ospif(ospj(self.test_bag_dir, 'tagmanifest-sha512.txt')))
+            self.assertTrue(ospif(ospj(self.test_bag_dir, 'README.txt')))
+            self.assertTrue(ospif(ospj(self.test_bag_dir, ospj('test1', 'test1.txt'))))
+            self.assertTrue(ospif(ospj(self.test_bag_dir, ospj('test2', 'test2.txt'))))
+            self.assertFalse(ospe(ospj(self.test_bag_dir, 'data')))
+        except Exception as e:
+            self.fail(bdbag.get_named_exception(e))
+
     def test_update_bag_add_file(self):
         logger.info(self.getTestHeader('update bag add file'))
         try:
