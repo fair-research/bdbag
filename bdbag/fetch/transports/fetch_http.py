@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 import logging
 import requests
 from requests.adapters import HTTPAdapter
@@ -15,7 +16,7 @@ else:
 
 logger = logging.getLogger(__name__)
 
-CHUNK_SIZE = 1024 * 1024
+CHUNK_SIZE = 1024 * 10240
 SESSIONS = dict()
 HEADERS = {'Connection': 'keep-alive'}
 
@@ -128,12 +129,19 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
             logger.error("Host %s responded:\n\n%s" % (urlsplit(url).netloc,  r.text))
             logger.warn('File transfer failed: [%s]' % output_path)
         else:
+            total = 0
+            start = datetime.datetime.now()
             logger.debug("Transferring file %s to %s" % (url, output_path))
             with open(output_path, 'wb') as data_file:
-                for chunk in r.iter_content(CHUNK_SIZE):
+                for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
                     data_file.write(chunk)
-                data_file.flush()
-            logger.info('File transfer successful: [%s]' % output_path)
+                    total += len(chunk)
+            elapsed = datetime.datetime.now() - start
+            totalSecs = elapsed.total_seconds()
+            totalMBs = total / (1024 * 1024)
+            throughput = str("%.3f MB/second" % (totalMBs / totalSecs if totalSecs > 0 else 0.001))
+            logger.info('File [%s] transfer successful. %.3f MB transferred at %s. Elapsed time: %s. ' %
+                        (output_path, totalMBs, throughput, elapsed))
             return True
 
     except requests.exceptions.RequestException as e:

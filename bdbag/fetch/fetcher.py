@@ -1,4 +1,5 @@
 import sys
+import datetime
 import logging
 from bdbag.fetch.transports import *
 from bdbag.fetch.auth.keychain import *
@@ -27,6 +28,7 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None):
     auth = read_keychain(keychain_file)
     current = 0
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
+    start = datetime.datetime.now()
     for url, size, path in bag.fetch_entries():
         output_path = os.path.normpath(os.path.join(bag.path, path))
         if not force and os.path.exists(output_path) and os.path.getsize(output_path) == int(size):
@@ -40,6 +42,8 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None):
             if not callback(current, total):
                 logger.warn("Fetch cancelled by user...")
                 break
+    elapsed = datetime.datetime.now() - start
+    logger.info("Fetch complete. Elapsed time: %s" % elapsed)
     cleanup_transports()
     return success
 
