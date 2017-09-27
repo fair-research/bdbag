@@ -6,6 +6,8 @@
 The *bdbag* utilities are a collection of software programs for working with
 [BagIt](https://datatracker.ietf.org/doc/draft-kunze-bagit/) packages that conform the BDDS Bagit and BDDS Bagit/RO profiles.
 
+The *bdbag* [profiles](https://github.com/ini-bdds/bdbag/tree/master/profiles) specify the use of the fetch.txt file, require serialization, and specify what manafests must be provided with a *bdbag*.
+
 These utilities combine various other components such as the BDDS forks of the
 [Bagit-Python](https://github.com/ini-bdds/bagit-python) bag creation utility and the BDDS
 [Bagit-Profiles-Validator](https://github.com/ini-bdds/bagit-profiles-validator)
