@@ -177,5 +177,6 @@ class TestCliArgParsing(BaseTest):
         self._test_bad_argument_error_handling(
             args, ["Specifying", "requires the", "argument"])
 
+
 if __name__ == '__main__':
     unittest.main()

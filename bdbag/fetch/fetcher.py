@@ -40,7 +40,7 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None):
         if callback:
             current += 1
             if not callback(current, total):
-                logger.warn("Fetch cancelled by user...")
+                logger.warning("Fetch cancelled by user...")
                 break
     elapsed = datetime.datetime.now() - start
     logger.info("Fetch complete. Elapsed time: %s" % elapsed)
@@ -53,6 +53,8 @@ def fetch_file(url, size, path, auth):
     scheme = urlsplit(url, allow_fragments=True).scheme.lower()
     if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
         return fetch_http.get_file(url, path, auth)
+    if SCHEME_FTP == scheme:
+        return fetch_ftp.get_file(url, path, auth)
     elif SCHEME_GLOBUS == scheme:
         return fetch_globus.get_file(url, path, auth)
     elif SCHEME_ARK == scheme:

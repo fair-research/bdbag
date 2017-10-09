@@ -308,6 +308,15 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_named_exception(e))
 
+    def test_resolve_fetch_ftp(self):
+        logger.info(self.getTestHeader('test resolve fetch ftp'))
+        try:
+            bdb.resolve_fetch(self.test_bag_fetch_ftp_dir)
+            bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_named_exception(e))
+
 #    def test_resolve_fetch_globus(self):
 #        # TODO
 #        pass

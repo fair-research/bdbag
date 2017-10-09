@@ -26,6 +26,8 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_bag_fetch_http_dir))
         self.test_bag_fetch_ark_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ark')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ark_dir))
+        self.test_bag_fetch_ftp_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ftp')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_ftp_dir))
 
     def tearDown(self):
         if os.path.isdir(self.tmpdir):

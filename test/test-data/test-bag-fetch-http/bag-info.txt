@@ -2,4 +2,4 @@ Bag-Software-Agent: bdbag.py <http://github.com/ini-bdds/bdbag>
 BagIt-Profile-Identifier: https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json
 Bagging-Date: 2016-05-03
 Contact-Name: mdarcy
-Payload-Oxum: 890.4
+Payload-Oxum: 789.2

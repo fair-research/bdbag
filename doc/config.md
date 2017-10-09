@@ -27,6 +27,7 @@ configuration sub-sections) which control various default behaviors of the softw
 |*bag_metadata*|This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.|*bag_config*
 |*bag_processes*|This is a numeric value representing the default number of concurrent processes to use when calculating checksums.|*bag_config*
 |||
+
 Below is a sample *bdbag.json* file:
 ```json
 {
@@ -56,9 +57,8 @@ configure the authentication method and credentials to use for a specifed base U
 | --- | --- |
 |*uri*|This is the base URI used to specify when authentication should be used.  When a URI reference is encountered in fetch.txt, an attempt will be made to match it against all base URIs specified in *keychain.json* and if a match is found, the request will be authenticated before file retrieval is attempted.
 |*auth_uri*|This is the authentication URI used to establish an authenticated session for the specified *uri*.  This is currently assumed to be an HTTP(s) protocol URL.
-|*auth_type*|This is the authentication type used by the server specified by *auth_uri*.  Currently, only the values "http-basic" and "http-form" are supported using the HTTP(S) protocol.
-|*auth_method*|This is the authentication-specific method to use during session establishment.  Currently only the values "get" and "post" are supported when using the *auth_type* of "http-basic" or "http-form".
-|*auth_params*|This is a child object containing authentication-type specific parameters used in session establishment.  It will generally contain credential information such as a username and password or certificate parameters, but could also contain other parameters required for authentication using the given *auth_type* mechanism.
+|*auth_type*|This is the authentication type used by the server specified by *auth_uri*.  Currently, only the values "http-basic", "http-form" and "cookie" are supported when using the HTTP(S) protocol, and "token" when using Globus Transfer protocol.
+|*auth_params*|This is a child object containing authentication-type specific parameters used in session establishment.  It will generally contain credential information such as a username and password, a cookie value, or client certificate parameters. It can also contain other parameters required for authentication with the given *auth_type* mechanism; for example the HTTP method (i.e., `GET` or `POST`) to use with HTTP Basic Auth.
 |||
 
 Below is a sample *keychain.json* file:
@@ -67,8 +67,7 @@ Below is a sample *keychain.json* file:
     {
         "uri":"https://some.host.com/somefiles",
         "auth_uri":"https://some.host.com/authenticate",
-        "auth_type": "form",
-        "auth_method": "post",
+        "auth_type": "http-form",
         "auth_params": {
             "username": "me",
             "password": "mypassword",
@@ -76,6 +75,31 @@ Below is a sample *keychain.json* file:
             "password_field": "password"
         }
     },
+    {
+        "uri":"https://another.host.com/somefiles",
+        "auth_uri":"https://another.host.com/authenticate",
+        "auth_type": "http-basic",
+        "auth_params": {
+            "auth_method":"POST",
+            "username": "me",
+            "password": "mypassword"
+        }
+    },
+    {
+        "uri":"https://yet-another.host.com/",
+        "auth_type": "cookie",
+        "auth_params": {
+            "cookies": [ "a_cookie_name=zxyfw1231_secret"]
+        }
+    },
+    {
+        "uri": "ftp://ftp.ftp-host.net/",
+        "auth_type": "ftp-basic",
+        "auth_params": {
+            "username": "anonymous",
+            "password": "bdbag@users.noreply.github.com"
+        }
+    },       
     {
         "uri":"globus://",
         "auth_type": "token",
