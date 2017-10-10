@@ -67,7 +67,7 @@ def get_file(url, output_path, auth_config, credentials=None):
         return True
 
     except Exception as e:
-        logger.error('FTP Request Exception: %s' % (bdbag.get_named_exception(e)))
+        logger.error('FTP Request Exception: %s' % (bdbag.get_typed_exception(e)))
         logger.warning('File transfer failed: [%s]' % output_path)
 
     return False

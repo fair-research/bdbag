@@ -5,7 +5,7 @@ import hashlib
 import logging
 import json
 from bdbag import bdbag_api as bdb
-from bdbag import get_named_exception as gne
+from bdbag import get_typed_exception as gte
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +171,7 @@ def main():
             args.func(args)
     except Exception as e:
         result = 1
-        error = "Error: %s" % gne(e)
+        error = "Error: %s" % gte(e)
 
     finally:
         if result != 0:

@@ -32,8 +32,8 @@ def resolve(ark):
         try:
             info = json.loads(r.text, object_pairs_hook=OrderedDict)
         except Exception as e:
-            logger.warn("Unable to parse ARK resolution result, a MINID or other supported JSON metadata structure "
-                        "was not found. Exception: %s" % bdbag.get_named_exception(e))
+            logger.warning("Unable to parse ARK resolution result, a MINID or other supported JSON metadata structure "
+                           "was not found. Exception: %s" % bdbag.get_typed_exception(e))
         # need a better way to validate minid response structure
         locations = info.get('locations', list())
         for location in locations:
@@ -44,7 +44,7 @@ def resolve(ark):
     if urls:
         logger.info("The identifier %s resolved into the following locations: %s" % (ark, urls))
     else:
-        logger.warn("No file locations were found for identifier %s" % ark)
+        logger.warning("No file locations were found for identifier %s" % ark)
 
     return urls
 

@@ -274,7 +274,7 @@ def main():
 
     except Exception as e:
         result = 1
-        error = "Error: %s" % bdbag.get_named_exception(e)
+        error = "Error: %s" % bdbag.get_typed_exception(e)
 
     finally:
         if temp_path:

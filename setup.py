@@ -42,13 +42,8 @@ setup(
                       'tzlocal',
                       'requests',
                       'certifi',
-                      'bagit==1.5.4.dev-4',
-                      'bagit-profile==1.0.2.dev',
+                      'bagit>=1.6.0b8',
                       'globus-sdk'],
-    dependency_links=[
-         "http://github.com/ini-bdds/bagit-python/archive/master.zip#egg=bagit-1.5.4.dev-4",
-         "http://github.com/ini-bdds/bagit-profiles-validator/archive/master.zip#egg=bagit-profile-1.0.2.dev"
-    ],
     license='Apache 2.0',
     classifiers=[
         'Intended Audience :: Science/Research',
