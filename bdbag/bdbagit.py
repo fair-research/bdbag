@@ -91,7 +91,7 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
             if 'Bagging-Date' not in bag_info:
                 bag_info['Bagging-Date'] = date.strftime(date.today(), "%Y-%m-%d")
             if 'Bag-Software-Agent' not in bag_info:
-                bag_info['Bag-Software-Agent'] = 'bagit.py v%s <%s>' % (VERSION, PROJECT_URL)
+                bag_info['Bag-Software-Agent'] = 'bdbagit.py v%s <%s>' % (VERSION, PROJECT_URL)
 
             bag_info['Payload-Oxum'] = "%s.%s" % (total_bytes, total_files)
             _make_tag_file('bag-info.txt', bag_info)
@@ -191,25 +191,11 @@ class UnexpectedRemoteFile(ManifestErrorDetail):
         return _("%s exists in fetch.txt but is not in manifest") % self.path
 
 
-class BagIncompleteError(BagError):
-    def __init__(self, total_files=None, total_bytes=None, file_count=None, byte_count=None):
-        super(BagIncompleteError, self).__init__()
-
-        self.total_files = total_files
-        self.total_bytes = total_bytes
-        self.file_count = file_count
-        self.byte_count = byte_count
-
-    def __str__(self):
-        return _("Found %s files and %s bytes on disk; expected %s files and %s bytes." %
-                 (self.total_files, self.total_bytes, self.file_count, self.byte_count))
-
-
 class BDBag(Bag):
     remote_entries = {}
 
     def __init__(self, path=None):
-        super(BDBag, self).__init__(path)
+        Bag.__init__(self, path)
 
     def files_to_be_fetched(self, normalize=True):
         for f, size, path in self.fetch_entries():
@@ -219,27 +205,27 @@ class BDBag(Bag):
                 yield path
 
     def compare_manifests_with_fs_and_fetch(self):
-        files_on_fs = set(self.payload_files())
-        files_in_manifest = set(self.payload_entries().keys())
-        files_in_fetch = set(self.files_to_be_fetched())
+        # We compare the filenames after Unicode normalization so we can
+        # reliably detect normalization changes after bag creation:
+        files_on_fs = set(normalize_unicode(i) for i in self.payload_files())
+        files_in_manifest = set(normalize_unicode(i) for i in self.payload_entries().keys())
+        files_in_fetch = set(normalize_unicode(i) for i in self.files_to_be_fetched())
 
-        if self.version == "0.97":
+        if self.version_info >= (0, 97):
             files_in_manifest = files_in_manifest | set(self.missing_optional_tagfiles())
 
-        return (list(files_in_manifest - files_on_fs - files_in_fetch),
-                list(files_on_fs - files_in_manifest),
-                list(files_in_fetch - files_in_manifest))
+        only_on_fs = list()
+        only_in_manifest = list()
+        only_in_fetch = list(files_in_fetch - files_in_manifest)
 
-    def compare_fetch_with_fs(self):
-        """Compares the fetch entries with the files actually
-           in the payload, and returns a list of all the files
-           that still need to be fetched.
-        """
+        for i in files_in_manifest.difference(files_on_fs):
+            if i not in files_in_fetch:
+                only_in_manifest.append(self.normalized_manifest_names[i])
 
-        files_on_fs = set(self.payload_files())
-        files_in_fetch = set(self.files_to_be_fetched())
+        for i in files_on_fs.difference(files_in_manifest):
+            only_on_fs.append(self.normalized_filesystem_names[i])
 
-        return list(files_in_fetch - files_on_fs)
+        return only_in_manifest, only_on_fs, only_in_fetch
 
     def _sync_remote_entries_with_existing_fetch(self):
         payload_entries = self.payload_entries()
@@ -337,6 +323,8 @@ class BDBag(Bag):
         self._validate_structure()
         self._validate_bagittxt()
 
+        # this check is bypassed because it attempts to validate URL scheme and netloc,
+        # and bdbag supports non-standard URLs, e.g., "ark:/"
         # self.validate_fetch()
 
         self._validate_contents(processes=processes, fast=fast, completeness_only=completeness_only, callback=callback)
@@ -348,7 +336,7 @@ class BDBag(Bag):
             raise BagValidationError(_('Fast validation requires bag-info.txt to include Payload-Oxum'))
 
         if fast:
-            # Perform the fast file count + size check so we can fail early:
+            # Perform the fast file count + size check so we can fail early, but only if fast is specified:
             self._validate_oxum()
             return
 

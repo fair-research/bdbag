@@ -60,7 +60,7 @@ def get_file(url, output_path, auth_config, credentials=None):
         elapsed = datetime.datetime.now() - start
         total = os.path.getsize(output_path)
         totalSecs = elapsed.total_seconds()
-        totalMBs = total / (1024 * 1024)
+        totalMBs = float(total) / float((1024 * 1024))
         throughput = str("%.3f MB/second" % (totalMBs / totalSecs if totalSecs > 0 else 0.001))
         logger.info('File [%s] transfer successful. %.3f MB transferred at %s. Elapsed time: %s. ' %
                     (output_path, totalMBs, throughput, elapsed))

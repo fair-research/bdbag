@@ -42,7 +42,7 @@ setup(
                       'tzlocal',
                       'requests',
                       'certifi',
-                      'bagit>=1.6.0b8',
+                      'bagit>=1.6.1',
                       'globus-sdk'],
     license='Apache 2.0',
     classifiers=[

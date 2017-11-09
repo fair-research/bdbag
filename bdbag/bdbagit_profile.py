@@ -206,7 +206,7 @@ class Profile(object):
     # Check the Bag's version, and if it's not in the list of allowed versions,
     # throw an exception.
     def validate_accept_bagit_version(self, bag):
-        if bag.version not in self.profile['Accept-BagIt-Version']:
+        if bag._version not in self.profile['Accept-BagIt-Version']:
             raise ProfileValidationError("Bag version does is not in list of allowed values.")
         return True
 

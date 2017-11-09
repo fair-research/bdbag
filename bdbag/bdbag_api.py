@@ -362,18 +362,16 @@ def validate_bag(bag_path, fast=False, callback=None, config_file=bdbag.DEFAULT_
         bag = bdbagit.BDBag(bag_path)
         bag.validate(bag_processes if not callback else 1, fast=fast, callback=callback)
         logger.info("Bag %s is valid" % bag_path)
-    except bdbagit.BagIncompleteError as e:
-        logger.warning("BagIncompleteError: %s %s", e,
-                       "This validation error may be transient if the bag contains unresolved remote file references "
-                       "from a fetch.txt file. In this case the bag is incomplete but not necessarily invalid. "
-                       "Resolve remote file references (if any) and re-validate.")
-        raise e
     except bdbagit.BagValidationError as e:
+        logger.warning("BagValidationError: %s %s", e,
+                       "\nNOTE: A BagValidationError may be transient if the bag contains unresolved remote file "
+                       "references from a fetch.txt file. In this case the bag is incomplete but not necessarily "
+                       "invalid. Resolve remote file references (if any) and re-validate.")
         errors = list()
         for d in e.details:
             errors.append(bdbag.get_typed_exception(d))
         raise bdbagit.BagValidationError('\nError: '.join(errors))
-    except bdbagit.InterruptedError as e:
+    except bdbagit.BaggingInterruptedError as e:
         logger.warning(bdbag.get_typed_exception(e))
         raise e
     except Exception as e:

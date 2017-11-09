@@ -23,7 +23,7 @@ def resolve(ark):
     urls = []
     resolver_url = ''.join((RESOLVER_URL, '/', ark))
     logger.info("Attempting to resolve %s into a valid set of URLs." % ark)
-    r = requests.get(resolver_url, headers={'accept': 'application/json', 'Connection': 'close'})
+    r = requests.get(resolver_url, headers={'accept': 'application/json', 'Connection': 'keep-alive'})
     if r.status_code != 200:
         logger.error('HTTP GET Failed for: %s' % r.url)
         logger.error("Host %s responded:\n\n%s" % (urlsplit(r.url).netloc, r.text))
