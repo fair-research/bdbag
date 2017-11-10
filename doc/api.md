@@ -80,6 +80,7 @@ Checks if the path denoted by `bag_path` is a directory that contains a valid ba
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to the bag location.
+
 **Returns**: `boolean` - Whether the path specified by `bag_path` contains a valid bag structure.
 
 -----
@@ -102,6 +103,7 @@ For the given `bag` object, removes any file and tagfile manifests for checksums
 | Param | Type | Description |
 | --- | --- | --- |
 |bag|`bag`|a`bag` object such as that returned by `make_bag`
+
 **Returns**: `boolean` - If any manifests were pruned or not.
 
 -----
@@ -116,6 +118,7 @@ Checks if the payload files in the bag's `data` directory are consistent with th
 |bag|`bag`|a`bag` object such as that returned by `make_bag`
 |skip_remote|`boolean`|do not include any of the bag's remote file entries or `fetch.txt` entries in the check
 |quiet|`boolean`|do not emit any logging messages if inconsistencies are encountered
+
 **Returns**: `boolean` - If all payload files can be accounted for either locally or as remote entries in `fetch.txt`,
 and that there are no additional files present that are not listed in either `fetch.txt` or the bag's file manifests.
 
@@ -155,6 +158,7 @@ use for a given base URL. The documentation for `keychain.json` can be found [he
 |bag_path|`string`|A normalized, absolute path to a bag directory.
 |force|`boolean`|A `boolean` value indicating whether to retrieve all listed files in `fetch.txt` or only those which are not currently found in the bag payload directory.
 |keychain_file|`string`|A normalized, absolute path to a `keychain.json` file, or if not specified, the default location will be used: `~/.bdbag/keychain.json`
+
 **Returns**: `boolean` - If all remote files were resolved successfully or not. Also returns `True` if the function invocation resulted in a NOOP.
 
 -----
@@ -170,6 +174,7 @@ compliant, i.e., complies with the rules of **"Section 4: Serialization"** of th
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
 |bag_archiver|`string`|One of the following case-insensitive string values: `zip`, `tar`, or `tgz`.
+
 **Returns**: `string` - The normalized, absolute path of the directory of the created archive file.
 
 -----
@@ -183,6 +188,7 @@ Extracts the bag specified by `bag_path` to the based directory specified by `ou
 |bag_path|`string`|A normalized, absolute path to a bag directory.
 |output_path|`string`|A normalized, absolute path to a base directory where the bag should be extracted.
 |temp|`boolean`|A `boolean` value indicating whether to extract this bag to a temporary directory or not. If `True`, overrides the `output_path` variable, if specified.
+
 **Returns**: `string` - The normalized, absolute path of the directory where the bag was extracted.
 
 -----
@@ -200,6 +206,7 @@ payload directory and compared against the checksum values in the file manifest(
 |bag_path|`string`|A normalized, absolute path to a bag directory or bag archive file.
 |fast|`boolean`|If `True` only check payload contents against `Payload-Oxum`, otherwise re-calculate checksums for all payload files.
 |config_file|`string`|A normalized, absolute path to a *bdbag* configuration file. Uses the default configuration file if  not specified.
+
 **Returns**: `boolean` - If the bag passed validation or not.
 
 -----
@@ -214,6 +221,7 @@ If a `profile_path` is specified, the bag is validated against that profile. Oth
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory or bag archive file.
 |bag_profile|`string`|A normalized, absolute path to a [BagIt-Profile](https://github.com/ruebot/bagit-profiles) file.
+
 **Returns**: `boolean` - If the bag passed profile validation or not.
 
 -----
@@ -226,6 +234,7 @@ constraints, if any.
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag archive file.
 |bag_profile|`string`|A normalized, absolute path to a [BagIt-Profile](https://github.com/ruebot/bagit-profiles) file.
+
 **Returns**: `boolean` - If the bag passed profile serialization validation or not.
 
 -----
