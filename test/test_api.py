@@ -254,18 +254,11 @@ class TestAPI(BaseTest):
     def test_validate_incomplete_bag_full(self):
         logger.info(self.getTestHeader('test full validation incomplete bag'))
         try:
-            if sys.version_info > (3,):
-                self.assertRaisesRegex(
-                    bdbagit.BagValidationError,
-                    "^\[ChecksumMismatch\].*(minid_v0[.]1_Nov_2015[.]pdf:|bdbag-profile[.]json)",
-                    bdb.validate_bag,
-                    self.test_bag_incomplete_dir, fast=False)
-            else:
-                self.assertRaisesRegexp(
-                    bdbagit.BagValidationError,
-                    "^\[ChecksumMismatch\].*(minid_v0[.]1_Nov_2015[.]pdf:|bdbag-profile[.]json)",
-                    bdb.validate_bag,
-                    self.test_bag_incomplete_dir, fast=False)
+            self.assertRaisesRegex(
+                bdbagit.BagValidationError,
+                "^Bag validation failed:.*(minid_v0[.]1_Nov_2015[.]pdf:|bdbag-profile[.]json)",
+                bdb.validate_bag,
+                self.test_bag_incomplete_dir, fast=False)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
