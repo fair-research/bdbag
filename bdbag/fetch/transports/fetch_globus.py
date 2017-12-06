@@ -64,7 +64,8 @@ def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
             return False
 
         # initialize transfer client
-        client = globus_sdk.TransferClient(token=token)
+        authorizer = globus_sdk.AccessTokenAuthorizer(token)
+        client = globus_sdk.TransferClient(authorizer=authorizer)
 
         # Activate source endpoint
         logger.debug("Activating source endpoint: %s" % src_endpoint)
