@@ -14,6 +14,7 @@ The command-line interface is built upon the API in this manner and can be used 
     * [read_metadata(metadata_file)](#read_metadata)
     * [is_bag(bag_path)](#is_bag)
     * [cleanup_bag(bag_path)](#cleanup_bag)
+    * [revert_bag(bag_path)](#revert_bag)
     * [prune_bag_manifests(bag)](#prune_bag_manifests)
     * [check_payload_consistency(bag, skip_remote=False, quiet=False)](#check_payload_consistency)
     * [make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE)](#make_bag)
@@ -95,6 +96,16 @@ Deletes the directory tree denoted by `bag_path`.
 
 -----
 
+<a name="revert_bag"></a>
+#### revert_bag(bag_path)
+Revert an existing bag directory back to a normal directory, deleting all bag metadata files. Payload files in the `data` directory will be moved back to the directory root, and the `data` directory will be deleted.
+
+| Param | Type | Description |
+| --- | --- | --- |
+|bag_path|`string`|A normalized, absolute path to a bag directory.
+
+-----
+
 <a name="prune_bag_manifests"></a>
 #### prune_bag_manifests(bag) ⇒ `boolean`
 For the given `bag` object, removes any file and tagfile manifests for checksums that are not listed in that object's
@@ -102,7 +113,7 @@ For the given `bag` object, removes any file and tagfile manifests for checksums
 
 | Param | Type | Description |
 | --- | --- | --- |
-|bag|`bag`|a`bag` object such as that returned by `make_bag`
+|bag|`bag`|a `bag` object such as that returned by `make_bag`
 
 **Returns**: `boolean` - If any manifests were pruned or not.
 
@@ -115,7 +126,7 @@ Checks if the payload files in the bag's `data` directory are consistent with th
 
 | Param | Type | Description |
 | --- | --- | --- |
-|bag|`bag`|a`bag` object such as that returned by `make_bag`
+|bag|`bag`|a `bag` object such as that returned by `make_bag`
 |skip_remote|`boolean`|do not include any of the bag's remote file entries or `fetch.txt` entries in the check
 |quiet|`boolean`|do not emit any logging messages if inconsistencies are encountered
 

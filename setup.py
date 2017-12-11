@@ -8,12 +8,16 @@
 
 from setuptools import setup, find_packages
 
+
 setup(
     name="bdbag",
-    description="Big Data Bag Utility",
+    description="BigData Bag Utilities",
+    long_description=
+    "For more information on *bdbag*, visit: https://github.com/ini-bdds/bdbag/.\n\n"
+    "For more information on the GUI frontend for *bdbag*, visit: https://github.com/ini-bdds/bdbag_gui/.\n",
     url='https://github.com/ini-bdds/bdbag/',
-    maintainer='USC Information Sciences Institute ISR Division',
-    maintainer_email='misd-support@isi.edu',
+    maintainer='USC Information Sciences Institute, Informatics Systems Research Division',
+    maintainer_email='isrd-support@isi.edu',
     version="1.1.0",
     packages=find_packages(),
     package_data={'bdbag': ['profiles/*.*']},
@@ -37,12 +41,18 @@ setup(
         'tempfile',
         'tarfile',
         'zipfile',
-        'urlparse'],
+        'urlparse',
+        'pytz',
+        'tzlocal',
+        'requests',
+        'certifi',
+        'bagit'
+    ],
     install_requires=['pytz',
                       'tzlocal',
                       'requests',
                       'certifi',
-                      'bagit>=1.6.1',
+                      'bagit==1.6.2',
                       'globus-sdk'],
     license='Apache 2.0',
     classifiers=[
