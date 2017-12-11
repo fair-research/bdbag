@@ -27,8 +27,14 @@ Enhanced bag support includes:
 * [Python 2.7](https://www.python.org/downloads/release/python-2711/) is the minimum Python version required.
 * The code and dependencies are currently compatible with Python 3.
 
-
 ### Installation
+The latest *bdbag* version is available on PyPi and can be installed using `pip`:
+
+```sh
+pip install bdbag
+```
+
+### Installation from Source
 Download the current [bdbag](https://github.com/ini-bdds/bdbag/archive/master.zip) source code from GitHub or
 alternatively clone the source from GitHub if you have *git* installed:
 
@@ -44,7 +50,7 @@ Note that if you want to make **bdbag** available to all users on the system, yo
 ```sh
 python setup.py install
 ```
-If you are on a Unix-based system (including MacOS) you should execute the above command as **root** or use **sudo**.
+If you are on a Unix-based system (including MacOSX) you should execute the above command as **root** or use **sudo**.
 
 ### Testing
 The unit tests can be run by invoking the following command from the root of the **bdbag** source code directory:
