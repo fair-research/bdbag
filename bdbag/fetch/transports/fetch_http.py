@@ -94,7 +94,7 @@ def get_session(url, auth_config):
                 break
 
         except Exception as e:
-            logger.warning("Unhandled exception during HTTP(S) authentication: %s" % bdbag.get_named_exception(e))
+            logger.warning("Unhandled exception during HTTP(S) authentication: %s" % bdbag.get_typed_exception(e))
 
     if not session:
         url_parts = urlsplit(url)
@@ -158,7 +158,7 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
             return True
 
     except requests.exceptions.RequestException as e:
-        logger.error('HTTP Request Exception: %s' % (bdbag.get_named_exception(e)))
+        logger.error('HTTP Request Exception: %s' % (bdbag.get_typed_exception(e)))
 
     return False
 

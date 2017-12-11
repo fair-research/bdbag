@@ -45,7 +45,7 @@ def parse_cli():
     revert_arg = standard_args.add_argument(
         '--revert', action="store_true",
         help="Revert an existing bag directory back to a normal directory, deleting all bag metadata files. "
-             "Payload files in the \'data\' directory will be copied back to the directory root, and the \'data\' "
+             "Payload files in the \'data\' directory will be moved back to the directory root, and the \'data\' "
              "directory will be deleted.")
 
     standard_args.add_argument(
@@ -111,8 +111,7 @@ def parse_cli():
         '--debug', action="store_true", help="Enable debug logging output.")
 
     standard_args.add_argument(
-        '--bag-path', metavar="<path>", required=True,
-        help="Path to a bag directory or bag archive file.")
+        'path', metavar="<path>", help="Path to a bag directory or bag archive file.")
 
     metadata_args = parser.add_argument_group('Bag metadata arguments')
     for header in bagit.STANDARD_BAG_INFO_HEADERS:
@@ -122,7 +121,7 @@ def parse_cli():
 
     bdb.configure_logging(level=logging.ERROR if args.quiet else (logging.DEBUG if args.debug else logging.INFO))
 
-    path = os.path.abspath(args.bag_path)
+    path = os.path.abspath(args.path)
     if not os.path.exists(path):
         sys.stderr.write("Error: file or directory not found: %s\n\n" % path)
         sys.exit(2)
@@ -211,7 +210,7 @@ def main():
     sys.stderr.write('\n')
 
     args, is_bag, is_file = parse_cli()
-    path = os.path.abspath(args.bag_path)
+    path = os.path.abspath(args.path)
 
     archive = None
     temp_path = None
@@ -274,7 +273,7 @@ def main():
 
     except Exception as e:
         result = 1
-        error = "Error: %s" % bdbag.get_named_exception(e)
+        error = "Error: %s" % bdbag.get_typed_exception(e)
 
     finally:
         if temp_path:

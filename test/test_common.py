@@ -1,5 +1,6 @@
 import os
 import gc
+import sys
 import shutil
 import tempfile
 import unittest
@@ -8,6 +9,10 @@ import unittest
 class BaseTest(unittest.TestCase):
 
     def setUp(self):
+
+        if sys.version_info < (3,):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
         self.tmpdir = tempfile.mkdtemp(prefix="bdbag_test_")
         shutil.copytree(os.path.abspath(os.path.join('test', 'test-data')), os.path.join(self.tmpdir, 'test-data'))
 

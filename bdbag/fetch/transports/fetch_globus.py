@@ -36,7 +36,7 @@ def authenticate(url, auth_config):
             if auth.auth_type == 'token':
                 return auth.auth_params.transfer_token, auth.auth_params.local_endpoint
         except Exception as e:
-            logger.warn("Unhandled exception getting Globus token: %s" % bdbag.get_named_exception(e))
+            logger.warn("Unhandled exception getting Globus token: %s" % bdbag.get_typed_exception(e))
 
     return None, None
 
@@ -94,6 +94,6 @@ def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
         return True
 
     except Exception as e:
-        logger.error('Globus transfer request exception: %s' % bdbag.get_named_exception(e))
+        logger.error('Globus transfer request exception: %s' % bdbag.get_typed_exception(e))
 
     return False

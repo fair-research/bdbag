@@ -66,7 +66,7 @@ def read_keychain(keychain_file, create_default=True):
                 "Unable to create default keychain file. A keychain file is required for authentication when "
                 "retrieving files from protected remote resources. Either ensure that the default keychain "
                 "file %s can be created or provide an a different path to a valid keychain file. Error: %s" %
-                (DEFAULT_KEYCHAIN_FILE, bdbag.get_named_exception(e)))
+                (DEFAULT_KEYCHAIN_FILE, bdbag.get_typed_exception(e)))
     if os.path.isfile(keychain_file):
         with open(keychain_file) as kf:
             keychain = kf.read()

@@ -11,13 +11,13 @@ with an error message indicating the incompatibility.
 ----
 
 ### Usage
-The only mandatory argument is `--bag-path`, all other arguments are optional.
+The only mandatory argument is a valid local path to a bag directory or bag archive file, all other arguments are optional.
 
 #### Basic arguments:
 ```
-usage: bdbag --bag-path <path>
-
+usage: bdbag
 [--update]
+[--revert]
 [--archiver {zip,tar,tgz}]
 [--checksum {md5,sha1,sha256,sha512,all}]
 [--skip-manifests]
@@ -32,6 +32,7 @@ usage: bdbag --bag-path <path>
 [--quiet]
 [--debug]
 [--help]
+<path>
 ```
 
 #### Extended arguments:
@@ -54,8 +55,8 @@ These extended arguments are mapped directly to metadata fields in bag-info.txt:
 ### Argument descriptions:
 
 ----
-##### `--bag-path <path>`
-Mandatory path to a bag directory or bag archive file.
+##### `<path>`
+Mandatory local path to a bag directory or bag archive file.
 
 If the target path is a directory and no bag structure exists in that path, a bag structure will be created "in-place".
 In order for a bag to be created in-place, the calling user must have write permissions for the specified directory.
@@ -65,6 +66,10 @@ If the target path is an archive file and no other conflicting arguments are spe
 ----
 ##### `--update`
 Update an existing bag dir, recalculating tag-manifest checksums and regenerating manifests and fetch.txt if necessary.
+
+----
+##### `--revert`
+Revert an existing bag directory back to a normal directory, deleting all bag metadata files. Payload files in the `data` directory will be moved back to the directory root, and the `data` directory will be deleted.
 
 ----
 ##### `--archiver {zip,tar,tgz}`
@@ -143,8 +148,9 @@ This following table enumerates the various arguments and compatibility modes.
 
 | Argument | Context | Description |
 |---:| :---: | --- |
-|`--bag-path`|all|Required argument
+|`<path>`|all|Required argument.
 |`--update`|bag dir only|An existing bag archive cannot be updated in-place. The bag must first be extracted and then updated.
+|`--revert`|bag dir only|Only a bag directory may be reverted to a non-bag directory.
 |`--archiver`|bag dir only|A bag archive cannot be created from an existing bag archive.
 |`--checksum`|bag dir only|A checksum manifest cannot be added to an existing bag archive. The bag must be extracted, updated, and re-archived.
 |`--prune-manifests`|bag dir only, update only|Unused manifests may only be pruned from an existing bag during an update operation.
@@ -157,6 +163,7 @@ This following table enumerates the various arguments and compatibility modes.
 |`--metadata-file`|bag dir only, create or update only|A metadata config file can be specified whenever a bag is created or updated.
 |`--remote-file-manifest`|bag dir only, create or update only|A remote-file-manifest can be specified whenever a bag is created or updated.
 |any extended argument|bag dir only, create or update only|Any of the standard bag metadata extended arguments, e.g., `--source-organization` or `--contact-email` may be specified during create or update of a bag directory, but not a bag archive.
+
 ----
 ### Examples
 
@@ -174,10 +181,10 @@ drwxr-xr-x. 24 mdarcy 4096 Apr 20 19:53 ..
 -rw-rw-r--.  1 mdarcy   56 Apr 20 19:53 test2.txt
 ```
 
-Executing `bdbag --bag-path ./test_bag` generates the following output:
+Executing `bdbag ./test_bag` generates the following output:
 ```
 
-[mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/
+[mdarcy@bdds-dev ~]$ bdbag ./test_bag/
 
 2016-04-20 20:02:14,711 - INFO - creating bag for directory /home/mdarcy/test_bag
 2016-04-20 20:02:14,712 - INFO - creating data dir
@@ -228,7 +235,7 @@ together into a single invocation when creating or updating a bag, and it is gen
 
 Here's how that would be done using the same starting bag directory:
 ```
-[mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --validate fast --validate-profile --archive tgz
+[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --validate fast --validate-profile --archive tgz
 
 2016-04-20 20:19:18,869 - INFO - creating bag for directory /home/mdarcy/test_bag
 2016-04-20 20:19:18,869 - INFO - creating data dir
@@ -292,7 +299,7 @@ drwxrwxr-x. 3 mdarcy 4096 Apr 20 20:19 ..
 ```
 Now we can execute an `--update` command to pick up the additional file.  We can also add a new checksum manifest with `--checksum sha1` and change the archive encoding to ZIP format:
 ```
-[mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --update --checksum sha1 --archive zip
+[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --update --checksum sha1 --archive zip
 
 2016-04-21 15:55:09,880 - INFO - Updating bag: /home/mdarcy/test_bag
 2016-04-21 15:55:09,881 - INFO - updating manifest-sha256.txt
@@ -337,7 +344,7 @@ For example, given the contents of the following metadata file called "test-meta
 ```
 Creating a bag that includes this metadata would be executed like this:
 ```
-[mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --metadata-file ./test-metadata.json
+[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --metadata-file ./test-metadata.json
 
 2016-04-22 11:54:19,705 - INFO - Reading bag metadata from file /home/mdarcy/test-metadata.json
 2016-04-22 11:54:19,706 - INFO - creating bag for directory /home/mdarcy/test_bag
@@ -405,7 +412,7 @@ Here's an example of what a `remote-file-manifest` looks like:
 ```
 Updating our previously created bag to add these remote files would be done like this:
 ```
-[mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --update --remote-file-manifest ./test-fetch-manifest.json
+[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --update --remote-file-manifest ./test-fetch-manifest.json
 
 2016-04-22 12:16:30,412 - INFO - Updating bag: /home/mdarcy/test_bag
 2016-04-22 12:16:30,412 - INFO - Generating remote file references from ./test-fetch-manifest.json
@@ -476,7 +483,7 @@ For any given bag, it is important to establish the bag's validity before making
 contents. If one were to receive, for example, the bag containing remote file references from the previous sample and
 attempt to validate it, the following output would be produced:
 ```
-[mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --validate fast
+[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --validate fast
 
 2016-04-22 12:39:57,781 - INFO - Validating bag: /home/mdarcy/test_bag
 2016-04-22 12:39:57,782 - WARNING - BagIncompleteError: Found 2 files and 101 bytes on disk; expected 4 files and 633684 bytes. This validation error may be transient if the bag contains unresolved remote file references from a fetch.txt file. In this case the bag is incomplete but not necessarily invalid. Resolve remote file references (if any) and re-validate.
@@ -485,7 +492,7 @@ Error: [BagIncompleteError] Found 2 files and 101 bytes on disk; expected 4 file
 ```
 Resolving remote references on the example bag would yield:
 ```
-[mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --resolve-fetch all
+[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --resolve-fetch all
 
 2016-04-22 12:33:20,045 - INFO - Attempting to resolve remote file references from fetch.txt...
 2016-04-22 12:33:20,054 - INFO - Starting new HTTPS connection (1): raw.githubusercontent.com
@@ -524,7 +531,7 @@ drwxrwxr-x. 3 mdarcy   4096 Apr 22 12:16 ..
 ```
 Finally, we can run `--validate full` on the bag in order to verify that the bag is now both complete and valid:
 ```
-[mdarcy@bdds-dev ~]$ bdbag --bag-path ./test_bag/ --validate full
+[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --validate full
 
 2016-04-22 12:37:52,317 - INFO - Validating bag: /home/mdarcy/test_bag
 2016-04-22 12:37:52,318 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/test1.txt
