@@ -53,7 +53,7 @@ setup(
                       'requests',
                       'certifi',
                       'bagit==1.6.2',
-                      'globus-sdk'],
+                      'globus-sdk==1.3.0'],
     license='Apache 2.0',
     classifiers=[
         'Intended Audience :: Science/Research',
