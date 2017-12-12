@@ -8,9 +8,9 @@ The *bdbag* utilities are a collection of software programs for working with
 
 The *bdbag* [profiles](https://github.com/ini-bdds/bdbag/tree/master/profiles) specify the use of the fetch.txt file, require serialization, and specify what manifests must be provided with a *bdbag*.
 
-These utilities combine various other components such as the BDDS forks of the
-[Bagit-Python](https://github.com/ini-bdds/bagit-python) bag creation utility and the BDDS
-[Bagit-Profiles-Validator](https://github.com/ini-bdds/bagit-profiles-validator)
+These utilities combine various other components such as the
+[Bagit-Python](https://github.com/LibraryOfCongress/bagit-python) bag creation utility and the
+[Bagit-Profiles-Validator](https://github.com/ruebot/bagit-profiles)
 utility into a single, easy to use software package.
 
 Enhanced bag support includes:
