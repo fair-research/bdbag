@@ -22,6 +22,8 @@ Enhanced bag support includes:
 * Built-in profile validation.
 * Built-in support for creation of bags with [Bagit/RO profile](https://github.com/ResearchObject/bagit-ro) compatibility.
 
+An experimental Graphical User Interface (GUI) for *bdbag* can be found [here](https://github.com/ini-bdds/bdbag_gui).
+
 ### Dependencies
 
 * [Python 2.7](https://www.python.org/downloads/release/python-2711/) is the minimum Python version required.
