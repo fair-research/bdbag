@@ -252,7 +252,11 @@ def make_bag(bag_path,
         remote_files = None
         if remote_file_manifest:
             remote_files = generate_remote_files_from_manifest(remote_file_manifest, bag_algorithms)
-        bag = bdbagit.make_bag(bag_path, bag_metadata, bag_processes, bag_algorithms, remote_files)
+        bag = bdbagit.make_bag(bag_path,
+                               bag_info=bag_metadata,
+                               processes=bag_processes,
+                               checksums=bag_algorithms,
+                               remote_entries=remote_files)
         logger.info('Created bag: %s' % bag_path)
 
     return bag

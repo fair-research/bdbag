@@ -162,16 +162,16 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    def test_update_bag_remote(self):
-        logger.info(self.getTestHeader('update bag add remote file manifest'))
+    def _test_bag_remote(self, update=False):
         try:
-            bag = bdb.make_bag(self.test_bag_dir,
-                               update=True,
+            bag_dir = self.test_data_dir if not update else self.test_bag_dir
+            bag = bdb.make_bag(bag_dir,
+                               update=update,
                                remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
             output = self.stream.getvalue()
             self.assertIsInstance(bag, bdbagit.BDBag)
             self.assertExpectedMessages(['Generating remote file references from', 'test-fetch-manifest.json'], output)
-            fetch_file = ospj(self.test_bag_dir, 'fetch.txt')
+            fetch_file = ospj(bag_dir, 'fetch.txt')
             self.assertTrue(ospif(fetch_file))
             with open(fetch_file) as ff:
                 fetch_txt = ff.read()
@@ -182,6 +182,14 @@ class TestAPI(BaseTest):
                 'ark:/88120/r8059v\t632860\tdata/minid_v0.1_Nov_2015.pdf', fetch_txt)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
+
+    def test_create_bag_remote(self):
+        logger.info(self.getTestHeader('create bag add remote file manifest'))
+        self._test_bag_remote()
+
+    def test_update_bag_remote(self):
+        logger.info(self.getTestHeader('update bag add remote file manifest'))
+        self._test_bag_remote(True)
 
     def test_archive_bag_zip(self):
         logger.info(self.getTestHeader('archive bag zip format'))
