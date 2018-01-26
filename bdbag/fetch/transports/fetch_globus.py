@@ -55,12 +55,12 @@ def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
             token, dest_endpoint = authenticate(url, auth_config)
         if token is None:
             logger.warn("A valid Globus access token is required to create transfers. "
-                        "Check keychain.cfg for valid parameters.")
+                        "Check keychain.json for valid parameters.")
             return False
 
         if dest_endpoint is None:
             logger.warn("A valid Globus destination endpoint must be specified. "
-                        "Check keychain.cfg for valid parameters.")
+                        "Check keychain.json for valid parameters.")
             return False
 
         # initialize transfer client

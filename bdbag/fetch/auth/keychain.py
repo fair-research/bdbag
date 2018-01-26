@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_KEYCHAIN_FILE = os.path.join(DEFAULT_KEYCHAIN_PATH, 'keychain.json')
 DEFAULT_KEYCHAIN = [
     {
-        "uri": "https://",
+        "uri": "https://<hostname>/<path>",
         "auth_uri": "",
         "auth_type": "http-form",
         "auth_params": {
@@ -25,7 +25,7 @@ DEFAULT_KEYCHAIN = [
         }
     },
     {
-        "uri": "ftp://",
+        "uri": "ftp://<hostname>/<path>",
         "auth_type": "ftp-basic",
         "auth_params": {
             "username": "",
@@ -33,7 +33,7 @@ DEFAULT_KEYCHAIN = [
         }
     },
     {
-        "uri": "globus://",
+        "uri": "globus://<endpoint>/<path>",
         "auth_type": "token",
         "auth_params": {
             "local_endpoint": "",
