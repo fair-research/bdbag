@@ -454,7 +454,6 @@ drwxrwxr-x. 3 mdarcy 4096 Apr 22 12:16 ..
 
 [mdarcy@bdds-dev ~]$ cat test_bag/fetch.txt
 
-URL     LENGTH  FILENAME
 https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json     723     data/bdbag-profile.json
 ark:/88120/r8059v       632860  data/minid_v0.1_Nov_2015.pdf
 
