@@ -17,17 +17,17 @@ pleae do notify us of any problems, comments, or suggestions by filing an issue.
 
 This program creates a big data bag (BDBag) containing a supplied set of (descriptive string, Minid) pairs,
 each of which is assumed to reference a single BDBag. This BDBag contains:
-* A *data/README* file listing the files referenced by the Minids
-* A *metadata/manifest.json* with a Research Object describing the BDBag's contents
-* A *fetch.txt* file with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
+* A `data/README` file providing some description, and listing the files referenced by the Minids
+* A `metadata/manifest.json` with a Research Object describing the BDBag's contents
+* A `fetch.txt` file with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
 
 ```sh
 python meta.py -m MINIDS -b BAGNAME [-r REMOTE_FILE_MANIFEST] [-V] [-h]
 ```
-* `MINIDS` : Name of file in which each line is a comma-separated <descriptive string>, <minid> pair
-* *BAGNAME* : Name of directory for new BDBag
-* *REMOTE_FILE_MANIFEST* : Name of file in which to place remote file manifest. By default, "t.json"
-* *-V* : If provided, then once bag is created, fetch bag contents and validate it.
+* `MINIDS` : Name of the input file that lists the minids to be integrated. Each line is a comma-separated <descriptive string>, <minid> pair
+* `BAGNAME` : Name of the directory that is to be created for the new BDBag
+* `REMOTE_FILE_MANIFEST` : Name of the temporary file in which to place the remote file manifest before passing it to the **bdbag** command. By default, "t.json" is used.
+* `-V` : If provided, then once bag is created, fetch bag contents and validate it.
 
 Many limitations
 * Essentially no error checking.
