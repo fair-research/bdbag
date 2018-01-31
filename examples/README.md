@@ -15,8 +15,8 @@ pleae do notify us of any problems, comments, or suggestions by filing an issue.
 
 ### The `meta.py` example
 
-This program creates a big data bag (BDBag) containing a supplied set of (descriptive string, Minid) pairs,
-each of which is assumed to reference a single BDBag. This BDBag contains:
+This program creates a new big data bag (BDBag) containing a supplied set of (descriptive string, Minid) pairs,
+each of which is assumed to reference a single BDBag.  That is, a "meta-bag." This BDBag contains:
 * A `data/README` file providing some description, and listing the files referenced by the Minids
 * A `metadata/manifest.json` with a Research Object describing the BDBag's contents
 * A `fetch.txt` file with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
