@@ -21,6 +21,8 @@ each of which is assumed to reference a single BDBag.  That is, a "meta-bag." Th
 * A `metadata/manifest.json` with a Research Object describing the BDBag's contents
 * A `fetch.txt` file with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
 
+![Image of the whole thing](images/MetaBag.pdf)
+
 ```sh
 python meta.py -m MINIDS -b BAGNAME [-r REMOTE_FILE_MANIFEST] [-V] [-h]
 ```
