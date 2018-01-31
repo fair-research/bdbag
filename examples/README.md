@@ -24,7 +24,7 @@ each of which is assumed to reference a single BDBag. This BDBag contains:
 ```sh
 python meta.py -m MINIDS -b BAGNAME [-r REMOTE_FILE_MANIFEST] [-V] [-h]
 ```
-* *MINIDS* : Name of file in which each line is a comma-separated <descriptive string>, <minid> pair
+* `MINIDS` : Name of file in which each line is a comma-separated <descriptive string>, <minid> pair
 * *BAGNAME* : Name of directory for new BDBag
 * *REMOTE_FILE_MANIFEST* : Name of file in which to place remote file manifest. By default, "t.json"
 * *-V* : If provided, then once bag is created, fetch bag contents and validate it.
