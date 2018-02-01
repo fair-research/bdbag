@@ -21,9 +21,6 @@ each of which is assumed to reference a single BDBag.  That is, a "meta-bag." Th
 * A `metadata/manifest.json` with a Research Object describing the BDBag's contents
 * A `fetch.txt` file with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
 
-##![Image of the whole thing](https://github.com/ianfoster/bdbag/blob/master/examples/images/MetaBags.png)
-![Image of the whole thing](images/MetaBags.png)
-
 ```sh
 python meta.py -m MINIDS -b BAGNAME [-r REMOTE_FILE_MANIFEST] [-V] [-h]
 ```
@@ -31,6 +28,14 @@ python meta.py -m MINIDS -b BAGNAME [-r REMOTE_FILE_MANIFEST] [-V] [-h]
 * `BAGNAME` : Name of the directory that is to be created for the new BDBag
 * `REMOTE_FILE_MANIFEST` : Name of the temporary file in which to place the remote file manifest before passing it to the **bdbag** command. By default, "t.json" is used.
 * `-V` : If provided, then once bag is created, fetch bag contents and validate it.
+
+In the following image, we show a request to create a new BDBag, `MYBAG`, that is to contain
+the bags listed in the file `MYMINIDS`. The new BDBag contains the usual files that are to be
+found in a BDBag, with the `fetch.txt` file containing the Minids that can be used to fetch
+their contents and the `data/manifest.json` containing descriptive metadata.
+
+![Image of the whole thing](images/MetaBags.png)
+
 
 Many limitations
 * Essentially no error checking.
