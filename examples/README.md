@@ -32,10 +32,10 @@ python meta.py -m MINIDS -b BAGNAME [-r REMOTE_FILE_MANIFEST] [-V] [-h]
 In the following image, we show a request to create a new BDBag, `MYBAG`, that is to contain
 the bags listed in the file `MYMINIDS`. The new BDBag contains the usual files that are to be
 found in a BDBag, with the `fetch.txt` file containing the Minids that can be used to fetch
-their contents and the `data/manifest.json` containing descriptive metadata.
+their contents and the `data/manifest.json` containing descriptive metadata. The `data/README` file
+contains helpful background information.
 
 ![Image of the whole thing](images/MetaBags.png)
-
 
 Many limitations
 * Essentially no error checking.
