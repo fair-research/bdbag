@@ -13,6 +13,8 @@ pleae do notify us of any problems, comments, or suggestions by filing an issue.
 * [Python 2.7](https://www.python.org/downloads/release/python-2711/) is the minimum Python version required.
 * The code and dependencies are currently compatible with Python 3.
 
+---
+
 ### The `meta.py` example
 
 This program creates a new big data bag (BDBag) containing a supplied set of (descriptive string, Minid) pairs,
