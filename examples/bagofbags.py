@@ -7,11 +7,10 @@
 # -- A metadata/manifest.json with a Research Object describing the BDBag's contents
 # -- A fetch.txt file with the info required to fetch the sub-bags into 'data' (standard BDBag stuff)
 #
-# Usage: python bagofbags.py -m MINIDS -b BAGNAME [-V]
+# Usage: python bagofbags.py -m MINIDS -b BAGNAME [-V] [-q] [-d]
 #   MINIDS = name of file, in which each line is a comma-separated <descriptive string>, <minid> pair
 #   BAGNAME = name of directory for new BDBag
 #   -V : If provided, then once bag is created, fetch bag contents and validate it.
-#   -d : (default 1) if >0, write some log info
 #
 # Runs with >Python 2.7, AFAIK
 #
@@ -154,7 +153,7 @@ def generate_remote_manifest_file(minid_fields, remote_manifest_filepath):
         entries = list()
         for (minid, _, _, filename, checksum, size) in minid_fields:
             entry = {
-                'url'      : NAME2THING + minid,
+                'url'      : minid,
                 'filename' : filename,
                 'length'   : size,
                 'sha256'   : checksum
