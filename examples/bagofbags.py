@@ -8,7 +8,7 @@
 # -- A fetch.txt file with the info required to fetch the sub-bags into 'data' (standard BDBag stuff)
 #
 # Usage: python bagofbags.py -m MINIDS -b BAGNAME [-V] [-q] [-d]
-#   MINIDS = name of file, in which each line is a comma-separated <descriptive string>, <minid> pair
+#   MINIDS = name of file containing a set of Minids, one per line
 #   BAGNAME = name of directory for new BDBag
 #   -V : If provided, then once bag is created, fetch bag contents and validate it.
 #
@@ -108,7 +108,11 @@ def get_minid_fields(minid):
     locations = minid_json['locations']
     link = locations[0]['link']
     filename = os.path.basename(link)
-    return( (minid_json['checksum'], link, filename) )
+    try:
+        title = str(minid_json['titles'][0]['title'])
+    except:
+        title = ''
+    return( (minid_json['checksum'], title, link, filename) )
 
 
 # Fetch the sub-bag file into a temporary directory and determine its size
@@ -118,20 +122,13 @@ def get_size(link):
     return(size) 
 
 
-def prepare_minid(description, minid):
-    (checksum, link, filename) = get_minid_fields(minid)
-    size = get_size(link)
-    filename = description.replace(' ', '_') + '_' + filename
-    return( (minid, description, link, filename, checksum, size) )
-
-
 def extract_fields(minids):
     results = []
-    for line in minids:
-        (description, minid) = line.split(',')
+    for minid in minids:
         minid = minid.strip()
-        entry = prepare_minid(description, minid)
-        results += [entry]
+        (checksum, title, link, filename) = get_minid_fields(minid)
+        size = get_size(link)
+        results += [(minid, title, link, filename, checksum, size)]
     return(results)
 
 
@@ -179,8 +176,8 @@ def write_readme(filename, minid_fields):
         e_writer.write('This is a Big Data bag (BDBag: https://github.com/ini-bdds/bdbag)\n')
         e_writer.write('that itself contains ' + str(len(minid_fields)) + ' Minid-referenced BDBags, as follows:\n\n')
         for entry in minid_fields:
-            (minid, description, link, filename, checksum, size) = entry
-            e_writer.write(minid + ' (' + description + '): ' + link + '\n')
+            (minid, title, link, filename, checksum, size) = entry
+            e_writer.write(minid + ' (' + title + '): ' + link + '\n')
 
 
 #----------------------------------------------------------------------------------------------------------------
@@ -230,7 +227,7 @@ def main(argv):
     write_ro_manifest(ro_manifest, ro_manifest_path)
 
     # Run make_bag again to include manifest.json in the checksums etc.
-    #bdb.make_bag(args.bagname, update=True)
+    bdb.make_bag(args.bagname, update=True)
 
     if args.verify:
         bdb.resolve_fetch(args.bagname, force=True) 
