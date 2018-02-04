@@ -18,10 +18,10 @@ pleae do notify us of any problems, comments, or suggestions by filing an issue.
 ### bagofbags.py: Create a BDBag containing 1+ other BDBags
 
 This program creates a new big data bag (BDBag) containing a supplied set of Minids,
-each of which is assumed to reference a single BDBag.  That is, a "bag of bags." This BDBag contains:
-* A `data/README` file providing some description of the new BDBag's contents
-* A `metadata/manifest.json` with a Research Object describing the new BDBag's contents
-* A `fetch.txt` file with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
+each of which is assumed to reference a single BDBag.  That is, a "bag of bags." This BDBag contains, among other things:
+* `data/README` providing some description of the new BDBag's contents
+* `metadata/manifest.json` with a Research Object describing the new BDBag's contents
+* `fetch.txt` with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
 
 ```sh
 python bagofbags.py -m MINIDS -b BAGNAME [-V] [-h] [-q] [-d]
@@ -34,7 +34,7 @@ In the following image, we show a request to create a new BDBag, `MYBAG`, that i
 the bags listed in the file `MYMINIDS`. The new BDBag contains the usual files that are to be
 found in a BDBag, with the `fetch.txt` file containing the Minids that can be used to fetch
 their contents and the `data/manifest.json` containing descriptive metadata. The `data/README` file
-contains helpful background information.
+contains background information.
 
 ![Image of the whole thing](images/MetaBags.png)
 
