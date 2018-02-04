@@ -24,11 +24,10 @@ each of which is assumed to reference a single BDBag.  That is, a "meta-bag." Th
 * A `fetch.txt` file with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
 
 ```sh
-python meta.py -m MINIDS -b BAGNAME [-r REMOTE_FILE_MANIFEST] [-V] [-h]
+python meta.py -m MINIDS -b BAGNAME [-r REMOTE_FILE_MANIFEST] [-V] [-h] [-q] [-d]
 ```
-* `MINIDS` : Name of the input file that lists the minids to be integrated. Each line is a comma-separated <descriptive string>, <minid> pair
+* `MINIDS` : Name of the input file that lists the minids to be integrated, one per line.
 * `BAGNAME` : Name of the directory that is to be created for the new BDBag
-* `REMOTE_FILE_MANIFEST` : Name of the temporary file in which to place the remote file manifest before passing it to the **bdbag** command. By default, "t.json" is used.
 * `-V` : If provided, then once bag is created, fetch bag contents and validate it.
 
 In the following image, we show a request to create a new BDBag, `MYBAG`, that is to contain
