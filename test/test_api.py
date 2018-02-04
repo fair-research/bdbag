@@ -295,10 +295,18 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_validate_remote_bag_from_rfm(self):
+        logger.info(self.getTestHeader('create, resolve, and validate bag from remote file manifest'))
+        self._test_bag_remote()
+        bdb.resolve_fetch(self.test_data_dir)
+        bdb.validate_bag(self.test_data_dir, fast=True)
+        bdb.validate_bag(self.test_data_dir, fast=False)
+
     def test_resolve_fetch_http(self):
         logger.info(self.getTestHeader('test resolve fetch http'))
         try:
             bdb.resolve_fetch(self.test_bag_fetch_http_dir)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
             output = self.stream.getvalue()
         except Exception as e:
@@ -312,6 +320,7 @@ class TestAPI(BaseTest):
         logger.info(self.getTestHeader('test resolve fetch ark'))
         try:
             bdb.resolve_fetch(self.test_bag_fetch_ark_dir)
+            bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=False)
             output = self.stream.getvalue()
         except Exception as e:
@@ -321,6 +330,7 @@ class TestAPI(BaseTest):
         logger.info(self.getTestHeader('test resolve fetch ftp'))
         try:
             bdb.resolve_fetch(self.test_bag_fetch_ftp_dir)
+            bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=False)
             output = self.stream.getvalue()
         except Exception as e:

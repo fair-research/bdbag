@@ -140,7 +140,7 @@ def update_manifests_from_remote(remote_entries, encoding='utf-8'):
             for digest, filename, byte_count in values:
                 manifest.write("%s  %s\n" % (digest, _encode_filename(filename)))
 
-    return num_files, total_bytes
+    return total_bytes, num_files
 
 
 def make_remote_file_entry(remote_entries, filename, url, length, alg, digest):
