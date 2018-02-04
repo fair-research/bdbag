@@ -15,18 +15,18 @@ pleae do notify us of any problems, comments, or suggestions by filing an issue.
 
 ---
 
-### The `meta.py` example
+### bagofbags.py: Create a BDBag containing 1+ other BDBags
 
-This program creates a new big data bag (BDBag) containing a supplied set of (descriptive string, Minid) pairs,
-each of which is assumed to reference a single BDBag.  That is, a "meta-bag." This BDBag contains:
-* A `data/README` file providing some description, and listing the files referenced by the Minids
-* A `metadata/manifest.json` with a Research Object describing the BDBag's contents
+This program creates a new big data bag (BDBag) containing a supplied set of Minids,
+each of which is assumed to reference a single BDBag.  That is, a "bag of bags." This BDBag contains:
+* A `data/README` file providing some description of the new BDBag's contents
+* A `metadata/manifest.json` with a Research Object describing the new BDBag's contents
 * A `fetch.txt` file with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
 
 ```sh
-python meta.py -m MINIDS -b BAGNAME [-r REMOTE_FILE_MANIFEST] [-V] [-h] [-q] [-d]
+python bagofbags.py -m MINIDS -b BAGNAME [-V] [-h] [-q] [-d]
 ```
-* `MINIDS` : Name of the input file that lists the minids to be integrated, one per line.
+* `MINIDS` : Name of input file listing the Minids to be included, one per line.
 * `BAGNAME` : Name of the directory that is to be created for the new BDBag
 * `-V` : If provided, then once bag is created, fetch bag contents and validate it.
 
