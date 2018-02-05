@@ -42,8 +42,8 @@ logger = logging.getLogger(__name__)
 
 BAG_CONFORMS_TO = [ 'https://tools.ietf.org/html/draft-kunze-bagit-14',
                     'https://w3id.org/ro/bagit/profile' ]
-NAME2THING = 'http://n2t.net/'
-MINID_SERVER = 'http://minid.bd2k.org/minid'
+NAME2THING      = 'http://n2t.net/'
+MINID_SERVER    = 'http://minid.bd2k.org/minid'
 
 
 def configure_logging(level=logging.INFO, logpath=None):
@@ -68,33 +68,13 @@ def init_ro_manifest(creator_name=None, creator_uri=None, creator_orcid=None):
     return manifest
 
 
-#It could make sense to aggregate the nested bags by their global
-#URI in the RO manifest instead of the (potentially not resolved) local
-#.zip files. The 'bundledAs' can be used to link it together with the ZIP
-#file:
-#
-#'aggregates': [
-#  { 'uri': 'http://n2t.net/ark:/57799/b91w9r',
-#    'conformsTo': [ 
-#       'https://tools.ietf.org/html/draft-kunze-bagit-14',
-#       'https://w3id.org/ro/bagit/profile'
-#    ],
-#    'bundledAs': {
-#      'uri': '../data/adrenal_gland_912c17b6-b2bf-461b-9753-49e7e01ac536.zip',
-#      'folder': 'data/'
-#      'filename': 'adrenal_gland_912c17b6-b2bf-461b-9753-49e7e01ac536.zip'
-#    }
-# }
-#]
-
-
 def add_remote_file_manifest(entries, ro_manifest):
     for (minid, _, _, uri, _, _) in entries:
          bundled_as = { 'uri'      : '../data/' + uri,
                         'folder'   : 'data/',
                         'filename' : uri }
          ro.add_aggregate(ro_manifest, NAME2THING+minid, mediatype=None,
-                          conforms_to=BAG_CONFORMS_TO, bundled_as=bundled_as)
+                          conforms_to=BAG_CONFORMS_TO, bundled_as=make_bundled_as)
     ro.add_annotation(ro_manifest, '../', content=''.join(['../data/', 'README']))
     # Following is a bit of a hack: should really modify ro.add_annotation to accept a motivatedBy
     [annotation] = ro_manifest.get('annotations', list())
