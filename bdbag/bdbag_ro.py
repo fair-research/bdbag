@@ -22,8 +22,23 @@ DEFAULT_RO_MANIFEST = {
 
 
 def write_ro_manifest(obj, path):
+    if not isinstance(obj, dict):
+        logger.warning("Cannot write RO manifest, invalid object type: %s" % type(obj).__name__)
+        return
+
     with open(os.path.abspath(path), 'w') as ro_manifest:
         json.dump(obj, ro_manifest, sort_keys=True, indent=4)
+
+
+def write_bag_ro_manifest(manifest, bag_path):
+
+    bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata"))
+
+    if not os.path.exists(bag_ro_metadata_path):
+        os.makedirs(bag_ro_metadata_path)
+
+    ro_manifest_path = os.path.join(bag_ro_metadata_path, "manifest.json")
+    write_ro_manifest(manifest, ro_manifest_path)
 
 
 def init_ro_manifest(author_name=None, author_uri=None, author_orcid=None):
