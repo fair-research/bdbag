@@ -12,6 +12,7 @@ BAG_CREATOR_NAME = "BDBag version: %s (Bagit version: %s)" % (VERSION, BAGIT_VER
 BAG_CREATOR_URI = "https://github.com/ini-bdds/bdbag"
 BAG_CONFORMS_TO = ['https://tools.ietf.org/html/draft-kunze-bagit-14',
                    'https://w3id.org/ro/bagit/profile']
+ORCID_BASE_URL = "http://orcid.org"
 
 DEFAULT_RO_MANIFEST = {
     "@context": ["https://w3id.org/bundle/context"],
@@ -21,10 +22,15 @@ DEFAULT_RO_MANIFEST = {
 }
 
 
-def write_ro_manifest(obj, path):
+def check_input(obj):
     if not isinstance(obj, dict):
-        logger.warning("Cannot write RO manifest, invalid object type: %s" % type(obj).__name__)
-        return
+        raise ValueError(
+            "bdbag_ro: invalid input object type (%s), expected (dict)" % type(obj).__name__)
+
+
+def write_ro_manifest(obj, path):
+
+    check_input(obj)
 
     with open(os.path.abspath(path), 'w') as ro_manifest:
         json.dump(obj, ro_manifest, sort_keys=True, indent=4)
@@ -41,16 +47,29 @@ def write_bag_ro_manifest(manifest, bag_path):
     write_ro_manifest(manifest, ro_manifest_path)
 
 
-def init_ro_manifest(author_name=None, author_uri=None, author_orcid=None):
+def init_ro_manifest(creator_name=None,
+                     creator_uri=None,
+                     creator_orcid=None,
+                     author_name=None,
+                     author_uri=None,
+                     author_orcid=None):
     manifest = copy.deepcopy(DEFAULT_RO_MANIFEST)
     authored_by = None
     if author_name:
         if author_orcid and not author_orcid.startswith("http"):
-            author_orcid = "/".join(["http://orcid.org", author_orcid])
+            author_orcid = "/".join([ORCID_BASE_URL, author_orcid])
         authored_by = make_authored_by(author_name, uri=author_uri, orcid=author_orcid)
+
+    if creator_name:
+        if creator_orcid and not creator_orcid.startswith("http"):
+            creator_orcid = "/".join([ORCID_BASE_URL, creator_orcid])
+        created_by = make_created_by(creator_name, uri=creator_uri, orcid=creator_orcid)
+    else:
+        created_by = make_created_by(name=BAG_CREATOR_NAME, uri=BAG_CREATOR_URI)
+
     add_provenance(manifest,
                    created_on=make_created_on(),
-                   created_by=make_created_by(name=BAG_CREATOR_NAME, uri=BAG_CREATOR_URI),
+                   created_by=created_by,
                    authored_on=make_authored_on(),
                    authored_by=authored_by)
 
@@ -70,8 +89,7 @@ def add_file_metadata(manifest,
                       conforms_to=None,
                       bundled_as=None):
 
-    if not isinstance(manifest, dict):
-        return
+    check_input(manifest)
 
     if not source_url and not local_path:
         raise ValueError("Error while adding file metadata to RO manifest. "
@@ -112,8 +130,7 @@ def add_file_metadata(manifest,
 def add_provenance(obj, created_on=None, created_by=None, authored_on=None, authored_by=None,
                    retrieved_from=None, retrieved_on=None, retrieved_by=None):
 
-    if not isinstance(obj, dict):
-        return
+    check_input(obj)
 
     if created_on:
         obj.update(created_on)
@@ -135,8 +152,7 @@ def add_provenance(obj, created_on=None, created_by=None, authored_on=None, auth
 
 def add_aggregate(obj, uri, mediatype=None, conforms_to=None, bundled_as=None):
 
-    if not isinstance(obj, dict):
-        return
+    check_input(obj)
 
     aggregates = obj.get('aggregates', list())
     aggregate = dict()
@@ -156,8 +172,7 @@ def add_aggregate(obj, uri, mediatype=None, conforms_to=None, bundled_as=None):
 
 def add_annotation(obj, about, uri=None, content=None, motivatedBy=None):
 
-    if not isinstance(obj, dict):
-        return
+    check_input(obj)
 
     annotations = obj.get('annotations', list())
     annotation = dict()
@@ -181,8 +196,8 @@ def make_bundled_as(uri=None, folder=None, filename=None):
         return None
 
     if filename and folder is None:
-        logger.warning("When specifying a \"filename\" attribute for a bundledAs object, the \"folder\" attribute must"
-                       " also be specified.")
+        raise ValueError("When specifying a \"filename\" attribute for a bundledAs object, the \"folder\" attribute "
+                         "must also be specified.")
 
     bundled_as = dict()
     if uri:
