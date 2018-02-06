@@ -36,8 +36,6 @@ from bdbag import bdbag_api as bdb
 from bdbag import bdbag_ro as ro
 import minid_client.minid_client_api as mn
 
-BAG_CONFORMS_TO = [ 'https://tools.ietf.org/html/draft-kunze-bagit-14',
-                    'https://w3id.org/ro/bagit/profile' ]
 NAME2THING      = 'http://n2t.net/'
 MINID_SERVER    = 'http://minid.bd2k.org/minid'
 
@@ -46,8 +44,8 @@ def add_remote_file_manifest(entries, ro_manifest):
     for (minid, _, _, uri, _, _) in entries:
          ro.add_aggregate(ro_manifest, NAME2THING+minid,
                           mediatype=None,
-                          conforms_to=BAG_CONFORMS_TO,
-                          bundled_as=make_bundled_as('../data/' + uri, 'data/', uri))
+                          conforms_to=ro.BAG_CONFORMS_TO,
+                          bundled_as=ro.make_bundled_as(None, 'data/', uri))
     ro.add_annotation(ro_manifest,
                       '../',
                       '../data/README,
@@ -69,7 +67,7 @@ def get_minid_fields(minid):
 
 # Determine the size of the sub-bag file
 def get_size(link):
-    r = requests.get(link)
+    r = requests.head(link)
     r.raise_for_status()
     if r.ok:
         size = r.headers['Content-Length']
