@@ -189,7 +189,7 @@ def make_bundled_as(uri=None, folder=None, filename=None):
         bundled_as['uri'] = uri
     if filename:
         bundled_as['filename'] = filename
-    if folder:
+    if folder is not None:
         bundled_as['folder'] = ''.join(["../data/", folder.replace("\\", "/")])
 
     return bundled_as
