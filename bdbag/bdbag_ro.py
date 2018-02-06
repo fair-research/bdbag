@@ -58,8 +58,8 @@ def init_ro_manifest(author_name=None, author_uri=None, author_orcid=None):
 
 
 def add_file_metadata(manifest,
-                      source_url,
-                      file_path=None,
+                      source_url=None,
+                      local_path=None,
                       media_type=None,
                       retrieved_on=None,
                       retrieved_by=None,
@@ -73,8 +73,12 @@ def add_file_metadata(manifest,
     if not isinstance(manifest, dict):
         return
 
+    if not source_url and not local_path:
+        raise ValueError("Error while adding file metadata to RO manifest. "
+                         "At least one of the parameters \"source_url\" or \"local_path\" must be specified")
+
     if not conforms_to:
-        path = file_path if file_path else source_url
+        path = local_path if local_path else source_url
         file_ext = os.path.splitext(path)[1][1:]
         file_ext = file_ext.lstrip(".") if file_ext else None
         conforms_to = FILETYPE_ONTOLOGY_MAP.get(file_ext, None)
@@ -82,12 +86,13 @@ def add_file_metadata(manifest,
     if not media_type:
         media_type = guess_mime_type(source_url)
 
-    if file_path:
-        uri = ''.join(["../data/", file_path])
-        retrieved_from = dict(retrievedFrom=source_url)
-    else:
-        uri = source_url
-        retrieved_from = None
+    uri = source_url
+    retrieved_from = None
+
+    if local_path:
+        uri = ''.join(["../data/", local_path])
+        if source_url:
+            retrieved_from = dict(retrievedFrom=source_url)
 
     add_provenance(
         add_aggregate(manifest,
