@@ -177,10 +177,10 @@ def add_annotation(obj, about, uri=None, content=None, motivatedBy=None):
 
 def make_bundled_as(uri=None, folder=None, filename=None):
 
-    if not uri and not folder and not filename:
+    if uri is None and folder is None and filename is None:
         return None
 
-    if filename and not folder:
+    if filename and folder is None:
         logger.warning("When specifying a \"filename\" attribute for a bundledAs object, the \"folder\" attribute must"
                        " also be specified.")
 
