@@ -111,7 +111,7 @@ def update_manifests_from_remote(remote_entries, encoding='utf-8'):
     if not remote_entries:
         return 0, 0
 
-    LOGGER.info(_('Updating manifests for remote files...'))
+    LOGGER.info(_('Generating manifest lines for remote files'))
     num_files = 0
     total_bytes = 0
     entries = []
@@ -171,7 +171,7 @@ def _make_fetch_file(path, remote_entries):
     if not remote_entries:
         return
 
-    LOGGER.info('writing fetch.txt')
+    LOGGER.info('Writing fetch.txt')
     fetch_file_path = os.path.join(path, "fetch.txt")
 
     with open(fetch_file_path, 'w') as fetch_file:

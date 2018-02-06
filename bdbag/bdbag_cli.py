@@ -36,7 +36,10 @@ def parse_cli():
 
     parser = argparse.ArgumentParser(
         description=description, epilog="For more information see: http://github.com/ini-bdds/bdbag")
-    standard_args = parser.add_argument_group('Standard arguments')
+
+    parser.add_argument('--version', action='version', version=bdbag.VERSION)
+
+    standard_args = parser.add_argument_group('Bag arguments')
 
     update_arg = standard_args.add_argument(
         '--update', action="store_true",

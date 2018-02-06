@@ -41,6 +41,31 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_cleanup_bag(self):
+        logger.info(self.getTestHeader('cleanup bag'))
+        try:
+            bdb.cleanup_bag(self.test_bag_dir)
+            self.assertFalse(ospe(self.test_bag_dir), "Failed to cleanup bag directory")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_ensure_bag_path_exists(self):
+        logger.info(self.getTestHeader('ensure bag path exists, save existing'))
+        try:
+            saved_bag_path = bdb.ensure_bag_path_exists(self.test_bag_dir)
+            self.assertTrue(ospe(self.test_bag_dir), "Bag directory does not exist")
+            self.assertTrue(ospe(saved_bag_path), "Saved bag path does not exist")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_ensure_bag_path_exists_delete_existing(self):
+        logger.info(self.getTestHeader('ensure bag path exists, delete existing'))
+        try:
+            bdb.ensure_bag_path_exists(self.test_bag_dir, save=False)
+            self.assertTrue(ospe(self.test_bag_dir), "Bag directory does not exist")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def test_create_bag_with_config(self):
         logger.info(self.getTestHeader('create bag with config'))
         try:

@@ -74,8 +74,21 @@ def cleanup_bag(bag_path, save=False):
         saved_bag_path = ''.join([bag_path, '_', time.strftime("%Y-%m-%d_%H.%M.%S")])
         logger.info("Moving bag %s to %s" % (bag_path, saved_bag_path))
         shutil.move(bag_path, saved_bag_path)
+        return saved_bag_path
     else:
         shutil.rmtree(bag_path)
+        return None
+
+
+def ensure_bag_path_exists(bag_path, save=True):
+    saved_bag_path = None
+    if os.path.exists(bag_path):
+        saved_bag_path = cleanup_bag(bag_path, save)
+    if not os.path.exists(bag_path):
+        logging.info("Creating bag directory: %s" % bag_path)
+        os.makedirs(bag_path)
+
+    return saved_bag_path
 
 
 def revert_bag(bag_path):

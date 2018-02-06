@@ -33,9 +33,9 @@ else:
 """
 import os
 import sys
-import mimetypes
 import logging
 import json
+from bdbag import guess_mime_type
 
 if sys.version_info > (3,):
     from urllib.request import urlopen
@@ -228,9 +228,7 @@ class Profile(object):
         if self.profile['Serialization'] == 'required' or self.profile['Serialization'] == 'optional' \
                 and os.path.isfile(path_to_bag):
             bag_path, bag_file = os.path.split(path_to_bag)
-            mtype = mimetypes.guess_type(bag_file)
-            mimetype = "+".join([mtype[0], mtype[1]]) if (mtype[0] is not None and mtype[1] is not None) else \
-                (mtype[0] if mtype[0] is not None else mtype[1])
+            mimetype = guess_mime_type(bag_file)
             if mimetype not in self.profile['Accept-Serialization']:
                 raise ProfileValidationError(
                     "Bag serialization type \"%s\" is not in the list of allowed values." % mimetype)
