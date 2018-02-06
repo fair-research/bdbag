@@ -38,48 +38,17 @@ from bdbag import bdbag_api as bdb
 from bdbag import bdbag_ro as ro
 import minid_client.minid_client_api as mn
 
-logger = logging.getLogger(__name__)
-
 BAG_CONFORMS_TO = [ 'https://tools.ietf.org/html/draft-kunze-bagit-14',
                     'https://w3id.org/ro/bagit/profile' ]
 NAME2THING      = 'http://n2t.net/'
 MINID_SERVER    = 'http://minid.bd2k.org/minid'
 
 
-def configure_logging(level=logging.INFO, logpath=None):
-    logging.captureWarnings(True)
-    log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    if logpath:
-        logging.basicConfig(filename=logpath, level=level, format=log_format)
-    else:
-        logging.basicConfig(level=level, format=log_format)
-
-
-def init_ro_manifest(creator_name=None, creator_uri=None, creator_orcid=None):
-    manifest = copy.deepcopy(ro.DEFAULT_RO_MANIFEST)
-    created_on = ro.make_created_on()
-    created_by = None
-    if creator_name:
-        if creator_orcid and not creator_orcid.startswith('http'):
-            creator_orcid = '/'.join(['http://orcid.org', creator_orcid])
-        created_by = ro.make_created_by(creator_name, uri=creator_uri, orcid=creator_orcid)
-    ro.add_provenance(manifest, created_on=created_on, created_by=created_by)
-    manifest.update({ 'conformsTo' : BAG_CONFORMS_TO })
-    return manifest
-
-
 def add_remote_file_manifest(entries, ro_manifest):
     for (minid, _, _, uri, _, _) in entries:
-         bundled_as = { 'uri'      : '../data/' + uri,
-                        'folder'   : 'data/',
-                        'filename' : uri }
-         ro.add_aggregate(ro_manifest, NAME2THING+minid, mediatype=None,
-                          conforms_to=BAG_CONFORMS_TO, bundled_as=make_bundled_as)
-    ro.add_annotation(ro_manifest, '../', content=''.join(['../data/', 'README']))
-    # Following is a bit of a hack: should really modify ro.add_annotation to accept a motivatedBy
-    [annotation] = ro_manifest.get('annotations', list())
-    annotation['oa:motivatedBy'] = 'oa:describing'
-    ro_manifest['annotations'] = [annotation]
+         ro.add_aggregate(ro_manifest, NAME2THING+minid, mediatype=None, conforms_to=BAG_CONFORMS_TO,
+                          bundled_as=make_bundled_as('../data/' + uri, 'data/', uri))
+    ro.add_annotation(ro_manifest, '../', '../data/README, motivatedBy={"@id": "oa:describing"})
 
 
 def get_minid_fields(minid):
@@ -95,34 +64,25 @@ def get_minid_fields(minid):
     return( (minid_json['checksum'], title, link, filename) )
 
 
-# Fetch the sub-bag file into a temporary directory and determine its size
+# Determine the size of the sub-bag file
 def get_size(link):
-    response = requests.get(link)
-    size = len(response.content)
+    r = requests.get(link)
+    r.raise_for_status()
+    if r.ok:
+        size = r.headers['Content-Length']
     return(size) 
 
 
-def extract_fields(minids):
+def extract_fields(minidfile):
+    with open(minidfile) as f:
+        minids = f.readlines()
+        minids = [x.strip() for x in minids] 
     results = []
     for minid in minids:
-        minid = minid.strip()
         (checksum, title, link, filename) = get_minid_fields(minid)
         size = get_size(link)
         results += [(minid, title, link, filename, checksum, size)]
     return(results)
-
-
-DEFAULT_RO_MANIFEST = {
-    '@context': ['https://w3id.org/bundle/context'],
-    '@id': '../',
-    'aggregates': [],
-    'annotations': []
-}
-
-
-def write_ro_manifest(obj, path):
-    with open(os.path.abspath(path), 'w') as ro_manifest:
-        json.dump(obj, ro_manifest, sort_keys=True, indent=4)
 
 
 def generate_remote_manifest_file(minid_fields, remote_manifest_filepath):
@@ -137,18 +97,6 @@ def generate_remote_manifest_file(minid_fields, remote_manifest_filepath):
             }
             entries.append(entry)
         json.dump(entries, writer, sort_keys=True, indent=4)
-
-
-def ensure_bag_path_exists(bag_path, overwrite=False):
-    if os.path.exists(bag_path):
-        if overwrite:
-            shutil.rmtree(bag_path)
-        else:
-            saved_bag_path = ''.join([bag_path, '_', time.strftime('%Y-%m-%d_%H.%M.%S')])
-            logger.warn('Specified bag directory already exists -- moving it to %s' % saved_bag_path)
-            shutil.move(bag_path, saved_bag_path)
-    if not os.path.exists(bag_path):
-        os.makedirs(bag_path)
 
 
 def write_readme(filename, minid_fields):
@@ -170,18 +118,13 @@ def main(argv):
     parser.add_argument('-d', '--debug', action="store_true", help="Enable debug logging output.")
     args = parser.parse_args()
    
-    configure_logging(level=logging.ERROR if args.quiet else (logging.DEBUG if args.debug else logging.INFO))
+    bdb.configure_logging(level=logging.ERROR if args.quiet else (logging.DEBUG if args.debug else logging.INFO))
 
     # Create the directory that will hold the new BDBag
-    ensure_bag_path_exists(args.bagname)
+    bdb.ensure_bag_path_exists(args.bagname)
 
-    # Read list of sub-bag Minids
-    with open(args.minids) as f:
-        minids = f.readlines()
-        minids = [x.strip() for x in minids] 
-
-    # Fetch each sub-bag to determine its properties
-    minid_fields = extract_fields(minids)
+    # For each supplied minid, fetch sub-bag to determine its properties
+    minid_fields = extract_fields(arg.minids)
 
     # Create 'README' file in the newly created bag directory. (moved to 'data' when bag is created)
     write_readme(args.bagname, minid_fields)
@@ -198,13 +141,14 @@ def main(argv):
                        remote_file_manifest=remote_file_manifest_file)
 
     # Create metadata/manifest.json file with Research Object JSON object
-    ro_manifest = init_ro_manifest(creator_name='bagofbags.py', creator_uri='https://github.com/ini-bdds/bdbag/examples/bagofbags.py')
+    ro_manifest = ro.init_ro_manifest(creator_name='bagofbags.py',
+                                      creator_uri='https://github.com/ini-bdds/bdbag/examples/bagofbags.py')
     add_remote_file_manifest(minid_fields, ro_manifest)
     bag_metadata_dir = os.path.abspath(os.path.join(args.bagname, 'metadata'))
     if not os.path.exists(bag_metadata_dir):
         os.mkdir(bag_metadata_dir)
     ro_manifest_path = osp.join(bag_metadata_dir, 'manifest.json')
-    write_ro_manifest(ro_manifest, ro_manifest_path)
+    ro.write_ro_manifest(ro_manifest, ro_manifest_path)
 
     # Run make_bag again to include manifest.json in the checksums etc.
     bdb.make_bag(args.bagname, update=True)
