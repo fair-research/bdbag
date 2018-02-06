@@ -1,4 +1,3 @@
-#
 # BagOfBags.py -- Ian Foster
 #
 # Program to create a big data bag (BDBag) containing a supplied set of (descriptive string, Minid) pairs,
@@ -14,10 +13,9 @@
 #
 # Runs with >Python 2.7, AFAIK
 #
-# Many limitations
-# -- Essentially no error checking.
+# Limitations
+# -- Limited error checking.
 # -- manifest.json is a Research Object, but doesn't include provenance info
-#
 
 import operator
 import json
@@ -46,9 +44,14 @@ MINID_SERVER    = 'http://minid.bd2k.org/minid'
 
 def add_remote_file_manifest(entries, ro_manifest):
     for (minid, _, _, uri, _, _) in entries:
-         ro.add_aggregate(ro_manifest, NAME2THING+minid, mediatype=None, conforms_to=BAG_CONFORMS_TO,
+         ro.add_aggregate(ro_manifest, NAME2THING+minid,
+                          mediatype=None,
+                          conforms_to=BAG_CONFORMS_TO,
                           bundled_as=make_bundled_as('../data/' + uri, 'data/', uri))
-    ro.add_annotation(ro_manifest, '../', '../data/README, motivatedBy={"@id": "oa:describing"})
+    ro.add_annotation(ro_manifest,
+                      '../',
+                      '../data/README,
+                      motivatedBy={"@id": "oa:describing"})
 
 
 def get_minid_fields(minid):
@@ -137,7 +140,6 @@ def main(argv):
     # Create the new bag based on the supplied remote manifest file
     bag = bdb.make_bag(args.bagname,
                        algs=['md5', 'sha256'],
-                       #metadata=bag_metadata,
                        remote_file_manifest=remote_file_manifest_file)
 
     # Create metadata/manifest.json file with Research Object JSON object
@@ -156,7 +158,6 @@ def main(argv):
     if args.verify:
         bdb.resolve_fetch(args.bagname, force=True) 
         bdb.validate_bag(args.bagname, fast=False, callback=None)
-
 
 #----------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
