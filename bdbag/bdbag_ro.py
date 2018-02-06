@@ -45,7 +45,6 @@ def init_ro_manifest(author_name=None, author_uri=None, author_orcid=None):
 def add_file_metadata(manifest,
                       source_url,
                       file_path=None,
-                      file_ext=None,
                       media_type=None,
                       retrieved_on=None,
                       retrieved_by=None,
@@ -60,7 +59,9 @@ def add_file_metadata(manifest,
         return
 
     if not conforms_to:
-        file_ext = file_ext if file_ext else (None if not file_path else os.path.splitext(file_path)[1][1:])
+        path = file_path if file_path else source_url
+        file_ext = os.path.splitext(path)[1][1:]
+        file_ext = file_ext.lstrip(".") if file_ext else None
         conforms_to = FILETYPE_ONTOLOGY_MAP.get(file_ext, None)
 
     if not media_type:
