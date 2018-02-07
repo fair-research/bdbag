@@ -35,6 +35,7 @@ import tempfile
 from bdbag import bdbag_api as bdb
 from bdbag import bdbag_ro as ro
 import minid_client.minid_client_api as mn
+from bdbag import VERSION, BAGIT_VERSION
 
 NAME2THING      = 'http://n2t.net/'
 MINID_SERVER    = 'http://minid.bd2k.org/minid'
@@ -150,9 +151,9 @@ def main(argv):
                        remote_file_manifest=remote_file_manifest_file)
 
     # Create metadata/manifest.json file with Research Object JSON object
-    ro_manifest = ro.init_ro_manifest(author_name=args.author_name, author_orcid=args.author_orcid)
-                                      #creator_name='bagofbags.py',
-                                      #creator_uri='https://github.com/ini-bdds/bdbag/examples/bagofbags.py')
+    ro_manifest = ro.init_ro_manifest(author_name=args.author_name, author_orcid=args.author_orcid,
+        creator_name = 'bagofbags using BDBag version: %s (Bagit version: %s)' % (VERSION, BAGIT_VERSION),
+        creator_uri='https://github.com/ini-bdds/bdbag/examples/bagofbags/')
     add_remote_file_manifest(minid_fields, ro_manifest)
     bag_metadata_dir = os.path.abspath(os.path.join(args.bagname, 'metadata'))
     if not os.path.exists(bag_metadata_dir):

@@ -6,7 +6,7 @@ We provide here what we hope will become a set of examples
 (so far, just one) to illustrate the use the **bdbag** utilities for various purposes.
 Some of these examples might eventually become additional utilities, but for now 
 they are provided as is, with no commitments as to quality or support. That said,
-pleae do notify us of any problems, comments, or suggestions by filing an issue.
+please do notify us of any problems, comments, or suggestions by filing an issue.
 
 ### Dependencies
 
@@ -15,7 +15,7 @@ pleae do notify us of any problems, comments, or suggestions by filing an issue.
 
 ---
 
-### bagofbags.py: Create a BDBag containing 1+ other BDBags
+### [bagofbags](bagofbags/bagofbags.py): Create a BDBag containing 1+ other BDBags
 
 This program creates a new big data bag (BDBag) containing a supplied set of Minids,
 each of which is assumed to reference a single BDBag.  That is, a "bag of bags." This BDBag contains, among other things:
