@@ -120,7 +120,7 @@ def main(argv):
     parser.add_argument('-v', '--verify', action='store_true',
                         help='Validate bag after building it.', required=False)
     parser.add_argument('-q', '--quiet', action="store_true", help="Suppress logging output.")
-    #parser.add_argument('-d', '--debug', action="store_true", help="Enable debug logging output.")
+    parser.add_argument('-d', '--debug', action="store_true", help="Enable debug logging output.")
     parser.add_argument('-n', '--author-name', metavar="<person or entity name>",
         help="Optional name of the person or entity responsible for the creation of this bag, "
              "for inclusion in the bag metadata.")
