@@ -23,7 +23,7 @@ usage: bdbag
 [--skip-manifests]
 [--prune-manifests]
 [--resolve-fetch {all,missing}]
-[--validate {fast,full}]
+[--validate {fast,full,structure}]
 [--validate-profile]
 [--config-file <file>]
 [--keychain-file <file>]
@@ -98,10 +98,10 @@ already exist in the bag payload directory. The `all` option causes all fetch fi
 already exist in the bag payload directory.
 
 ----
-##### `--validate {fast,full}`
+##### `--validate {fast,full,structure}`
 Validate a bag directory or bag archive. If `fast` is specified, the `Payload-Oxum` metadata field (if present) will be
-used to check that the payload files are present and accounted for. Otherwise if `full` is specified, all checksums will
-be regenerated and compared to the corresponding entries in the manifest.
+used to check that the payload files are present and accounted for. If `full` is specified, all checksums will
+be regenerated and compared to the corresponding entries in the manifest. If `structure` is specified, the bag will be checked for structural validity only.
 
 ----
 ##### `--validate-profile`

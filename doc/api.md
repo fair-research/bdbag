@@ -24,6 +24,7 @@ The command-line interface is built upon the API in this manner and can be used 
     * [validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE)](#validate_bag)
     * [validate_bag_profile(bag_path, profile_path=None)](#validate_bag_profile)
     * [validate_bag_serialization(bag_path, bag_profile)](#validate_bag_serialization)
+    * [validate_bag_structure(bag_path, skip_remote=True)](#validate_bag_structure)
 
 <a name="bdbag_api"></a>
 ### bdbag_api.py
@@ -249,4 +250,14 @@ constraints, if any.
 **Returns**: `boolean` - If the bag passed profile serialization validation or not.
 
 -----
+<a name="validate_bag_structure"></a>
+#### validate_bag_structure(bag_path, check_remote=False)
+Checks a bag's structural conformance as well as payload consistency between file manifests, the filesystem, and fetch.txt.
+
+| Param | Type | Description |
+| --- | --- | --- |
+|bag_path|`string`|A normalized, absolute path to a bag directory or bag archive file.
+|check_remote|`boolean`|A boolean value indicating if remote files should be included in the the consistency check.
+
+**Throws**: `BagValidationError` - If the bag structure could not be validated.
 
