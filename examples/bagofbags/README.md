@@ -1,21 +1,8 @@
-# bdbag examples
+# Bag of Bags
 
 #### BDDS Big Data Bag Examples
 
-We provide here what we hope will become a set of examples 
-(so far, just one) to illustrate the use the **bdbag** utilities for various purposes.
-Some of these examples might eventually become additional utilities, but for now 
-they are provided as is, with no commitments as to quality or support. That said,
-please do notify us of any problems, comments, or suggestions by filing an issue.
-
-### Dependencies
-
-* [Python 2.7](https://www.python.org/downloads/release/python-2711/) is the minimum Python version required.
-* The code and dependencies are currently compatible with Python 3.
-
----
-
-### [bagofbags](bagofbags/bagofbags.py): Create a BDBag containing 1+ other BDBags
+#### [bagofbags](bagofbags.py): Create a BDBag containing 1+ other BDBags
 
 This program creates a new big data bag (BDBag) containing a supplied set of Minids,
 each of which is assumed to reference a single BDBag.  That is, a "bag of bags." This BDBag contains, among other things:
@@ -38,7 +25,4 @@ contains background information.
 
 ![Image of the whole thing](images/MetaBags.png)
 
-Many limitations
-* Essentially no error checking.
-* manifest.json is a Research Object, but does not include provenance info
 `
