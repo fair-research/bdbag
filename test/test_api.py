@@ -284,6 +284,13 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_validate_complete_bag_structure(self):
+        logger.info(self.getTestHeader('test structure validation complete bag'))
+        try:
+            bdb.validate_bag_structure(self.test_bag_dir)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def test_validate_incomplete_bag_full(self):
         logger.info(self.getTestHeader('test full validation incomplete bag'))
         try:
@@ -299,6 +306,60 @@ class TestAPI(BaseTest):
         logger.info(self.getTestHeader('test fast validation incomplete bag'))
         try:
             self.assertRaises(bdbagit.BagValidationError,  bdb.validate_bag, self.test_bag_incomplete_dir, fast=True)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_incomplete_bag_structure(self):
+        logger.info(self.getTestHeader('test structure validation incomplete bag'))
+        try:
+            bdb.validate_bag_structure(self.test_bag_incomplete_dir)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_invalid_bag_structure_manifest(self):
+        logger.info(self.getTestHeader('test structure validation invalid bag manifest'))
+        try:
+            self.assertRaises(bdbagit.BagValidationError,
+                              bdb.validate_bag_structure,
+                              self.test_bag_invalid_structure_manifest_dir)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_invalid_bag_structure_filesystem(self):
+        logger.info(self.getTestHeader('test structure validation invalid bag filesystem'))
+        try:
+            self.assertRaises(bdbagit.BagValidationError,
+                              bdb.validate_bag_structure,
+                              self.test_bag_invalid_structure_filesystem_dir)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_invalid_bag_structure_fetch(self):
+        logger.info(self.getTestHeader('test structure validation invalid bag fetch.txt'))
+        try:
+            self.assertRaises(bdbagit.BagValidationError,
+                              bdb.validate_bag_structure,
+                              self.test_bag_invalid_structure_fetch_dir)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_invalid_bag_state_manifest_fetch(self):
+        logger.info(self.getTestHeader('test bag state validation invalid bag manifest with missing fetch.txt'))
+        try:
+            self.assertRaises(bdbagit.BagValidationError,
+                              bdb.validate_bag_structure,
+                              self.test_bag_invalid_state_manifest_fetch_dir,
+                              skip_remote=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_invalid_bag_state_fetch_filesize(self):
+        logger.info(self.getTestHeader('test bag state validation invalid local file size of fetch.txt file ref'))
+        try:
+            self.assertRaises(bdbagit.BagValidationError,
+                              bdb.validate_bag_structure,
+                              self.test_bag_invalid_state_fetch_filesize_dir,
+                              skip_remote=False)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 

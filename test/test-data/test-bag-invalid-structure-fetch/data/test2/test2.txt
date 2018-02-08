@@ -1,0 +1,1 @@
+This is another simple content file for the bdbag tests.

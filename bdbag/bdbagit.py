@@ -192,10 +192,10 @@ class UnexpectedRemoteFile(ManifestErrorDetail):
 
 
 class BDBag(Bag):
-    remote_entries = {}
 
     def __init__(self, path=None):
         Bag.__init__(self, path)
+        self.remote_entries = dict()
 
     def files_to_be_fetched(self, normalize=True):
         for f, size, path in self.fetch_entries():

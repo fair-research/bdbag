@@ -55,10 +55,20 @@ class TestCli(BaseTest):
     def test_resolve_fetch(self):
         pass
 
-    def test_validate(self):
+    def test_validate_full(self):
         args = ARGS + [self.test_bag_dir, '--validate', 'full']
         logfile.writelines(self.getTestHeader('validate bag', args))
         self._test_successful_invocation(args, ["test-bag is valid"])
+
+    def test_validate_fast(self):
+        args = ARGS + [self.test_bag_dir, '--validate', 'fast']
+        logfile.writelines(self.getTestHeader('validate bag', args))
+        self._test_successful_invocation(args, ["test-bag is valid"])
+
+    def test_validate_structure(self):
+        args = ARGS + [self.test_bag_dir, '--validate', 'structure']
+        logfile.writelines(self.getTestHeader('validate bag', args))
+        self._test_successful_invocation(args, ["test-bag is a valid bag structure"])
 
     def test_validate_profile(self):
         args = ARGS + [ospj(self.test_archive_dir, 'test-bag.zip'), '--validate-profile']

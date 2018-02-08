@@ -1,0 +1,1 @@
+https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json	723	data/bdbag-profile.json

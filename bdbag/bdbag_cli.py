@@ -79,10 +79,11 @@ def parse_cli():
              " even if they already exist in the bag payload directory.")
 
     standard_args.add_argument(
-        '--validate', choices=['fast', 'full'],
+        '--validate', choices=['fast', 'full', 'structure'],
         help="Validate a bag directory or bag archive. If \"fast\" is specified, Payload-Oxum (if present) will be "
-             "used to check that the payload files are present and accounted for. Otherwise if \"full\" is specified, "
-             "all checksums will be regenerated and compared to the corresponding entries in the manifest")
+             "used to check that the payload files are present and accounted for. If \"full\" is specified, "
+             "all checksums will be regenerated and compared to the corresponding entries in the manifest. " 
+             "If \"structure\" is specified, the bag will be checked for structural validity only.")
 
     standard_args.add_argument(
         '--validate-profile', action="store_true",
@@ -254,9 +255,12 @@ def main():
         if args.validate:
             if is_file:
                 temp_path = bdb.extract_bag(path, temp=True)
-            bdb.validate_bag(temp_path if temp_path else path,
-                             fast=True if args.validate == 'fast' else False,
-                             config_file=args.config_file)
+            if args.validate == 'structure':
+                bdb.validate_bag_structure(temp_path if temp_path else path)
+            else:
+                bdb.validate_bag(temp_path if temp_path else path,
+                                 fast=True if args.validate == 'fast' else False,
+                                 config_file=args.config_file)
 
         if args.archiver:
             archive = bdb.archive_bag(path, args.archiver)

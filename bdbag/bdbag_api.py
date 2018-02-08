@@ -141,27 +141,45 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
 
     only_in_manifests, only_on_fs, only_in_fetch = bag.compare_manifests_with_fs_and_fetch()
     payload_consistent = not only_on_fs
+
     if not skip_remote:
+        # check for changes to remote entries vs. known fetch.txt entries
         updated_remote_files = sorted(bag.remote_entries.keys())
         existing_remote_files = sorted(list(bag.files_to_be_fetched(False)))
-        unresolved_fetch_files = set(bag.files_to_be_fetched()) - set(bag.payload_files())
         modified_remote_files = list(set(updated_remote_files) - set(existing_remote_files))
+        if modified_remote_files:
+            payload_consistent = False
+            if not quiet:
+                logger.warning("The bag manifests require updating to reflect changes to remote file references.")
+
+        # check if there are files flagged as only_in_manifests that have not had remote entries created for them
         normalized_updated_remote_files = set()
         for filename in updated_remote_files:
             normalized_updated_remote_files.add(os.path.normpath(filename))
         unresolved_manifest_files = list(set(only_in_manifests) - normalized_updated_remote_files)
-        if modified_remote_files or only_in_fetch:
-            payload_consistent = False
         if unresolved_manifest_files:
             payload_consistent = False
+
+        # check for fetch files that are simply missing from the payload
+        unresolved_fetch_files = set(bag.files_to_be_fetched()) - set(bag.payload_files())
         if unresolved_fetch_files:
             payload_consistent = False
+            if not quiet:
+                logger.warning("The bag contains remote file references in fetch.txt that have not been resolved.")
+
+        # check for size mismatches of local files that may have been fetched already
         for url, size, path in bag.fetch_entries():
             output_path = os.path.normpath(os.path.join(bag.path, path))
-            if os.path.exists(output_path) and os.path.getsize(output_path) != int(size):
-                payload_consistent = False
+            if os.path.exists(output_path):
+                local_size = os.path.getsize(output_path)
+                remote_size = int(size)
+                if local_size != remote_size:
+                    payload_consistent = False
+                    if not quiet:
+                        logger.warning("The size of the local file %s (%d bytes) does not match the size of the file "
+                                       "(%d bytes) specified in fetch.txt." % (output_path, local_size, remote_size))
     elif payload_consistent:
-        payload_consistent = not only_in_manifests
+        payload_consistent = not (only_in_manifests or only_in_fetch)
 
     for path in only_in_manifests:
         e = bdbagit.FileMissing(path)
@@ -176,13 +194,12 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
             logger.warning(
                 "%s. Re-run with the \"update\" flag set in order to add this file to the manifest."
                 % bdbag.get_typed_exception(e))
-    if not skip_remote:
-        for path in only_in_fetch:
-            e = bdbagit.UnexpectedRemoteFile(path)
-            if not quiet:
-                logger.warning(
-                    "%s. Ensure that any remote file references from fetch.txt are also present in the manifest and "
-                    "re-run with the \"update\" flag set in order to apply this change." % bdbag.get_typed_exception(e))
+    for path in only_in_fetch:
+        e = bdbagit.UnexpectedRemoteFile(path)
+        if not quiet:
+            logger.warning(
+                "%s. Ensure that any remote file references from fetch.txt are also present in the manifest and "
+                "re-run with the \"update\" flag set in order to apply this change." % bdbag.get_typed_exception(e))
 
     return payload_consistent
 
@@ -279,10 +296,7 @@ def archive_bag(bag_path, bag_archiver):
     bag_archiver = bag_archiver.lower()
 
     try:
-        logger.info("Verifying bag structure: %s" % bag_path)
-        bag = bdbagit.BDBag(bag_path)
-        if not check_payload_consistency(bag, skip_remote=True):
-            raise RuntimeError("Inconsistent payload state.")
+        validate_bag_structure(bag_path, skip_remote=True)
     except Exception as e:
         logger.error("Error while archiving bag: %s", e)
         raise e
@@ -389,6 +403,18 @@ def validate_bag(bag_path, fast=False, callback=None, config_file=bdbag.DEFAULT_
         raise e
     except Exception as e:
         raise RuntimeError("Unhandled exception while validating bag: %s" % e)
+
+
+def validate_bag_structure(bag_path, skip_remote=True):
+    try:
+        logger.info("Validating bag structure: %s" % bag_path)
+        bag = bdbagit.BDBag(bag_path)
+        if not check_payload_consistency(bag, skip_remote=skip_remote):
+            raise bdbagit.BagValidationError("Inconsistent payload state. See log warnings for additional information.")
+        logger.info("The directory %s is a valid bag structure" % bag_path)
+    except Exception as e:
+        logger.error("Error while validating bag structure: %s", e)
+        raise e
 
 
 def validate_bag_profile(bag_path, profile_path=None):

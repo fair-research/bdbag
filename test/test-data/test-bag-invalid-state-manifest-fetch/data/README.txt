@@ -1,0 +1,1 @@
+This is a test input directory structure for the bdbag unit tests.

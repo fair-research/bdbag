@@ -1,0 +1,30 @@
+{
+  "BagIt-Profile-Info":{
+    "BagIt-Profile-Identifier":"http://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
+    "Source-Organization":"bd2k.org",
+    "External-Description":"BDBag BagIt basic profile.",
+    "Version":"0.1.20160329"
+   },
+   "Bag-Info": {
+     "Payload-Oxum":{
+       "required":true
+     }
+   },
+   "Manifests-Required":[
+      "md5", "sha256"
+   ],
+   "Allow-Fetch.txt": true,
+   "Serialization": "required",
+   "Accept-Serialization":[
+     "application/zip",
+     "application/x-zip-compressed",
+     "application/x-tar",
+     "application/x-tar+gzip"
+   ],
+   "Tag-Manifests-Required":[
+     "md5", "sha256"
+   ],
+   "Accept-BagIt-Version":[
+      "0.97"
+   ]
+}

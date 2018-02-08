@@ -33,6 +33,21 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ark_dir))
         self.test_bag_fetch_ftp_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ftp')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ftp_dir))
+        self.test_bag_invalid_structure_manifest_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-invalid-structure-manifest')
+        self.assertTrue(os.path.isdir(self.test_bag_invalid_structure_manifest_dir))
+        self.test_bag_invalid_structure_filesystem_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-invalid-structure-filesystem')
+        self.assertTrue(os.path.isdir(self.test_bag_invalid_structure_filesystem_dir))
+        self.test_bag_invalid_structure_fetch_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-invalid-structure-fetch')
+        self.assertTrue(os.path.isdir(self.test_bag_invalid_structure_fetch_dir))
+        self.test_bag_invalid_state_manifest_fetch_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-invalid-state-manifest-fetch')
+        self.assertTrue(os.path.isdir(self.test_bag_invalid_state_manifest_fetch_dir))
+        self.test_bag_invalid_state_fetch_filesize_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-invalid-state-fetch-filesize')
+        self.assertTrue(os.path.isdir(self.test_bag_invalid_state_fetch_filesize_dir))
 
     def tearDown(self):
         if os.path.isdir(self.tmpdir):
