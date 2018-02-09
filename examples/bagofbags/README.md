@@ -1,28 +1,31 @@
-# Bag of Bags
+# BagOfBags: Create a BDBag containing references to other BDBags
 
-#### BDDS Big Data Bag Examples
+This program uses functions from the `bdbag_api`, `bdbag_ro`, and `minid_client_api` packages
+to create a big data bag containing a supplied set of Minids,
+each of which is assumed to reference a single BDBag.  That is, a "bag of bags."
+In brief, it:
+* Reads the Minids for the sub-bags from a supplied file
+* Uses `minid_client_api.get_entities` to fetch metadata about each sub-bag
+* Uses `bdbag_api.make_bag` to create the new bag containing references to the sub-bags
+* Uses several `bdbag_ro` functions to create the Research Object describing the new bag
 
-#### [bagofbags](bagofbags.py): Create a BDBag containing 1+ other BDBags
+It also creates a `README` file containing a list of sub-bag titles.
 
-This program creates a new big data bag (BDBag) containing a supplied set of Minids,
-each of which is assumed to reference a single BDBag.  That is, a "bag of bags." This BDBag contains, among other things:
-* `data/README` providing some description of the new BDBag's contents
-* `metadata/manifest.json` with a Research Object describing the new BDBag's contents
-* `fetch.txt` with the info required to fetch the sub-bags into "data" (standard BDBag stuff)
+For example, the following creates a bag called `MYBAG` containing the bags listed in
+the file `MYMINIDS`, with specified author name and ORCID.
 
 ```sh
-python bagofbags.py -m MINIDS -b BAGNAME [-V] [-h] [-q] [-d]
+python bagofbags.py -m MYMINIDS -b MYBAG -n "Josiah Carberry" -o "0000-0002-1825-0097"
 ```
-* `MINIDS` : Name of input file listing the Minids to be included, one per line.
-* `BAGNAME` : Name of the directory that is to be created for the new BDBag
-* `-V` : If provided, then once bag is created, fetch bag contents and validate it.
 
-In the following image, we show a request to create a new BDBag, `MYBAG`, that is to contain
-the bags listed in the file `MYMINIDS`. The new BDBag contains the usual files that are to be
+As shown below, the resulting BDBag contains the usual files that are to be
 found in a BDBag, with the `fetch.txt` file containing the Minids that can be used to fetch
-their contents and the `data/manifest.json` containing descriptive metadata. The `data/README` file
-contains background information.
+their contents and the `data/manifest.json` containing descriptive metadata.
+In addition, the `data/README` file contains background information.
 
 ![Image of the whole thing](images/MetaBags.png)
 
-`
+If you want to validate a newly created bag of bags, then the `-v` option will also:
+* Use `bdbag_api.resolve_fetch` to download the sub-bags
+* Use `bdbag_api.validate_bag` to validate the complete bag of bags
+
