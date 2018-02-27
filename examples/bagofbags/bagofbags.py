@@ -60,7 +60,11 @@ def get_size(link):
     r = requests.head(link)
     r.raise_for_status()
     if r.ok:
-        size = r.headers['Content-Length']
+        # Some servers do not return a Content-Length
+        try:
+            size = r.headers['Content-Length']
+        except:
+            size = 0
     return(size) 
 
 
