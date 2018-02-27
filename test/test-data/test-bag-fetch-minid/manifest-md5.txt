@@ -1,0 +1,2 @@
+64ed533554cc55b83c211b6c3e885702  data/README.txt
+c8193ccc60cf2e79ecbf66241bc6dcee  data/non-redundant_fimo_motifs.meme

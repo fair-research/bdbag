@@ -1,16 +1,8 @@
 import os
-import sys
 import datetime
 import logging
-import bdbag
+from bdbag import urlsplit, urlunsplit, urlretrieve, get_typed_exception
 import bdbag.fetch.auth.keychain as keychain
-
-if sys.version_info > (3,):
-    from urllib.request import urlretrieve
-    from urllib.parse import urlsplit, urlunsplit
-else:
-    from urllib import urlretrieve
-    from urlparse import urlsplit, urlunsplit
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +59,7 @@ def get_file(url, output_path, auth_config, credentials=None):
         return True
 
     except Exception as e:
-        logger.error('FTP Request Exception: %s' % (bdbag.get_typed_exception(e)))
+        logger.error('FTP Request Exception: %s' % (get_typed_exception(e)))
         logger.warning('File transfer failed: [%s]' % output_path)
 
     return False

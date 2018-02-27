@@ -1,0 +1,1 @@
+minid:b97957	1262183	data/non-redundant_fimo_motifs.meme

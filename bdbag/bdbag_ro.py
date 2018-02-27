@@ -1,7 +1,9 @@
+import sys
 import os
 import json
 import copy
-from bdbag import guess_mime_type, add_mime_types, VERSION, BAGIT_VERSION
+from collections import OrderedDict
+from bdbag import urlsplit, urlunsplit, urlquote, guess_mime_type, add_mime_types, VERSION, BAGIT_VERSION
 from datetime import datetime
 from tzlocal import get_localzone
 import logging
@@ -26,6 +28,19 @@ def check_input(obj):
     if not isinstance(obj, dict):
         raise ValueError(
             "bdbag_ro: invalid input object type (%s), expected (dict)" % type(obj).__name__)
+
+
+def read_ro_manifest(path):
+    with open(path) as mf:
+        manifest = mf.read()
+
+    return json.loads(manifest, object_pairs_hook=OrderedDict)
+
+
+def read_bag_ro_manifest(bag_path):
+    bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata", "manifest.json"))
+
+    return read_ro_manifest(bag_ro_metadata_path)
 
 
 def write_ro_manifest(obj, path):
@@ -95,26 +110,26 @@ def add_file_metadata(manifest,
         raise ValueError("Error while adding file metadata to RO manifest. "
                          "At least one of the parameters \"source_url\" or \"local_path\" must be specified")
 
+    path = local_path if local_path else source_url
     if not conforms_to:
-        path = local_path if local_path else source_url
         file_ext = os.path.splitext(path)[1][1:]
         file_ext = file_ext.lstrip(".") if file_ext else None
         conforms_to = FILETYPE_ONTOLOGY_MAP.get(file_ext, None)
 
     if not media_type:
-        media_type = guess_mime_type(source_url)
+        media_type = guess_mime_type(path)
 
     uri = source_url
     retrieved_from = None
 
     if local_path:
-        uri = ''.join(["../data/", local_path])
+        uri = ensure_payload_path_prefix(local_path)
         if source_url:
-            retrieved_from = dict(retrievedFrom=source_url)
+            retrieved_from = dict(retrievedFrom=escape_url_path(source_url))
 
     add_provenance(
         add_aggregate(manifest,
-                      uri=uri,
+                      uri=escape_url_path(uri),
                       mediatype=media_type,
                       conforms_to=conforms_to,
                       bundled_as=bundled_as),
@@ -205,7 +220,7 @@ def make_bundled_as(uri=None, folder=None, filename=None):
     if filename:
         bundled_as['filename'] = filename
     if folder is not None:
-        bundled_as['folder'] = ''.join(["../data/", folder.replace("\\", "/")])
+        bundled_as['folder'] = ensure_payload_path_prefix(folder)
 
     return bundled_as
 
@@ -271,6 +286,30 @@ def _make_isoformat_date(date=None):
         now = datetime.now(tz=get_localzone())
         now = now.replace(microsecond=0)
         return now.isoformat()
+
+
+def ensure_payload_path_prefix(input_path):
+    input_path = input_path.replace("\\", "/")
+    if input_path.startswith("/"):
+        input_path = input_path.lstrip("/")
+    if input_path == "data":
+        output_path = "../data/"
+    elif input_path.startswith("data/"):
+        output_path = ''.join(["../", input_path])
+    elif input_path.startswith("../data/"):
+        output_path = input_path
+    else:
+        output_path = ''.join(["../data/", input_path])
+
+    return output_path
+
+
+def escape_url_path(url):
+    urlparts = urlsplit(url)
+    path = urlquote(urlparts.path)
+    query = urlquote(urlparts.query)
+    fragment = urlquote(urlparts.fragment)
+    return urlunsplit((urlparts.scheme, urlparts.netloc, path, query, fragment))
 
 
 FILETYPE_ONTOLOGY_MAP = {

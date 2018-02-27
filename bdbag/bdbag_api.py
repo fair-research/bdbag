@@ -8,11 +8,12 @@ import datetime
 import tempfile
 import tarfile
 import zipfile
-import bdbag
 import bdbag.bdbagit as bdbagit
 import bdbag.bdbagit_profile as bdbp
 from collections import OrderedDict
-from bdbag.fetch import fetcher
+from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL, BAG_PROFILE_TAG, DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, \
+    DEFAULT_CONFIG_PATH, get_typed_exception
+from bdbag.fetch.fetcher import fetch_bag_files
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
 logger = logging.getLogger(__name__)
@@ -28,26 +29,26 @@ def configure_logging(level=logging.INFO, logpath=None):
 
 
 def create_default_config():
-    if not os.path.isdir(bdbag.DEFAULT_CONFIG_PATH):
+    if not os.path.isdir(DEFAULT_CONFIG_PATH):
         try:
-            os.makedirs(bdbag.DEFAULT_CONFIG_PATH)
+            os.makedirs(DEFAULT_CONFIG_PATH)
         except OSError as error:
             if error.errno != errno.EEXIST:
                 raise
-    with open(bdbag.DEFAULT_CONFIG_FILE, 'w') as cf:
-        cf.write(json.dumps(bdbag.DEFAULT_CONFIG, sort_keys=True, indent=4, separators=(',', ': ')))
+    with open(DEFAULT_CONFIG_FILE, 'w') as cf:
+        cf.write(json.dumps(DEFAULT_CONFIG, sort_keys=True, indent=4, separators=(',', ': ')))
         cf.close()
 
 
 def read_config(config_file, create_default=True):
-    config = json.dumps(bdbag.DEFAULT_CONFIG)
-    if config_file == bdbag.DEFAULT_CONFIG_FILE and not os.path.isfile(config_file) and create_default:
+    config = json.dumps(DEFAULT_CONFIG)
+    if config_file == DEFAULT_CONFIG_FILE and not os.path.isfile(config_file) and create_default:
         logger.debug("No default configuration file found, attempting to create one.")
         try:
             create_default_config()
         except Exception as e:
             logger.debug("Unable to create default configuration file %s. Using internal defaults. %s" %
-                         (bdbag.DEFAULT_CONFIG_FILE, bdbag.get_typed_exception(e)))
+                         (DEFAULT_CONFIG_FILE, get_typed_exception(e)))
     if os.path.isfile(config_file):
         with open(config_file) as cf:
             config = cf.read()
@@ -187,19 +188,19 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
             logger.warning(
                 "%s. Resolve this file reference by either 1) adding the missing file to the bag payload or 2) adding "
                 "a remote file reference in fetch.txt. or 3) re-run with the \"update\" flag set in order to remove "
-                "this file from the bag manifest." % bdbag.get_typed_exception(e))
+                "this file from the bag manifest." % get_typed_exception(e))
     for path in only_on_fs:
         e = bdbagit.UnexpectedFile(path)
         if not quiet:
             logger.warning(
                 "%s. Re-run with the \"update\" flag set in order to add this file to the manifest."
-                % bdbag.get_typed_exception(e))
+                % get_typed_exception(e))
     for path in only_in_fetch:
         e = bdbagit.UnexpectedRemoteFile(path)
         if not quiet:
             logger.warning(
                 "%s. Ensure that any remote file references from fetch.txt are also present in the manifest and "
-                "re-run with the \"update\" flag set in order to apply this change." % bdbag.get_typed_exception(e))
+                "re-run with the \"update\" flag set in order to apply this change." % get_typed_exception(e))
 
     return payload_consistent
 
@@ -233,7 +234,7 @@ def make_bag(bag_path,
              metadata=None,
              metadata_file=None,
              remote_file_manifest=None,
-             config_file=bdbag.DEFAULT_CONFIG_FILE):
+             config_file=DEFAULT_CONFIG_FILE):
     bag = None
     try:
         bag = bdbagit.BDBag(bag_path)
@@ -259,7 +260,8 @@ def make_bag(bag_path,
         bag_metadata['Bagging-Date'] = datetime.date.strftime(datetime.date.today(), "%Y-%m-%d")
 
     if 'Bag-Software-Agent' not in bag_metadata:
-        bag_metadata['Bag-Software-Agent'] = 'bdbag.py <http://github.com/ini-bdds/bdbag>'
+        bag_metadata['Bag-Software-Agent'] = \
+            'BDBag version: %s (Bagit version: %s) <%s>' % (VERSION, BAGIT_VERSION, PROJECT_URL)
 
     if bag:
         if update:
@@ -383,7 +385,7 @@ def extract_bag(bag_path, output_path=None, temp=False):
     return output_path
 
 
-def validate_bag(bag_path, fast=False, callback=None, config_file=bdbag.DEFAULT_CONFIG_FILE):
+def validate_bag(bag_path, fast=False, callback=None, config_file=DEFAULT_CONFIG_FILE):
     config = read_config(config_file)
     bag_config = config['bag_config']
     bag_processes = bag_config.get('bag_processes', 1)
@@ -399,7 +401,7 @@ def validate_bag(bag_path, fast=False, callback=None, config_file=bdbag.DEFAULT_
                        "necessarily invalid. Resolve remote file references (if any) and re-validate.")
         raise e
     except bdbagit.BaggingInterruptedError as e:
-        logger.warning(bdbag.get_typed_exception(e))
+        logger.warning(get_typed_exception(e))
         raise e
     except Exception as e:
         raise RuntimeError("Unhandled exception while validating bag: %s" % e)
@@ -424,7 +426,7 @@ def validate_bag_profile(bag_path, profile_path=None):
 
     # Instantiate a profile, supplying its URI.
     if not profile_path:
-        profile_path = bag.info.get(bdbag.BAG_PROFILE_TAG, None)
+        profile_path = bag.info.get(BAG_PROFILE_TAG, None)
         if not profile_path:
             raise bdbp.ProfileValidationError("Bag does not contain a BagIt-Profile-Identifier")
 
@@ -492,10 +494,15 @@ def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False
     return remote_files
 
 
-def resolve_fetch(bag_path, force=False, callback=None, keychain_file=DEFAULT_KEYCHAIN_FILE):
+def resolve_fetch(bag_path,
+                  force=False,
+                  callback=None,
+                  keychain_file=DEFAULT_KEYCHAIN_FILE,
+                  config_file=DEFAULT_CONFIG_FILE):
     bag = bdbagit.BDBag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=True):
         logger.info("Attempting to resolve remote file references from fetch.txt...")
-        return fetcher.fetch_bag_files(bag, keychain_file, force, callback)
+        config = read_config(config_file if config_file else DEFAULT_CONFIG_FILE)
+        return fetch_bag_files(bag, keychain_file, force, callback, config)
     else:
         return True

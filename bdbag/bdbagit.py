@@ -3,6 +3,7 @@ from collections import OrderedDict
 from bagit import *
 from bagit import _, _can_read, _can_bag, _make_tag_file, _make_tagmanifest_file, _encode_filename, _decode_filename, \
     _calc_hashes
+from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,6 +19,11 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
         checksums = DEFAULT_CHECKSUMS
 
     bag_dir = os.path.abspath(bag_dir)
+    cwd = os.path.abspath(os.path.curdir)
+
+    if cwd.startswith(bag_dir) and cwd != bag_dir:
+        raise RuntimeError(_('Bagging a parent of the current directory is not supported'))
+
     LOGGER.info(_("Creating bag for directory %s"), bag_dir)
 
     if not os.path.isdir(bag_dir):
@@ -91,8 +97,8 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
             if 'Bagging-Date' not in bag_info:
                 bag_info['Bagging-Date'] = date.strftime(date.today(), "%Y-%m-%d")
             if 'Bag-Software-Agent' not in bag_info:
-                bag_info['Bag-Software-Agent'] = 'bdbagit.py v%s <%s>' % (VERSION, PROJECT_URL)
-
+                bag_info['Bag-Software-Agent'] = \
+                    'BDBag version: %s (Bagit version: %s) <%s>' % (VERSION, BAGIT_VERSION, PROJECT_URL)
             bag_info['Payload-Oxum'] = "%s.%s" % (total_bytes, total_files)
             _make_tag_file('bag-info.txt', bag_info)
 
@@ -174,7 +180,7 @@ def _make_fetch_file(path, remote_entries):
     LOGGER.info('Writing fetch.txt')
     fetch_file_path = os.path.join(path, "fetch.txt")
 
-    with open(fetch_file_path, 'w') as fetch_file:
+    with open_text_file(fetch_file_path, 'w') as fetch_file:
         for filename in sorted(remote_entries.keys()):
             fetch_file.write("%s\t%s\t%s\n" %
                              (remote_entries[filename]['url'],

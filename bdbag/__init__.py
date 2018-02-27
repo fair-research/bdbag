@@ -1,4 +1,5 @@
 import os
+import sys
 import mimetypes
 from pkg_resources import get_distribution, DistributionNotFound
 
@@ -9,6 +10,7 @@ try:
     VERSION = get_distribution("bdbag").version
 except DistributionNotFound:
     VERSION = '0.0.dev0'
+PROJECT_URL = 'https://github.com/ini-bdds/bdbag'
 
 try:
     BAGIT_VERSION = get_distribution("bagit").version
@@ -18,6 +20,9 @@ except DistributionNotFound:
 BAG_PROFILE_TAG = 'BagIt-Profile-Identifier'
 BDBAG_PROFILE_ID = 'https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json'
 BDBAG_RO_PROFILE_ID = 'https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-ro-profile.json'
+
+ID_RESOLVER_TAG = 'identifier_resolvers'
+DEFAULT_ID_RESOLVERS = ['n2t.net', 'identifiers.org']
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser('~'), '.bdbag')
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')
@@ -30,8 +35,16 @@ DEFAULT_CONFIG = {
         {
             BAG_PROFILE_TAG: BDBAG_PROFILE_ID
         }
-    }
+    },
+    ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
 }
+
+if sys.version_info > (3,):
+    from urllib.parse import quote as urlquote, urlsplit, urlunsplit
+    from urllib.request import urlretrieve, urlopen
+else:
+    from urllib import quote as urlquote, urlretrieve, urlopen
+    from urlparse import urlsplit, urlunsplit
 
 
 def get_typed_exception(e):

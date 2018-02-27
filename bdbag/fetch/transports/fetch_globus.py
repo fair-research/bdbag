@@ -1,15 +1,9 @@
 import os
-import sys
 import platform
 import logging
-import bdbag
+from bdbag import urlsplit, get_typed_exception
 import bdbag.fetch.auth.keychain as keychain
 import globus_sdk
-
-if sys.version_info > (3,):
-    from urllib.parse import urlsplit
-else:
-    from urlparse import urlsplit
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +30,7 @@ def authenticate(url, auth_config):
             if auth.auth_type == 'token':
                 return auth.auth_params.transfer_token, auth.auth_params.local_endpoint
         except Exception as e:
-            logger.warn("Unhandled exception getting Globus token: %s" % bdbag.get_typed_exception(e))
+            logger.warn("Unhandled exception getting Globus token: %s" % get_typed_exception(e))
 
     return None, None
 
@@ -95,6 +89,6 @@ def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
         return True
 
     except Exception as e:
-        logger.error('Globus transfer request exception: %s' % bdbag.get_typed_exception(e))
+        logger.error('Globus transfer request exception: %s' % get_typed_exception(e))
 
     return False

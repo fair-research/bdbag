@@ -32,15 +32,9 @@ else:
 
 """
 import os
-import sys
 import logging
 import json
-from bdbag import guess_mime_type
-
-if sys.version_info > (3,):
-    from urllib.request import urlopen
-else:
-    from urllib import urlopen
+from bdbag import guess_mime_type, urlopen
 
 
 # Define an exception class for use within this module.

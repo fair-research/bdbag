@@ -250,7 +250,8 @@ def main():
                 sys.stderr.write(ASYNC_TRANSFER_VALIDATION_WARNING)
             bdb.resolve_fetch(path,
                               force=True if args.resolve_fetch == 'all' else False,
-                              keychain_file=args.keychain_file)
+                              keychain_file=args.keychain_file,
+                              config_file=args.config_file)
 
         if args.validate:
             if is_file:

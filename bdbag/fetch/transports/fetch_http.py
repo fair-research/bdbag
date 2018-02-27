@@ -1,18 +1,12 @@
 import os
-import sys
 import datetime
 import logging
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import certifi
-import bdbag
+from bdbag import urlsplit, get_typed_exception
 import bdbag.fetch.auth.keychain as keychain
-
-if sys.version_info > (3,):
-    from urllib.parse import urlsplit
-else:
-    from urlparse import urlsplit
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +88,7 @@ def get_session(url, auth_config):
                 break
 
         except Exception as e:
-            logger.warning("Unhandled exception during HTTP(S) authentication: %s" % bdbag.get_typed_exception(e))
+            logger.warning("Unhandled exception during HTTP(S) authentication: %s" % get_typed_exception(e))
 
     if not session:
         url_parts = urlsplit(url)
@@ -158,7 +152,7 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
             return True
 
     except requests.exceptions.RequestException as e:
-        logger.error('HTTP Request Exception: %s' % (bdbag.get_typed_exception(e)))
+        logger.error('HTTP Request Exception: %s' % (get_typed_exception(e)))
 
     return False
 

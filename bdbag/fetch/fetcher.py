@@ -1,13 +1,7 @@
-import sys
 import datetime
-import logging
+from bdbag import ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS, DEFAULT_CONFIG, urlsplit
 from bdbag.fetch.transports import *
 from bdbag.fetch.auth.keychain import *
-
-if sys.version_info > (3,):
-    from urllib.parse import urlsplit
-else:
-    from urlparse import urlsplit
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +13,15 @@ SCHEME_GLOBUS = 'globus'
 SCHEME_FTP = 'ftp'
 SCHEME_SFTP = 'sftp'
 SCHEME_ARK = 'ark'
+SCHEME_MINID = 'minid'
 SCHEME_TAG = 'tag'
 
 
-def fetch_bag_files(bag, keychain_file, force=False, callback=None):
+def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAULT_CONFIG):
 
     success = True
     auth = read_keychain(keychain_file)
+    resolvers = config.get(ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS) if config else DEFAULT_ID_RESOLVERS
     current = 0
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     start = datetime.datetime.now()
@@ -36,7 +32,7 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None):
                 logger.debug("Not fetching already present file: %s" % output_path)
             pass
         else:
-            success = fetch_file(url, size, output_path, auth)
+            success = fetch_file(url, size, output_path, auth, resolvers=resolvers)
         if callback:
             current += 1
             if not callback(current, total):
@@ -48,7 +44,7 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None):
     return success
 
 
-def fetch_file(url, size, path, auth):
+def fetch_file(url, size, path, auth, **kwargs):
 
     scheme = urlsplit(url, allow_fragments=True).scheme.lower()
     if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
@@ -57,8 +53,9 @@ def fetch_file(url, size, path, auth):
         return fetch_ftp.get_file(url, path, auth)
     elif SCHEME_GLOBUS == scheme:
         return fetch_globus.get_file(url, path, auth)
-    elif SCHEME_ARK == scheme:
-        for url in fetch_ark.resolve(url):
+    elif SCHEME_ARK == scheme or SCHEME_MINID == scheme:
+        resolvers = kwargs.get("resolvers")
+        for url in fetch_identifier.resolve(url, resolvers):
             if fetch_file(url, size, path, auth):
                 return True
         return False
