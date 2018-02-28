@@ -125,11 +125,11 @@ def add_file_metadata(manifest,
     if local_path:
         uri = ensure_payload_path_prefix(local_path)
         if source_url:
-            retrieved_from = dict(retrievedFrom=escape_url_path(source_url))
+            retrieved_from = dict(retrievedFrom=source_url)
 
     add_provenance(
         add_aggregate(manifest,
-                      uri=escape_url_path(uri),
+                      uri=uri,
                       mediatype=media_type,
                       conforms_to=conforms_to,
                       bundled_as=bundled_as),
