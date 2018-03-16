@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import mimetypes
 from pkg_resources import get_distribution, DistributionNotFound
@@ -40,10 +41,10 @@ DEFAULT_CONFIG = {
 }
 
 if sys.version_info > (3,):
-    from urllib.parse import quote as urlquote, urlsplit, urlunsplit
+    from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
     from urllib.request import urlretrieve, urlopen
 else:
-    from urllib import quote as urlquote, urlretrieve, urlopen
+    from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen
     from urlparse import urlsplit, urlunsplit
 
 
@@ -71,3 +72,24 @@ def guess_mime_type(file_path):
         content_type = mtype[1]
 
     return content_type
+
+
+def parse_content_disposition(value):
+    m = re.match("^filename[*]=UTF-8''(?P<name>[-_.~A-Za-z0-9%]+)$", value)
+    if not m:
+        raise ValueError('Cannot parse content-disposition "%s".' % value)
+
+    n = m.groupdict()['name']
+
+    try:
+        n = urlunquote(str(n))
+    except Exception as e:
+        raise ValueError('Invalid URL encoding of content-disposition filename component. %s.' % e)
+
+    try:
+        if sys.version_info < (3,):
+            n = n.decode('utf8')
+    except Exception as e:
+        raise ValueError('Invalid UTF-8 encoding of content-disposition filename component. %s.' % e)
+
+    return n

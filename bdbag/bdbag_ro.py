@@ -129,7 +129,7 @@ def add_file_metadata(manifest,
 
     add_provenance(
         add_aggregate(manifest,
-                      uri=uri,
+                      uri=escape_url_path(uri),
                       mediatype=media_type,
                       conforms_to=conforms_to,
                       bundled_as=bundled_as),
@@ -306,7 +306,7 @@ def ensure_payload_path_prefix(input_path):
 
 def escape_url_path(url):
     urlparts = urlsplit(url)
-    path = urlquote(urlparts.path)
+    path = urlquote(urlparts.path, '/')
     query = urlquote(urlparts.query)
     fragment = urlquote(urlparts.fragment)
     return urlunsplit((urlparts.scheme, urlparts.netloc, path, query, fragment))

@@ -18,7 +18,7 @@ setup(
     url='https://github.com/ini-bdds/bdbag/',
     maintainer='USC Information Sciences Institute, Informatics Systems Research Division',
     maintainer_email='isrd-support@isi.edu',
-    version="1.2.0",
+    version="1.2.1",
     packages=find_packages(),
     package_data={'bdbag': ['profiles/*.*']},
     test_suite='test',
@@ -52,7 +52,7 @@ setup(
                       'tzlocal',
                       'requests',
                       'certifi',
-                      'bagit==1.6.3',
+                      'bagit==1.6.4',
                       'globus-sdk==1.3.0'],
     license='Apache 2.0',
     classifiers=[

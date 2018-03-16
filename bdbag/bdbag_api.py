@@ -109,6 +109,7 @@ def revert_bag(bag_path):
         logger.debug("Bag revert: moving payload file %s to %s", old_path, new_path)
         os.rename(old_path, new_path)
     os.rmdir(data_path)
+    logging.info("Bag directory %s has been reverted back to a normal directory." % bag_path)
 
 
 def prune_bag_manifests(bag):
