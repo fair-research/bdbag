@@ -5,7 +5,7 @@
         ],
         "bag_archiver": "tgz",
         "bag_metadata": {
-            "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
+            "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
             "Contact-Name": "bdbag test"
         },
         "bag_processes": 1

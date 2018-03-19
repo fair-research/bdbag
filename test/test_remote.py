@@ -47,10 +47,10 @@ class TestRemoteAPI(BaseTest):
             with open(fetch_file) as ff:
                 fetch_txt = ff.read()
             self.assertIn(
-                'https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json'
-                '\t723\tdata/bdbag-profile.json', fetch_txt)
+                'https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt'
+                '\t201\tdata/test-fetch-http.txt', fetch_txt)
             self.assertIn(
-                'ark:/88120/r8059v\t632860\tdata/minid_v0.1_Nov_2015.pdf', fetch_txt)
+                'ark:/57799/b9dd5t\t223\tdata/test-fetch-identifier.txt', fetch_txt)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -76,7 +76,8 @@ class TestRemoteAPI(BaseTest):
             bag_path = ospj(self.test_archive_dir, 'test-bag.zip')
             bdb.validate_bag_serialization(
                 bag_path,
-                bag_profile_path='https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json')
+                bag_profile_path=
+                'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json')
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 

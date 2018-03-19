@@ -1,15 +1,15 @@
 [
   {
-    "url":"ark:/88120/r8059v",
-    "length": 632860,
-    "filename": "minid_v0.1_Nov_2015.pdf",
-    "sha256": "cacc1abf711425d3c554277a5989df269cefaa906d27f1aaa72205d30224ed5f"
+    "url":"ark:/57799/b9dd5t",
+    "length": 223,
+    "filename": "test-fetch-identifier.txt",
+    "sha256": "59e6e0b91b51d49a5fb0e1068980d2e7d2b2001a6d11c59c64156d32e197a626"
   },
   {
-    "url":"https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
-    "length":723,
-    "filename":"bdbag-profile.json",
-    "md5":"4754a1f3204f8b2de547477117f65f6d",
-    "sha256":"3039ea47828e032ea2fe63679281c50760e68b5773a76f5873c4ae7acdf87951"
+    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt",
+    "length":201,
+    "filename":"test-fetch-http.txt",
+    "md5":"f3ad851f4213d41ce9690542010bffa0",
+    "sha256":"861236468065b9b0ae369ae99bbc7df08b4db919438e288d923efc0e77775bbf"
   }
 ]
