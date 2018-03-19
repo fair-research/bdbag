@@ -1,4 +1,4 @@
-a995130af5f92bbd227310fb1b9e30f1 bag-info.txt
+786dcab0597d9bd87e0d208f40a1c566 bag-info.txt
 9e5ad981e0d29adc278f6a294b8c2aca bagit.txt
 00388d20a00fb43d92f074af75a7a4ef manifest-md5.txt
 6941709082607b8f61fe9c4ef01a1747 manifest-sha1.txt

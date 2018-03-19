@@ -3,9 +3,7 @@ import os
 import sys
 import logging
 import bagit
-import bdbag
-from bdbag import bdbag_api as bdb
-from bdbag import DEFAULT_CONFIG_FILE
+from bdbag import bdbag_api as bdb, get_typed_exception, DEFAULT_CONFIG_FILE, VERSION
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
 BAG_METADATA = dict()
@@ -32,12 +30,12 @@ class AddMetadataAction(argparse.Action):
 
 
 def parse_cli():
-    description = 'BD2K BDBag utility for working with Bagit/RO archives'
+    description = 'BDBag utility for working with Bagit/RO archives'
 
     parser = argparse.ArgumentParser(
-        description=description, epilog="For more information see: http://github.com/ini-bdds/bdbag")
+        description=description, epilog="For more information see: http://github.com/fair-research/bdbag")
 
-    parser.add_argument('--version', action='version', version=bdbag.VERSION)
+    parser.add_argument('--version', action='version', version=VERSION)
 
     standard_args = parser.add_argument_group('Bag arguments')
 
@@ -281,7 +279,7 @@ def main():
 
     except Exception as e:
         result = 1
-        error = "Error: %s" % bdbag.get_typed_exception(e)
+        error = "Error: %s" % get_typed_exception(e)
 
     finally:
         if temp_path:

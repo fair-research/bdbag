@@ -11,7 +11,7 @@ try:
     VERSION = get_distribution("bdbag").version
 except DistributionNotFound:
     VERSION = '0.0.dev0'
-PROJECT_URL = 'https://github.com/ini-bdds/bdbag'
+PROJECT_URL = 'https://github.com/fair-research/bdbag'
 
 try:
     BAGIT_VERSION = get_distribution("bagit").version
@@ -19,8 +19,8 @@ except DistributionNotFound:
     BAGIT_VERSION = '0.0.dev0'
 
 BAG_PROFILE_TAG = 'BagIt-Profile-Identifier'
-BDBAG_PROFILE_ID = 'https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json'
-BDBAG_RO_PROFILE_ID = 'https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-ro-profile.json'
+BDBAG_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json'
+BDBAG_RO_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-ro-profile.json'
 
 ID_RESOLVER_TAG = 'identifier_resolvers'
 DEFAULT_ID_RESOLVERS = ['n2t.net', 'identifiers.org']

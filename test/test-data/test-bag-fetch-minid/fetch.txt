@@ -1,1 +1,1 @@
-minid:b97957	1262183	data/non-redundant_fimo_motifs.meme
+minid:b9dd5t	223	data/test-fetch-identifier.txt

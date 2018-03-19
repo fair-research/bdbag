@@ -1,12 +1,12 @@
 # bdbag
-[![Build Status](https://travis-ci.org/ini-bdds/bdbag.svg)](https://travis-ci.org/ini-bdds/bdbag)
+[![Build Status](https://travis-ci.org/fair-research/bdbag.svg)](https://travis-ci.org/fair-research/bdbag)
 
 #### BDDS Big Data Bag Utilities
 
 The *bdbag* utilities are a collection of software programs for working with
 [BagIt](https://datatracker.ietf.org/doc/draft-kunze-bagit/) packages that conform the BDDS Bagit and BDDS Bagit/RO profiles.
 
-The *bdbag* [profiles](https://github.com/ini-bdds/bdbag/tree/master/profiles) specify the use of the fetch.txt file, require serialization, and specify what manifests must be provided with a *bdbag*.
+The *bdbag* [profiles](https://github.com/fair-research/bdbag/tree/master/profiles) specify the use of the fetch.txt file, require serialization, and specify what manifests must be provided with a *bdbag*.
 
 These utilities combine various other components such as the
 [Bagit-Python](https://github.com/LibraryOfCongress/bagit-python) bag creation utility and the
@@ -22,7 +22,7 @@ Enhanced bag support includes:
 * Built-in profile validation.
 * Built-in support for creation of bags with [Bagit/RO profile](https://github.com/ResearchObject/bagit-ro) compatibility.
 
-An experimental Graphical User Interface (GUI) for *bdbag* can be found [here](https://github.com/ini-bdds/bdbag_gui).
+An experimental Graphical User Interface (GUI) for *bdbag* can be found [here](https://github.com/fair-research/bdbag_gui).
 
 ### Dependencies
 
@@ -37,11 +37,11 @@ pip install bdbag
 ```
 
 ### Installation from Source
-Download the current [bdbag](https://github.com/ini-bdds/bdbag/archive/master.zip) source code from GitHub or
+Download the current [bdbag](https://github.com/fair-research/bdbag/archive/master.zip) source code from GitHub or
 alternatively clone the source from GitHub if you have *git* installed:
 
 ```sh
-git clone https://github.com/ini-bdds/bdbag
+git clone https://github.com/fair-research/bdbag
 ```
 From the root of the **bdbag** source code directory execute the following command:
 ```sh

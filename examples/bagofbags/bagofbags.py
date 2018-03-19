@@ -97,7 +97,7 @@ def generate_remote_manifest_file(minid_fields, remote_manifest_filepath):
 
 def write_readme(filename, minid_fields):
     with open(filename + '/README', 'wt') as e_writer:
-        e_writer.write('This is a Big Data bag (BDBag: https://github.com/ini-bdds/bdbag)\n')
+        e_writer.write('This is a Big Data bag (BDBag: https://github.com/fair-research/bdbag)\n')
         e_writer.write('that itself contains ' + str(len(minid_fields)) + ' Minid-referenced BDBags, as follows:\n\n')
         for entry in minid_fields:
             (minid, title, link, filename, checksum, size) = entry
@@ -146,7 +146,7 @@ def main(argv):
     # Create metadata/manifest.json file with Research Object JSON object
     ro_manifest = ro.init_ro_manifest(author_name=args.author_name, author_orcid=args.author_orcid,
         creator_name = 'bagofbags using BDBag version: %s (Bagit version: %s)' % (VERSION, BAGIT_VERSION),
-        creator_uri='https://github.com/ini-bdds/bdbag/examples/bagofbags/')
+        creator_uri='https://github.com/fair-research/bdbag/examples/bagofbags/')
     add_remote_file_manifest_to_ro(ro_manifest, minid_fields)
     bag_metadata_dir = os.path.abspath(os.path.join(args.bagname, 'metadata'))
     if not os.path.exists(bag_metadata_dir):

@@ -1,9 +1,9 @@
 {
   "BagIt-Profile-Info":{
-    "BagIt-Profile-Identifier":"http://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
-    "Source-Organization":"bd2k.org",
-    "External-Description":"BDDS BDBag BagIt basic profile.",
-    "Version":"0.1.20160329"
+    "BagIt-Profile-Identifier":"http://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
+    "Source-Organization":"https://fair-research.github.io/",
+    "External-Description":"BDBag BagIt basic profile.",
+    "Version":"0.1.20180319"
    },
    "Bag-Info": {
      "Payload-Oxum":{

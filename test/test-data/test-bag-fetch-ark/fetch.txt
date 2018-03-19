@@ -1,1 +1,1 @@
-ark:/88120/r8059v	632860	data/minid_v0.1_Nov_2015.pdf
+ark:/57799/b9dd5t	223	data/test-fetch-identifier.txt

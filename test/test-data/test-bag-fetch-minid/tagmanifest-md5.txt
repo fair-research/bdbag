@@ -1,5 +1,5 @@
-f70e9d0f9e3f51225f3d9ce3dca12f7e bag-info.txt
+8fcd684fc829ff7c538f656bd1bd3d77 bag-info.txt
 9e5ad981e0d29adc278f6a294b8c2aca bagit.txt
-12f64519a06050c9b5b1a942e1f53aee manifest-md5.txt
-c74c31f77636cef508c55193431f49ea manifest-sha256.txt
-939d0b39f77572ba829f7cd5b85539f5 fetch.txt
+5acf9d85aa2839393d9fee1e902f0cc6 fetch.txt
+aabd445ed7747e1d271a7cdf85053e98 manifest-md5.txt
+c51bdbc841ad21079b3897964b435636 manifest-sha256.txt

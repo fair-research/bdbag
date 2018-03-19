@@ -1,4 +1,3 @@
-import sys
 import os
 import json
 import copy
@@ -11,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 BAG_CREATOR_NAME = "BDBag version: %s (Bagit version: %s)" % (VERSION, BAGIT_VERSION)
-BAG_CREATOR_URI = "https://github.com/ini-bdds/bdbag"
+BAG_CREATOR_URI = "https://github.com/fair-research/bdbag"
 BAG_CONFORMS_TO = ['https://tools.ietf.org/html/draft-kunze-bagit-14',
                    'https://w3id.org/ro/bagit/profile']
 ORCID_BASE_URL = "http://orcid.org"

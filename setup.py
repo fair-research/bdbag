@@ -13,12 +13,12 @@ setup(
     name="bdbag",
     description="BigData Bag Utilities",
     long_description=
-    "For more information on *bdbag*, visit: https://github.com/ini-bdds/bdbag/.\n\n"
-    "For more information on the GUI frontend for *bdbag*, visit: https://github.com/ini-bdds/bdbag_gui/.\n",
-    url='https://github.com/ini-bdds/bdbag/',
+    "For more information on *bdbag*, visit: https://github.com/fair-research/bdbag/.\n\n"
+    "For more information on the GUI frontend for *bdbag*, visit: https://github.com/fair-research/bdbag_gui/.\n",
+    url='https://github.com/fair-research/bdbag/',
     maintainer='USC Information Sciences Institute, Informatics Systems Research Division',
     maintainer_email='isrd-support@isi.edu',
-    version="1.2.1",
+    version="1.2.2",
     packages=find_packages(),
     package_data={'bdbag': ['profiles/*.*']},
     test_suite='test',

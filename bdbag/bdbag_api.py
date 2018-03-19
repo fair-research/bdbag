@@ -249,7 +249,7 @@ def make_bag(bag_path,
     bag_processes = bag_config.get('bag_processes', 1)
 
     # bag metadata merge order: config(if new, else if update use existing)->metadata_file->metadata
-    if not update:
+    if not update or (update and not os.path.isfile(os.path.join(bag_path, "bag-info.txt"))):
         bag_metadata = bag_config.get('bag_metadata', {}).copy()
     else:
         bag_metadata = bag.info

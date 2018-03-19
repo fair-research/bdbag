@@ -262,7 +262,7 @@ Here's how that would be done using the same starting bag directory:
 2016-04-20 20:19:18,875 - INFO - Archiving bag (tgz): /home/mdarcy/test_bag
 2016-04-20 20:19:18,880 - INFO - Created bag archive: /home/mdarcy/test_bag.tgz
 2016-04-20 20:19:18,880 - INFO - Validating bag profile: /home/mdarcy/test_bag
-2016-04-20 20:19:18,881 - INFO - Retrieving profile: https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json
+2016-04-20 20:19:18,881 - INFO - Retrieving profile: https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json
 2016-04-20 20:19:18,990 - INFO - Bag structure conforms to specified profile
 2016-04-20 20:19:18,991 - INFO - Validating bag serialization: /home/mdarcy/test_bag.tgz
 2016-04-20 20:19:18,997 - INFO - Bag serialization conforms to specified profile
@@ -335,7 +335,7 @@ For example, given the contents of the following metadata file called "test-meta
 
 ```json
 {
-    "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
+    "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
     "External-Description": "Simple bdbag test",
     "Source-Organization": "BD2K - BDDS Team",
     "Contact-Name": "mdarcy",
@@ -372,8 +372,8 @@ required metadata that is automatically added by the bagging software:
 [mdarcy@bdds-dev ~]$ cat test_bag/bag-info.txt
 
 Arbitrary-Metadata-Value: Some arbitrary value
-Bag-Software-Agent: bdbag.py <http://github.com/ini-bdds/bdbag>
-BagIt-Profile-Identifier: https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json
+Bag-Software-Agent: bdbag.py <http://github.com/fair-research/bdbag>
+BagIt-Profile-Identifier: https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json
 Bagging-Date: 2016-04-22
 Contact-Name: mdarcy
 External-Description: Simple bdbag test
@@ -396,7 +396,7 @@ Here's an example of what a `remote-file-manifest` looks like:
 ```json
 [
   {
-    "url":"https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
+    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
     "length":723,
     "filename":"bdbag-profile.json",
     "md5":"4754a1f3204f8b2de547477117f65f6d",
@@ -454,7 +454,7 @@ drwxrwxr-x. 3 mdarcy 4096 Apr 22 12:16 ..
 
 [mdarcy@bdds-dev ~]$ cat test_bag/fetch.txt
 
-https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json     723     data/bdbag-profile.json
+https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json     723     data/bdbag-profile.json
 ark:/88120/r8059v       632860  data/minid_v0.1_Nov_2015.pdf
 
 [mdarcy@bdds-dev ~]$  cat test_bag/manifest-md5.txt

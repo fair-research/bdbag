@@ -37,7 +37,7 @@ Below is a sample *bdbag.json* file:
             "sha256"
         ],
         "bag_metadata": {
-            "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
+            "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
             "Contact-Name": "Mike D'Arcy"
         },
         "bag_processes": 1
@@ -119,7 +119,7 @@ written as-is to the bag's `bag-info.txt` file.
 Below is a sample *metadata* configuration file:
 ```json
 {
-    "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
+    "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
     "External-Description": "Simple bdbag test",
     "Arbitrary-Metadata-Field": "This is completely arbitrary"
 }
@@ -143,7 +143,7 @@ Below is a sample *remote-file-manifest* configuration file:
 ```json
 [
     {
-        "url":"https://raw.githubusercontent.com/ini-bdds/bdbag/master/profiles/bdbag-profile.json",
+        "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
         "length":699,
         "filename":"bdbag-profile.json",
         "md5":"9faccdb6f9a47a10d9a00bd2b13f7ab3",

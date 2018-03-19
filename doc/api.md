@@ -152,7 +152,7 @@ Creates or updates the bag denoted by the `bag_path` argument.
 |remote_file_manifest|`string`|A JSON file representation of remote file entries that will be used to add remote files to the bag file manifest(s) and used to create the bag's `fetch.txt`. The format of this file is described [here](./config.md/#remote-file-manifest).
 |config_file|`string`|A JSON file representation of configuration data that is used during bag creation and update. The format of this file is described [here](./config.md#bdbag.json).
 
-**Returns**: `bag` - An instantiated [bagit-python](https://github.com/ini-bdds/bagit-python/blob/master/bagit.py) `bag` class object.
+**Returns**: `bag` - An instantiated [bagit-python](https://github.com/fair-research/bagit-python/blob/master/bagit.py) `bag` class object.
 
 -----
 

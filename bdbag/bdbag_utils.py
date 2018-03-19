@@ -5,9 +5,7 @@ import argparse
 import hashlib
 import logging
 import json
-
 import binascii
-
 from bdbag import bdbag_api as bdb, parse_content_disposition, urlsplit
 from bdbag import get_typed_exception as gte
 from bdbag.fetch.transports.fetch_http import get_session
@@ -174,7 +172,7 @@ def parse_cli():
     description = 'Utility routines for working with BDBags'
 
     parser = argparse.ArgumentParser(
-        description=description, epilog="For more information see: http://github.com/ini-bdds/bdbag")
+        description=description, epilog="For more information see: http://github.com/fair-research/bdbag")
 
     parser.add_argument(
         '--quiet', action="store_true", help="Suppress logging output.")

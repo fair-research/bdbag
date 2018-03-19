@@ -267,7 +267,7 @@ class TestAPI(BaseTest):
         try:
             self.assertRaisesRegex(
                 bdbagit.BagValidationError,
-                "^Bag validation failed:.*(minid_v0[.]1_Nov_2015[.]pdf:|bdbag-profile[.]json)",
+                "^Bag validation failed:.*(test-fetch-identifier[.]txt:|test-fetch-http[.]txt)",
                 bdb.validate_bag,
                 self.test_bag_incomplete_dir, fast=False)
         except Exception as e:
