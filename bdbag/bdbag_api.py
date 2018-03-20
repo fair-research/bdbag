@@ -345,6 +345,7 @@ def extract_bag(bag_path, output_path=None, temp=False):
     if not os.path.exists(bag_path):
         raise RuntimeError("Specified bag path not found: %s" % bag_path)
 
+    bag_dir = os.path.splitext(os.path.basename(bag_path))[0]
     if os.path.isfile(bag_path):
         if temp:
             output_path = tempfile.mkdtemp(prefix='bag_')
@@ -355,6 +356,7 @@ def extract_bag(bag_path, output_path=None, temp=False):
                 logger.info("Specified output path %s already exists, moving existing directory to %s" %
                             (output_path, newpath))
                 shutil.move(output_path, newpath)
+            output_path = os.path.dirname(bag_path)
         if zipfile.is_zipfile(bag_path):
             logger.info("Extracting ZIP archived bag file: %s" % bag_path)
             with open(bag_path, 'rb') as bag_file:
@@ -370,20 +372,10 @@ def extract_bag(bag_path, output_path=None, temp=False):
             raise RuntimeError("Archive format not supported for bag file: %s"
                                "\nSupported archive formats are ZIP or TAR/GZ/BZ2" % bag_path)
 
-        for dirpath, dirnames, filenames in os.walk(output_path):
-            if len(dirnames) > 1:
-                # According to the spec there should only ever be one base bag directory at the base of a
-                # deserialized archive. It is not clear if other non-bag directories are allowed.
-                # For now, assume no other dirs allowed and terminate if more than one present.
-                raise RuntimeError(
-                    "Invalid bag serialization: Multiple base directories found in extracted archive.")
-            else:
-                output_path = os.path.abspath(os.path.join(dirpath, dirnames[0]))
-                break
+    extracted_path = os.path.join(output_path, bag_dir)
+    logger.info("File %s was successfully extracted to directory %s" % (bag_path, extracted_path))
 
-    logger.info("File %s was successfully extracted to directory %s" % (bag_path, output_path))
-
-    return output_path
+    return extracted_path
 
 
 def validate_bag(bag_path, fast=False, callback=None, config_file=DEFAULT_CONFIG_FILE):
