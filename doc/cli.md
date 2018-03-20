@@ -148,7 +148,7 @@ This following table enumerates the various arguments and compatibility modes.
 
 | Argument | Context | Description |
 |---:| :---: | --- |
-|`<path>`|all|Required argument.
+|`<path>`|all|Required argument. When no other options are specified, creates a bag from the target path if that path is a directory and not already a bag; otherwise, if the path represents an archive file in a supported format, the file is extracted.
 |`--update`|bag dir only|An existing bag archive cannot be updated in-place. The bag must first be extracted and then updated.
 |`--revert`|bag dir only|Only a bag directory may be reverted to a non-bag directory.
 |`--archiver`|bag dir only|A bag archive cannot be created from an existing bag archive.
@@ -172,7 +172,7 @@ This following table enumerates the various arguments and compatibility modes.
 The simplest invocation of *bdbag* is to create a bag in-place by specifying an input directory. For example, given a
 directory like this:
 ```
-[mdarcy@bdds-dev ~]$ ls -lagR test_bag/
+[mdarcy@dev ~]$ ls -lagR test_bag/
 test_bag/:
 total 12
 drwxrwxr-x.  2 mdarcy   38 Apr 20 19:54 .
@@ -184,7 +184,7 @@ drwxr-xr-x. 24 mdarcy 4096 Apr 20 19:53 ..
 Executing `bdbag ./test_bag` generates the following output:
 ```
 
-[mdarcy@bdds-dev ~]$ bdbag ./test_bag/
+[mdarcy@dev ~]$ bdbag ./test_bag/
 
 2016-04-20 20:02:14,711 - INFO - creating bag for directory /home/mdarcy/test_bag
 2016-04-20 20:02:14,712 - INFO - creating data dir
@@ -208,7 +208,7 @@ Executing `bdbag ./test_bag` generates the following output:
 
 The resulting bag directory now looks like the following:
 ```
-[mdarcy@bdds-dev ~]$ ls -lagR test_bag/
+[mdarcy@dev ~]$ ls -lagR test_bag/
 test_bag/:
 total 32
 drwxrwxr-x.  3 mdarcy 4096 Apr 20 20:02 .
@@ -235,7 +235,7 @@ together into a single invocation when creating or updating a bag, and it is gen
 
 Here's how that would be done using the same starting bag directory:
 ```
-[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --validate fast --validate-profile --archive tgz
+[mdarcy@dev ~]$ bdbag ./test_bag/ --validate fast --validate-profile --archive tgz
 
 2016-04-20 20:19:18,869 - INFO - creating bag for directory /home/mdarcy/test_bag
 2016-04-20 20:19:18,869 - INFO - creating data dir
@@ -276,7 +276,7 @@ encoding to ZIP format.  While it is possible to perform all of these operations
 First, add or remove files from the bag data directory as desired. In this example we'll just add a file called `test3.txt`:
 ```
 
-[mdarcy@bdds-dev ~]$ ls -lagR test_bag/
+[mdarcy@dev ~]$ ls -lagR test_bag/
 test_bag/:
 total 32
 drwxrwxr-x.  3 mdarcy 4096 Apr 20 20:19 .
@@ -299,7 +299,7 @@ drwxrwxr-x. 3 mdarcy 4096 Apr 20 20:19 ..
 ```
 Now we can execute an `--update` command to pick up the additional file.  We can also add a new checksum manifest with `--checksum sha1` and change the archive encoding to ZIP format:
 ```
-[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --update --checksum sha1 --archive zip
+[mdarcy@dev ~]$ bdbag ./test_bag/ --update --checksum sha1 --archive zip
 
 2016-04-21 15:55:09,880 - INFO - Updating bag: /home/mdarcy/test_bag
 2016-04-21 15:55:09,881 - INFO - updating manifest-sha256.txt
@@ -337,14 +337,14 @@ For example, given the contents of the following metadata file called "test-meta
 {
     "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
     "External-Description": "Simple bdbag test",
-    "Source-Organization": "BD2K - BDDS Team",
+    "Source-Organization": "Fair-Research Team",
     "Contact-Name": "mdarcy",
     "Arbitrary-Metadata-Value": "Some arbitrary value"
 }
 ```
 Creating a bag that includes this metadata would be executed like this:
 ```
-[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --metadata-file ./test-metadata.json
+[mdarcy@dev ~]$ bdbag ./test_bag/ --metadata-file ./test-metadata.json
 
 2016-04-22 11:54:19,705 - INFO - Reading bag metadata from file /home/mdarcy/test-metadata.json
 2016-04-22 11:54:19,706 - INFO - creating bag for directory /home/mdarcy/test_bag
@@ -369,7 +369,7 @@ Creating a bag that includes this metadata would be executed like this:
 The resulting `bag-info.txt` will now contain the metadata from the `test-metadata.json` file, in addition to the
 required metadata that is automatically added by the bagging software:
 ```
-[mdarcy@bdds-dev ~]$ cat test_bag/bag-info.txt
+[mdarcy@dev ~]$ cat test_bag/bag-info.txt
 
 Arbitrary-Metadata-Value: Some arbitrary value
 Bag-Software-Agent: bdbag.py <http://github.com/fair-research/bdbag>
@@ -378,7 +378,7 @@ Bagging-Date: 2016-04-22
 Contact-Name: mdarcy
 External-Description: Simple bdbag test
 Payload-Oxum: 101.2
-Source-Organization: BD2K - BDDS Team
+Source-Organization: Fair-Research Team
 ```
 ----
 
@@ -412,7 +412,7 @@ Here's an example of what a `remote-file-manifest` looks like:
 ```
 Updating our previously created bag to add these remote files would be done like this:
 ```
-[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --update --remote-file-manifest ./test-fetch-manifest.json
+[mdarcy@dev ~]$ bdbag ./test_bag/ --update --remote-file-manifest ./test-fetch-manifest.json
 
 2016-04-22 12:16:30,412 - INFO - Updating bag: /home/mdarcy/test_bag
 2016-04-22 12:16:30,412 - INFO - Generating remote file references from ./test-fetch-manifest.json
@@ -431,7 +431,7 @@ Updating our previously created bag to add these remote files would be done like
 ```
 The result of this command is a `fetch.txt` file in our bag directory, along with manifest entries for the remote files:
 ```
-[mdarcy@bdds-dev ~]$ ls -lagR test_bag/
+[mdarcy@dev ~]$ ls -lagR test_bag/
 test_bag/:
 total 36
 drwxrwxr-x.  3 mdarcy 4096 Apr 22 12:16 .
@@ -452,18 +452,18 @@ drwxrwxr-x. 3 mdarcy 4096 Apr 22 12:16 ..
 -rw-rw-r--. 1 mdarcy   45 Apr 20 19:53 test1.txt
 -rw-rw-r--. 1 mdarcy   56 Apr 20 19:53 test2.txt
 
-[mdarcy@bdds-dev ~]$ cat test_bag/fetch.txt
+[mdarcy@dev ~]$ cat test_bag/fetch.txt
 
 https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json     723     data/bdbag-profile.json
 ark:/88120/r8059v       632860  data/minid_v0.1_Nov_2015.pdf
 
-[mdarcy@bdds-dev ~]$  cat test_bag/manifest-md5.txt
+[mdarcy@dev ~]$  cat test_bag/manifest-md5.txt
 
 4754a1f3204f8b2de547477117f65f6d  data/bdbag-profile.json
 dad6891eb4148dfed2d162370983d06f  data/test1.txt
 11069c18ee13a990265cf944359dbca5  data/test2.txt
 
-[mdarcy@bdds-dev ~]$  cat test_bag/manifest-sha256.txt
+[mdarcy@dev ~]$  cat test_bag/manifest-sha256.txt
 
 3039ea47828e032ea2fe63679281c50760e68b5773a76f5873c4ae7acdf87951  data/bdbag-profile.json
 cacc1abf711425d3c554277a5989df269cefaa906d27f1aaa72205d30224ed5f  data/minid_v0.1_Nov_2015.pdf
@@ -482,7 +482,7 @@ For any given bag, it is important to establish the bag's validity before making
 contents. If one were to receive, for example, the bag containing remote file references from the previous sample and
 attempt to validate it, the following output would be produced:
 ```
-[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --validate fast
+[mdarcy@dev ~]$ bdbag ./test_bag/ --validate fast
 
 2016-04-22 12:39:57,781 - INFO - Validating bag: /home/mdarcy/test_bag
 2016-04-22 12:39:57,782 - WARNING - BagIncompleteError: Found 2 files and 101 bytes on disk; expected 4 files and 633684 bytes. This validation error may be transient if the bag contains unresolved remote file references from a fetch.txt file. In this case the bag is incomplete but not necessarily invalid. Resolve remote file references (if any) and re-validate.
@@ -491,7 +491,7 @@ Error: [BagIncompleteError] Found 2 files and 101 bytes on disk; expected 4 file
 ```
 Resolving remote references on the example bag would yield:
 ```
-[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --resolve-fetch all
+[mdarcy@dev ~]$ bdbag ./test_bag/ --resolve-fetch all
 
 2016-04-22 12:33:20,045 - INFO - Attempting to resolve remote file references from fetch.txt...
 2016-04-22 12:33:20,054 - INFO - Starting new HTTPS connection (1): raw.githubusercontent.com
@@ -505,7 +505,7 @@ Resolving remote references on the example bag would yield:
 ```
 The bag directory would now contain the following files:
 ```
-[mdarcy@bdds-dev ~]$ ls -lagR test_bag/
+[mdarcy@dev ~]$ ls -lagR test_bag/
 test_bag/:
 total 36
 drwxrwxr-x.  3 mdarcy 4096 Apr 22 12:16 .
@@ -530,7 +530,7 @@ drwxrwxr-x. 3 mdarcy   4096 Apr 22 12:16 ..
 ```
 Finally, we can run `--validate full` on the bag in order to verify that the bag is now both complete and valid:
 ```
-[mdarcy@bdds-dev ~]$ bdbag ./test_bag/ --validate full
+[mdarcy@dev ~]$ bdbag ./test_bag/ --validate full
 
 2016-04-22 12:37:52,317 - INFO - Validating bag: /home/mdarcy/test_bag
 2016-04-22 12:37:52,318 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/test1.txt
