@@ -22,6 +22,8 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_archive_dir))
         self.test_config_dir = os.path.join(self.tmpdir, 'test-data', 'test-config')
         self.assertTrue(os.path.isdir(self.test_config_dir))
+        self.test_http_dir = os.path.join(self.tmpdir, 'test-data', 'test-http')
+        self.assertTrue(os.path.isdir(self.test_http_dir))
 
         self.test_bag_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag')
         self.assertTrue(os.path.isdir(self.test_bag_dir))
@@ -50,6 +52,12 @@ class BaseTest(unittest.TestCase):
         self.test_bag_invalid_state_fetch_filesize_dir = os.path.join(
             self.tmpdir, 'test-data', 'test-bag-invalid-state-fetch-filesize')
         self.assertTrue(os.path.isdir(self.test_bag_invalid_state_fetch_filesize_dir))
+        self.test_bag_update_invalid_fetch_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-update-invalid-fetch')
+        self.assertTrue(os.path.isdir(self.test_bag_update_invalid_fetch_dir))
+        self.test_bag_invalid_state_duplicate_manifest_fetch_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-invalid-state-duplicate-manifest-fetch')
+        self.assertTrue(os.path.isdir(self.test_bag_invalid_state_duplicate_manifest_fetch_dir))
 
     def tearDown(self):
         if os.path.isdir(self.tmpdir):

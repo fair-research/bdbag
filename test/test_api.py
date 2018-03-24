@@ -1,10 +1,10 @@
 import os
 import sys
+import shutil
 import logging
 import unittest
 import bdbag
 import bdbag.bdbagit as bdbagit
-import bdbag.bdbagit_profile as bdbagit_profile
 from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
@@ -184,6 +184,51 @@ class TestAPI(BaseTest):
             self.assertFalse(ospif(ospj(self.test_bag_dir, 'tagmanifest-sha1.txt')))
             self.assertFalse(ospif(ospj(self.test_bag_dir, 'tagmanifest-sha256.txt')))
             self.assertFalse(ospif(ospj(self.test_bag_dir, 'tagmanifest-sha512.txt')))
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_update_bag_duplicate_manifest_entry_from_remote(self):
+        logger.info(self.getTestHeader('update bag with fetch.txt entry for local file'))
+        try:
+            with self.assertRaises(bdbagit.BagManifestConflict) as ar:
+                bdb.make_bag(self.test_bag_invalid_state_duplicate_manifest_fetch_dir, update=True)
+            logger.error(bdbag.get_typed_exception(ar.exception))
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_create_bag_duplicate_manifest_entry_from_remote(self):
+        logger.info(self.getTestHeader('create bag with fetch.txt entry for local file'))
+        try:
+            duplicate_file = "test-fetch-http.txt"
+            shutil.copy(ospj(self.test_http_dir, duplicate_file), ospj(self.test_data_dir, duplicate_file))
+            with self.assertRaises(bdbagit.BagManifestConflict) as ar:
+                bdb.make_bag(self.test_data_dir,
+                             remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
+            logger.error(bdbag.get_typed_exception(ar.exception))
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_update_bag_invalid_fetch_entry(self):
+        logger.info(self.getTestHeader('update bag with invalid fetch.txt entry with missing length'))
+        try:
+            bdb.validate_bag_structure(self.test_bag_update_invalid_fetch_dir)
+            fetch = ospj(self.test_bag_update_invalid_fetch_dir, 'fetch.txt')
+            with open(fetch, "w") as ff:
+                ff.write('https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/'
+                         'test-fetch-http.txt\t-\tdata/test-fetch-http.txt\n')
+            with self.assertRaises(ValueError) as ar:
+                bdb.make_bag(self.test_bag_update_invalid_fetch_dir, update=True)
+            logger.error(bdbag.get_typed_exception(ar.exception))
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_create_bag_invalid_fetch_entry(self):
+        logger.info(self.getTestHeader('create bag with invalid fetch.txt entry with missing length'))
+        try:
+            with self.assertRaises(ValueError) as ar:
+                bdb.make_bag(self.test_data_dir,
+                             remote_file_manifest=ospj(self.test_config_dir, 'test-invalid-fetch-manifest.json'))
+            logger.error(bdbag.get_typed_exception(ar.exception))
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 

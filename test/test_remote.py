@@ -33,7 +33,7 @@ class TestRemoteAPI(BaseTest):
         logger.removeHandler(self.handler)
         super(TestRemoteAPI, self).tearDown()
 
-    def _test_bag_remote(self, update=False):
+    def _test_bag_with_remote_file_manifest(self, update=False):
         try:
             bag_dir = self.test_data_dir if not update else self.test_bag_dir
             bag = bdb.make_bag(bag_dir,
@@ -47,20 +47,20 @@ class TestRemoteAPI(BaseTest):
             with open(fetch_file) as ff:
                 fetch_txt = ff.read()
             self.assertIn(
-                'https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt'
-                '\t201\tdata/test-fetch-http.txt', fetch_txt)
+                'https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/'
+                'test-fetch-http.txt\t201\tdata/test-fetch-http.txt', fetch_txt)
             self.assertIn(
                 'ark:/57799/b9dd5t\t223\tdata/test-fetch-identifier.txt', fetch_txt)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    def test_create_bag_remote(self):
+    def test_create_bag_from_remote_file_manifest(self):
         logger.info(self.getTestHeader('create bag add remote file manifest'))
-        self._test_bag_remote()
+        self._test_bag_with_remote_file_manifest()
 
-    def test_update_bag_remote(self):
+    def test_update_bag_from_remote_file_manifest(self):
         logger.info(self.getTestHeader('update bag add remote file manifest'))
-        self._test_bag_remote(True)
+        self._test_bag_with_remote_file_manifest(True)
 
     def test_validate_profile(self):
         logger.info(self.getTestHeader('validate profile'))
@@ -83,7 +83,7 @@ class TestRemoteAPI(BaseTest):
 
     def test_validate_remote_bag_from_rfm(self):
         logger.info(self.getTestHeader('create, resolve, and validate bag from remote file manifest'))
-        self._test_bag_remote()
+        self._test_bag_with_remote_file_manifest()
         bdb.resolve_fetch(self.test_data_dir)
         bdb.validate_bag(self.test_data_dir, fast=True)
         bdb.validate_bag(self.test_data_dir, fast=False)

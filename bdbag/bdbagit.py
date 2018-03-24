@@ -1,9 +1,9 @@
+import json
 from collections import OrderedDict
-
 from bagit import *
 from bagit import _, _can_read, _can_bag, _make_tag_file, _make_tagmanifest_file, _encode_filename, _decode_filename, \
     _calc_hashes
-from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL
+from bdbag import escape_url_path, VERSION, BAGIT_VERSION, PROJECT_URL
 
 LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
             os.chmod('data', os.stat(cwd).st_mode)
 
             total_bytes, total_files = make_manifests('data', processes, algorithms=checksums, encoding=encoding)
-            total_bytes_remote, total_files_remote = update_manifests_from_remote(remote_entries)
+            total_bytes_remote, total_files_remote = update_manifests_from_remote(remote_entries, bag_dir)
             total_bytes += total_bytes_remote
             total_files += total_files_remote
 
@@ -105,7 +105,7 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
             for c in checksums:
                 _make_tagmanifest_file(c, bag_dir, encoding='utf-8')
     except Exception:
-        LOGGER.exception(_("An error occurred creating a bag in %s"), bag_dir)
+        LOGGER.error(_("An error occurred creating a bag in %s"), bag_dir)
         raise
     finally:
         os.chdir(old_dir)
@@ -113,7 +113,7 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
     return BDBag(bag_dir)
 
 
-def update_manifests_from_remote(remote_entries, encoding='utf-8'):
+def update_manifests_from_remote(remote_entries, bag_path=".", encoding='utf-8'):
     if not remote_entries:
         return 0, 0
 
@@ -124,13 +124,26 @@ def update_manifests_from_remote(remote_entries, encoding='utf-8'):
     if remote_entries:
         sorted_remote_entries = OrderedDict(sorted(remote_entries.items(), key=lambda t: t[0]))
         for filename, values in sorted_remote_entries.items():
+            file_path = os.path.abspath(os.path.join(bag_path, filename))
+            if os.path.isfile(file_path):
+                error = \
+                    "A remote file entry [%s] with metadata %s already exists in the bag payload directory at [%s]. " \
+                    "Either remove the local file from the bag payload or remove the remote file entry and " \
+                    "regenerate or update the bag." % (filename, json.dumps(remote_entries[filename]), file_path)
+                raise BagManifestConflict(error)
+            try:
+                remote_size = int(values['length'])
+            except Exception:
+                raise ValueError(
+                    "A specified remote file [%s] with metadata %s contains a non-integer file size: \"%s\". " % (
+                        filename, json.dumps(remote_entries[filename]), values['length']))
             checksums = []
             num_files += 1
-            total_bytes += values['length']
+            total_bytes += remote_size
             for alg in CHECKSUM_ALGOS:
                 if alg in values.keys():
                     checksums.append(
-                        (alg, values[alg], _denormalize_filename(_decode_filename(filename)), values['length']))
+                        (alg, values[alg], _denormalize_filename(_decode_filename(filename)), remote_size))
             entries.append(checksums)
 
     # At this point we have a list of tuples which start with the algorithm name:
@@ -152,7 +165,7 @@ def update_manifests_from_remote(remote_entries, encoding='utf-8'):
 def make_remote_file_entry(remote_entries, filename, url, length, alg, digest):
     entry = remote_entries.get(filename, None)
     if not entry:
-        remote_entries[filename] = {'url': url, 'length': int(length)}
+        remote_entries[filename] = {'url': url, 'length': length}
     remote_entries[filename][alg] = digest
 
 
@@ -174,21 +187,27 @@ def _denormalize_filename(filename):
 
 
 def _make_fetch_file(path, remote_entries):
+    fetch_file_path = os.path.join(path, "fetch.txt")
     if not remote_entries:
+        if os.path.isfile(fetch_file_path):
+            os.remove(fetch_file_path)
         return
 
     LOGGER.info('Writing fetch.txt')
-    fetch_file_path = os.path.join(path, "fetch.txt")
 
     with open_text_file(fetch_file_path, 'w') as fetch_file:
         for filename in sorted(remote_entries.keys()):
             fetch_file.write("%s\t%s\t%s\n" %
-                             (remote_entries[filename]['url'],
+                             (escape_url_path(remote_entries[filename]['url']),
                               remote_entries[filename]['length'],
                               _denormalize_filename(filename)))
 
 
 class BaggingInterruptedError(RuntimeError):
+    pass
+
+
+class BagManifestConflict(BagError):
     pass
 
 
@@ -238,13 +257,13 @@ class BDBag(Bag):
         for url, length, filename in self.fetch_entries():
             entry_path = os.path.normpath(filename.lstrip("*"))
             if entry_path in payload_entries:
-                for alg in self.algs:
+                for alg in self.algorithms:
                     if payload_entries[entry_path].get(alg, None):
                         self.add_remote_file(filename, url, length, alg, payload_entries[entry_path][alg])
 
     def add_remote_file(self, filename, url, length, alg, digest):
-        if alg not in self.algs:
-            self.algs.append(alg)
+        if alg not in self.algorithms:
+            self.algorithms.append(alg)
         make_remote_file_entry(self.remote_entries, filename, url, length, alg, digest)
 
     def save(self, processes=1, manifests=False):
@@ -286,36 +305,42 @@ class BDBag(Bag):
 
         # Change working directory to bag directory so helper functions work
         old_dir = os.path.abspath(os.path.curdir)
-        os.chdir(self.path)
+        try:
+            os.chdir(self.path)
 
-        # Generate new manifest files
-        if manifests:
-            total_bytes, total_files = make_manifests('data', processes,
-                                                      algorithms=self.algorithms,
-                                                      encoding=self.encoding)
+            # Generate new manifest files
+            if manifests:
+                total_bytes, total_files = make_manifests('data', processes,
+                                                          algorithms=self.algorithms,
+                                                          encoding=self.encoding)
 
-            self._sync_remote_entries_with_existing_fetch()
-            total_bytes_remote, total_files_remote = update_manifests_from_remote(self.remote_entries)
-            total_bytes += total_bytes_remote
-            total_files += total_files_remote
+                self._sync_remote_entries_with_existing_fetch()
+                total_bytes_remote, total_files_remote = update_manifests_from_remote(self.remote_entries, self.path)
+                total_bytes += total_bytes_remote
+                total_files += total_files_remote
 
-            # Update fetch.txt
-            _make_fetch_file(self.path, self.remote_entries)
+                # Update fetch.txt
+                _make_fetch_file(self.path, self.remote_entries)
 
-            # Update Payload-Oxum
-            LOGGER.info(_('Updating Payload-Oxum in %s'), self.tag_file_name)
-            self.info['Payload-Oxum'] = '%s.%s' % (total_bytes, total_files)
+                # Update Payload-Oxum
+                LOGGER.info(_('Updating Payload-Oxum in %s'), self.tag_file_name)
+                self.info['Payload-Oxum'] = '%s.%s' % (total_bytes, total_files)
 
-        _make_tag_file(self.tag_file_name, self.info)
+            _make_tag_file(self.tag_file_name, self.info)
 
-        # Update tag-manifest for changes to manifest & bag-info files
-        for alg in self.algorithms:
-            _make_tagmanifest_file(alg, self.path, encoding=self.encoding)
+            # Update tag-manifest for changes to manifest & bag-info files
+            for alg in self.algorithms:
+                _make_tagmanifest_file(alg, self.path, encoding=self.encoding)
 
-        # Reload the manifests
-        self._load_manifests()
+            # Reload the manifests
+            self._load_manifests()
 
-        os.chdir(old_dir)
+        except Exception:
+            LOGGER.error(_("An error occurred updating bag in %s"), self.path)
+            raise
+
+        finally:
+            os.chdir(old_dir)
 
     def validate(self, processes=1, fast=False, completeness_only=False, callback=None):
         """Checks the structure and contents are valid.
@@ -418,7 +443,7 @@ class BDBag(Bag):
             raise
         # Any unhandled exceptions are probably fatal
         except:
-            LOGGER.exception(_("Unable to calculate file hashes for %s"), self)
+            LOGGER.error(_("Unable to calculate file hashes for %s"), self)
             raise
 
         for rel_path, f_hashes, hashes in hash_results:

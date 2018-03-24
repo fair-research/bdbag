@@ -27,7 +27,17 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
     start = datetime.datetime.now()
     for url, size, path in bag.fetch_entries():
         output_path = os.path.normpath(os.path.join(bag.path, path))
-        if not force and os.path.exists(output_path) and os.path.getsize(output_path) == int(size):
+        local_size = os.path.getsize(output_path) if os.path.exists(output_path) else None
+        try:
+            remote_size = int(size)
+        except ValueError:
+            remote_size = None
+        missing = True
+        if local_size is not None:
+            if local_size == remote_size or remote_size is None:
+                missing = False
+
+        if not force and not missing:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug("Not fetching already present file: %s" % output_path)
             pass

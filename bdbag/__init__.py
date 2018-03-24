@@ -93,3 +93,11 @@ def parse_content_disposition(value):
         raise ValueError('Invalid UTF-8 encoding of content-disposition filename component. %s.' % e)
 
     return n
+
+
+def escape_url_path(url):
+    urlparts = urlsplit(url)
+    path = urlquote(urlunquote(urlparts.path), '/')
+    query = urlquote(urlunquote(urlparts.query))
+    fragment = urlquote(urlunquote(urlparts.fragment))
+    return urlunsplit((urlparts.scheme, urlparts.netloc, path, query, fragment))

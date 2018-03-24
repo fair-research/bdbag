@@ -41,7 +41,6 @@ def create_default_config():
 
 
 def read_config(config_file, create_default=True):
-    config = json.dumps(DEFAULT_CONFIG)
     if config_file == DEFAULT_CONFIG_FILE and not os.path.isfile(config_file) and create_default:
         logger.debug("No default configuration file found, attempting to create one.")
         try:
@@ -52,6 +51,9 @@ def read_config(config_file, create_default=True):
     if os.path.isfile(config_file):
         with open(config_file) as cf:
             config = cf.read()
+    else:
+        config = json.dumps(DEFAULT_CONFIG)
+        logger.warning("Unable to read configuration file: [%s]. Using internal defaults." % DEFAULT_CONFIG_FILE)
 
     return json.loads(config, object_pairs_hook=OrderedDict)
 
@@ -174,12 +176,15 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
             output_path = os.path.normpath(os.path.join(bag.path, path))
             if os.path.exists(output_path):
                 local_size = os.path.getsize(output_path)
-                remote_size = int(size)
+                try:
+                    remote_size = int(size)
+                except ValueError:
+                    remote_size = -1
                 if local_size != remote_size:
                     payload_consistent = False
                     if not quiet:
                         logger.warning("The size of the local file %s (%d bytes) does not match the size of the file "
-                                       "(%d bytes) specified in fetch.txt." % (output_path, local_size, remote_size))
+                                       "(%s bytes) specified in fetch.txt." % (output_path, local_size, size))
     elif payload_consistent:
         payload_consistent = not (only_in_manifests or only_in_fetch)
 
@@ -188,8 +193,8 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
         if not quiet:
             logger.warning(
                 "%s. Resolve this file reference by either 1) adding the missing file to the bag payload or 2) adding "
-                "a remote file reference in fetch.txt. or 3) re-run with the \"update\" flag set in order to remove "
-                "this file from the bag manifest." % get_typed_exception(e))
+                "a remote file reference in fetch.txt. or 3) re-run in \"update\" mode in order to remove this file "
+                "from the bag manifest." % get_typed_exception(e))
     for path in only_on_fs:
         e = bdbagit.UnexpectedFile(path)
         if not quiet:
@@ -457,15 +462,15 @@ def validate_bag_serialization(bag_path, bag_profile=None, bag_profile_path=None
 def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False):
     logger.info("Generating remote file references from %s" % remote_file_manifest)
     remote_files = dict()
-    with open(remote_file_manifest, "r") as fetch_in:
-        line = fetch_in.readline().lstrip()
-        fetch_in.seek(0)
+    with open(remote_file_manifest, "r") as rfm_in:
+        line = rfm_in.readline().lstrip()
+        rfm_in.seek(0)
         is_json_stream = False
         if line.startswith('{'):
-            fetch = fetch_in
+            fetch = rfm_in
             is_json_stream = True
         else:
-            fetch = json.load(fetch_in, object_pairs_hook=OrderedDict)
+            fetch = json.load(rfm_in, object_pairs_hook=OrderedDict)
 
         for entry in fetch:
             if is_json_stream:
@@ -482,7 +487,7 @@ def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False
                         bdbagit.make_remote_file_entry(
                             remote_files, entry['filename'], entry['url'], entry['length'], alg, entry[alg])
 
-        fetch_in.close()
+        rfm_in.close()
 
     return remote_files
 

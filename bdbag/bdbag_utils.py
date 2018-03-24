@@ -84,7 +84,7 @@ def generate_remote_file_manifest(args):
             output_path = ''.join([subdir, os.path.dirname(filepath), "/", filename])
 
             rfm_entry['url'] = url
-            rfm_entry['length'] = int(length)
+            rfm_entry['length'] = length
             rfm_entry['filename'] = output_path
             if md5:
                 rfm_entry['md5'] = md5

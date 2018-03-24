@@ -209,8 +209,6 @@ def parse_cli():
 
 def main():
 
-    sys.stderr.write('\n')
-
     args, is_bag, is_file = parse_cli()
     path = os.path.abspath(args.path)
 
@@ -218,6 +216,9 @@ def main():
     temp_path = None
     error = None
     result = 0
+
+    if not args.quiet:
+        sys.stderr.write('\n')
 
     try:
         if not is_file:
@@ -240,7 +241,8 @@ def main():
         # otherwise just extract the bag if it is an archive and no other conflicting options specified
         elif not (args.validate or args.validate_profile or args.resolve_fetch):
             bdb.extract_bag(path)
-            sys.stderr.write('\n')
+            if not args.quiet:
+                sys.stderr.write('\n')
             return result
 
         if args.resolve_fetch:
@@ -287,7 +289,8 @@ def main():
         if result != 0:
             sys.stderr.write("\n%s" % error)
 
-    sys.stderr.write('\n')
+    if not args.quiet:
+        sys.stderr.write('\n')
 
     return result
 

@@ -2,7 +2,7 @@ import os
 import json
 import copy
 from collections import OrderedDict
-from bdbag import urlsplit, urlunsplit, urlquote, guess_mime_type, add_mime_types, VERSION, BAGIT_VERSION
+from bdbag import guess_mime_type, add_mime_types, escape_url_path, VERSION, BAGIT_VERSION
 from datetime import datetime
 from tzlocal import get_localzone
 import logging
@@ -301,14 +301,6 @@ def ensure_payload_path_prefix(input_path):
         output_path = ''.join(["../data/", input_path])
 
     return output_path
-
-
-def escape_url_path(url):
-    urlparts = urlsplit(url)
-    path = urlquote(urlparts.path, '/')
-    query = urlquote(urlparts.query)
-    fragment = urlquote(urlparts.fragment)
-    return urlunsplit((urlparts.scheme, urlparts.netloc, path, query, fragment))
 
 
 FILETYPE_ONTOLOGY_MAP = {
