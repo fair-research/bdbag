@@ -51,6 +51,7 @@ class TestRemoteAPI(BaseTest):
                 'test-fetch-http.txt\t201\tdata/test-fetch-http.txt', fetch_txt)
             self.assertIn(
                 'ark:/57799/b9dd5t\t223\tdata/test-fetch-identifier.txt', fetch_txt)
+            bdb.validate_bag_structure(bag_dir, True)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 

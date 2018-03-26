@@ -77,6 +77,7 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
             # original directory
             os.chmod('data', os.stat(cwd).st_mode)
 
+            validate_remote_entries(remote_entries, bag_dir)
             total_bytes, total_files = make_manifests('data', processes, algorithms=checksums, encoding=encoding)
             total_bytes_remote, total_files_remote = update_manifests_from_remote(remote_entries, bag_dir)
             total_bytes += total_bytes_remote
@@ -124,21 +125,9 @@ def update_manifests_from_remote(remote_entries, bag_path=".", encoding='utf-8')
     if remote_entries:
         sorted_remote_entries = OrderedDict(sorted(remote_entries.items(), key=lambda t: t[0]))
         for filename, values in sorted_remote_entries.items():
-            file_path = os.path.abspath(os.path.join(bag_path, filename))
-            if os.path.isfile(file_path):
-                error = \
-                    "A remote file entry [%s] with metadata %s already exists in the bag payload directory at [%s]. " \
-                    "Either remove the local file from the bag payload or remove the remote file entry and " \
-                    "regenerate or update the bag." % (filename, json.dumps(remote_entries[filename]), file_path)
-                raise BagManifestConflict(error)
-            try:
-                remote_size = int(values['length'])
-            except Exception:
-                raise ValueError(
-                    "A specified remote file [%s] with metadata %s contains a non-integer file size: \"%s\". " % (
-                        filename, json.dumps(remote_entries[filename]), values['length']))
             checksums = []
             num_files += 1
+            remote_size = int(values['length'])
             total_bytes += remote_size
             for alg in CHECKSUM_ALGOS:
                 if alg in values.keys():
@@ -160,6 +149,25 @@ def update_manifests_from_remote(remote_entries, bag_path=".", encoding='utf-8')
                 manifest.write("%s  %s\n" % (digest, _encode_filename(filename)))
 
     return total_bytes, num_files
+
+
+def validate_remote_entries(remote_entries, bag_path="."):
+    if remote_entries:
+        sorted_remote_entries = OrderedDict(sorted(remote_entries.items(), key=lambda t: t[0]))
+        for filename, values in sorted_remote_entries.items():
+            file_path = os.path.abspath(os.path.join(bag_path, filename))
+            if os.path.isfile(file_path):
+                error = \
+                    "A remote file entry [%s] with metadata %s already exists in the bag payload directory at [%s]. " \
+                    "Either remove the local file from the bag payload or remove the remote file entry and " \
+                    "regenerate or update the bag." % (filename, json.dumps(remote_entries[filename]), file_path)
+                raise BagManifestConflict(error)
+            try:
+                remote_size = int(values['length'])
+            except Exception:
+                raise ValueError(
+                    "A specified remote file [%s] with metadata %s contains a non-integer file size: \"%s\". " % (
+                        filename, json.dumps(remote_entries[filename]), values['length']))
 
 
 def make_remote_file_entry(remote_entries, filename, url, length, alg, digest):
@@ -310,11 +318,11 @@ class BDBag(Bag):
 
             # Generate new manifest files
             if manifests:
+                self._sync_remote_entries_with_existing_fetch()
+                validate_remote_entries(self.remote_entries, self.path)
                 total_bytes, total_files = make_manifests('data', processes,
                                                           algorithms=self.algorithms,
                                                           encoding=self.encoding)
-
-                self._sync_remote_entries_with_existing_fetch()
                 total_bytes_remote, total_files_remote = update_manifests_from_remote(self.remote_entries, self.path)
                 total_bytes += total_bytes_remote
                 total_files += total_files_remote
