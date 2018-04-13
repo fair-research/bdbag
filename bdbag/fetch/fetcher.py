@@ -15,6 +15,7 @@ SCHEME_SFTP = 'sftp'
 SCHEME_ARK = 'ark'
 SCHEME_MINID = 'minid'
 SCHEME_TAG = 'tag'
+SCHEME_IRODS = 'irods'
 
 
 def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAULT_CONFIG):
@@ -63,6 +64,8 @@ def fetch_file(url, size, path, auth, **kwargs):
         return fetch_ftp.get_file(url, path, auth)
     elif SCHEME_GLOBUS == scheme:
         return fetch_globus.get_file(url, path, auth)
+    elif SCHEME_IRODS == scheme:
+        return fetch_irods.get_file(url, path, auth)
     elif SCHEME_ARK == scheme or SCHEME_MINID == scheme:
         resolvers = kwargs.get("resolvers")
         for url in fetch_identifier.resolve(url, resolvers):
