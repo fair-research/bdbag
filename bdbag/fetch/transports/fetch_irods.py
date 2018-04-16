@@ -34,6 +34,7 @@ def authenticate(url, auth_config):
         except AttributeError as e:
             logger.warn("Exception getting iRODS authentication parameters: %s" % get_typed_exception(e))
 
+    logger.warning("Could not locate a suitable keychain entry for: %s" % url)
     return None, None
 
 
@@ -54,7 +55,7 @@ def get_new_session(url, auth_config):
     port = url_parts.port
     username, password = authenticate(url, auth_config)
     if username is None or password is None:
-        raise ValueError("Missing required username or password parameter")
+        raise ValueError("Missing required username or password parameter in keychain")
 
     from irods.session import iRODSSession
     session = iRODSSession(irods_host=url_parts.hostname,
@@ -96,12 +97,12 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
         return True
 
     except Exception as e:
-        logger.error('IRODS Request Exception: %s' % (get_typed_exception(e)))
+        logger.error('iRODS Request Exception: %s' % (get_typed_exception(e)))
 
     return False
 
 
 def cleanup():
     for session in SESSIONS.values():
-        session.close()
+        session.cleanup()
     SESSIONS.clear()
