@@ -142,18 +142,68 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    def test_update_bag_change_metadata(self):
-        logger.info(self.getTestHeader('update bag change metadata'))
+    def _test_create_or_update_bag_with_metadata(
+            self, update=False, override_file_metadata=False, no_file_metadata=False):
         try:
-            bag = bdb.make_bag(self.test_bag_dir,
-                               update=True,
-                               metadata={"Contact-Name": "nobody"},
-                               metadata_file=(ospj(self.test_config_dir, 'test-metadata.json')))
+            metadata_param = None if not override_file_metadata else \
+                {
+                   "bag_metadata": {"Contact-Name": "nobody"},
+                   "ro_metadata": {
+                       "manifest.json": {
+                           "@context": ["https://w3id.org/bundle/context"],
+                           "@id": "../"
+                       }
+                   }
+                }
+            bag_dir = self.test_bag_dir if update else self.test_data_dir
+            bag = bdb.make_bag(bag_dir,
+                               update=update,
+                               metadata=metadata_param,
+                               metadata_file=None if no_file_metadata else (
+                                   ospj(self.test_config_dir, 'test-metadata.json')))
             output = self.stream.getvalue()
             self.assertIsInstance(bag, bdbagit.BDBag)
-            self.assertExpectedMessages(['Reading bag metadata from file', 'test-metadata.json'], output)
+            bag_info_txt = self.slurp_text_file(ospj(bag_dir, 'bag-info.txt')).splitlines()
+            if override_file_metadata:
+                self.assertIn('Contact-Name: nobody', bag_info_txt)
+            if not no_file_metadata:
+                self.assertExpectedMessages(['Reading bag metadata from file', 'test-metadata.json'], output)
+                self.assertIn('External-Description: Simple bdbag test', bag_info_txt)
+                ro_manifest_file = ospj(bag_dir, 'metadata', 'manifest.json')
+                self.assertTrue(os.path.isfile(ro_manifest_file))
+                ro_manifest_txt = self.slurp_text_file(ro_manifest_file)
+                ro_test_line = '"uri": "../data/test2/test2.txt"'
+                if override_file_metadata:
+                    self.assertNotIn(ro_test_line, ro_manifest_txt)
+                else:
+                    self.assertIn(ro_test_line, ro_manifest_txt)
+
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
+
+    def test_create_bag_with_file_metadata_only(self):
+        logger.info(self.getTestHeader('create bag with file metadata only'))
+        self._test_create_or_update_bag_with_metadata()
+
+    def test_create_bag_with_parameterized_metadata_only(self):
+        logger.info(self.getTestHeader('create bag with parameterized metadata only'))
+        self._test_create_or_update_bag_with_metadata(no_file_metadata=True)
+
+    def test_create_bag_with_parameterized_metadata_and_file_metadata(self):
+        logger.info(self.getTestHeader('create bag with parameterized metadata and file metadata'))
+        self._test_create_or_update_bag_with_metadata(override_file_metadata=True)
+
+    def test_update_bag_with_file_metadata_only(self):
+        logger.info(self.getTestHeader('update bag with file metadata only'))
+        self._test_create_or_update_bag_with_metadata(update=True)
+
+    def test_update_bag_change_parameterized_metadata_only(self):
+        logger.info(self.getTestHeader('update bag change parameterized metadata, no file metadata'))
+        self._test_create_or_update_bag_with_metadata(update=True, no_file_metadata=True)
+
+    def test_update_bag_change_parameterized_metadata_and_file_metadata(self):
+        logger.info(self.getTestHeader('update bag change metadata with parameterized override of file metadata'))
+        self._test_create_or_update_bag_with_metadata(update=True, override_file_metadata=True)
 
     def test_update_bag_change_metadata_only(self):
         logger.info(self.getTestHeader('update bag change metadata only - do not save manifests'))
@@ -161,11 +211,15 @@ class TestAPI(BaseTest):
             bag = bdb.make_bag(self.test_bag_dir,
                                update=True,
                                save_manifests=False,
-                               metadata={"Contact-Name": "nobody"},
+                               metadata={"bag_metadata": {"Contact-Name": "nobody"}},
                                metadata_file=(ospj(self.test_config_dir, 'test-metadata.json')))
             output = self.stream.getvalue()
             self.assertIsInstance(bag, bdbagit.BDBag)
             self.assertExpectedMessages(['Reading bag metadata from file', 'test-metadata.json'], output)
+            bag_info_txt = self.slurp_text_file(ospj(self.test_bag_dir, 'bag-info.txt')).splitlines()
+            self.assertIn('Contact-Name: nobody', bag_info_txt)
+            self.assertIn('External-Description: Simple bdbag test', bag_info_txt)
+            self.assertTrue(os.path.isfile(ospj(self.test_bag_dir, 'metadata', 'manifest.json')))
             self.assertUnexpectedMessages(['updating manifest-sha1.txt',
                                            'updating manifest-sha256.txt',
                                            'updating manifest-sha512.txt',

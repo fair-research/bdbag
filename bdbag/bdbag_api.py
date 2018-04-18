@@ -61,7 +61,7 @@ def read_config(config_file, create_default=True):
 
 def read_metadata(metadata_file):
     if not metadata_file:
-        return {}
+        return dict()
     else:
         metadata_file = os.path.abspath(metadata_file)
 
@@ -256,14 +256,23 @@ def make_bag(bag_path,
 
     # bag metadata merge order: config(if new, else if update use existing)->metadata_file->metadata
     if not update or (update and not os.path.isfile(os.path.join(bag_path, "bag-info.txt"))):
+        # config metadata
         bag_metadata = bag_config.get('bag_metadata', {}).copy()
     else:
         bag_metadata = bag.info
+
+    # file metadata
     metadata_file_data = read_metadata(metadata_file)
     bag_metadata.update(metadata_file_data.get("bag_metadata", dict()))
-    if metadata:
-        bag_metadata.update(metadata)
     ro_metadata = metadata_file_data.get("ro_metadata")
+
+    # parameterized metadata
+    if metadata:
+        bag_metadata.update(metadata.get("bag_metadata", dict()))
+        if ro_metadata:
+            ro_metadata.update(metadata.get("ro_metadata", dict()))
+        else:
+            ro_metadata = metadata.get("ro_metadata")
 
     if 'Bagging-Date' not in bag_metadata:
         bag_metadata['Bagging-Date'] = datetime.date.strftime(datetime.date.today(), "%Y-%m-%d")
@@ -290,7 +299,7 @@ def make_bag(bag_path,
                 raise e
         else:
             logger.info("The directory %s is already a bag." % bag_path)
-
+    # otherwise, create
     else:
         remote_files = None
         if remote_file_manifest:
