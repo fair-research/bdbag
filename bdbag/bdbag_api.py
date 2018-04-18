@@ -10,6 +10,7 @@ import tarfile
 import zipfile
 import bdbag.bdbagit as bdbagit
 import bdbag.bdbagit_profile as bdbp
+import bdbag.bdbag_ro as bdbro
 from collections import OrderedDict
 from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL, BAG_PROFILE_TAG, DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, \
     DEFAULT_CONFIG_PATH, get_typed_exception
@@ -258,9 +259,11 @@ def make_bag(bag_path,
         bag_metadata = bag_config.get('bag_metadata', {}).copy()
     else:
         bag_metadata = bag.info
-    bag_metadata.update(read_metadata(metadata_file))
+    metadata_file_data = read_metadata(metadata_file)
+    bag_metadata.update(metadata_file_data.get("bag_metadata", dict()))
     if metadata:
         bag_metadata.update(metadata)
+    ro_metadata = metadata_file_data.get("ro_metadata")
 
     if 'Bagging-Date' not in bag_metadata:
         bag_metadata['Bagging-Date'] = datetime.date.strftime(datetime.date.today(), "%Y-%m-%d")
@@ -279,6 +282,8 @@ def make_bag(bag_path,
                     logger.warning(
                         "Manifests must be updated due to bag payload change or checksum configuration change.")
                     save_manifests = True
+                if ro_metadata:
+                    bdbro.serialize_bag_ro_metadata(ro_metadata, bag_path)
                 bag.save(bag_processes, manifests=save_manifests)
             except Exception as e:
                 logger.error("Exception while updating bag manifests: %s", e)
@@ -296,7 +301,9 @@ def make_bag(bag_path,
                                checksums=bag_algorithms,
                                remote_entries=remote_files)
         logger.info('Created bag: %s' % bag_path)
-
+        if ro_metadata:
+            bdbro.serialize_bag_ro_metadata(ro_metadata, bag_path)
+            bag.save(bag_processes)
     return bag
 
 

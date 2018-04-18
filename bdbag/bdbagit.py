@@ -2,7 +2,7 @@ import json
 from collections import OrderedDict
 from bagit import *
 from bagit import _, _can_read, _can_bag, _make_tag_file, _make_tagmanifest_file, _encode_filename, _decode_filename, \
-    _calc_hashes
+    _calc_hashes,_walk
 from bdbag import escape_url_path, VERSION, BAGIT_VERSION, PROJECT_URL
 
 LOGGER = logging.getLogger(__name__)
@@ -78,10 +78,8 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
             os.chmod('data', os.stat(cwd).st_mode)
 
             validate_remote_entries(remote_entries, bag_dir)
-            total_bytes, total_files = make_manifests('data', processes, algorithms=checksums, encoding=encoding)
-            total_bytes_remote, total_files_remote = update_manifests_from_remote(remote_entries, bag_dir)
-            total_bytes += total_bytes_remote
-            total_files += total_files_remote
+            total_bytes, total_files = make_manifests(
+                'data', processes, algorithms=checksums, encoding=encoding, remote=remote_entries)
 
             _make_fetch_file(bag_dir, remote_entries)
 
@@ -114,41 +112,72 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
     return BDBag(bag_dir)
 
 
-def update_manifests_from_remote(remote_entries, bag_path=".", encoding='utf-8'):
-    if not remote_entries:
-        return 0, 0
+def make_manifests(data_dir, processes, algorithms=DEFAULT_CHECKSUMS, encoding='utf-8', remote=None):
+    LOGGER.info(_('Using %(process_count)d processes to generate manifests: %(algorithms)s'),
+                {'process_count': processes, 'algorithms': ', '.join(algorithms)})
 
-    LOGGER.info(_('Generating manifest lines for remote files'))
-    num_files = 0
-    total_bytes = 0
-    entries = []
-    if remote_entries:
-        sorted_remote_entries = OrderedDict(sorted(remote_entries.items(), key=lambda t: t[0]))
+    manifest_line_generator = partial(generate_manifest_lines, algorithms=algorithms)
+
+    if processes > 1:
+        pool = multiprocessing.Pool(processes=processes)
+        checksums = pool.map(manifest_line_generator, _walk(data_dir))
+        pool.close()
+        pool.join()
+    else:
+        checksums = [manifest_line_generator(i) for i in _walk(data_dir)]
+
+    # At this point we have a list of tuples which start with the algorithm name:
+    manifest_data = {}
+    for batch in checksums:
+        for entry in batch:
+            manifest_data.setdefault(entry[0], []).append(entry[1:])
+
+    # These will be keyed on the algorithm name so we can perform sanity checks
+    # below to catch failures in the hashing process:
+    num_files = defaultdict(lambda: 0)
+    total_bytes = defaultdict(lambda: 0)
+
+    remote_entries = []
+    if remote:
+        LOGGER.info(_('Generating manifest lines for remote files'))
+        sorted_remote_entries = OrderedDict(sorted(remote.items(), key=lambda t: t[0]))
         for filename, values in sorted_remote_entries.items():
             checksums = []
-            num_files += 1
             remote_size = int(values['length'])
-            total_bytes += remote_size
             for alg in CHECKSUM_ALGOS:
                 if alg in values.keys():
                     checksums.append(
                         (alg, values[alg], _denormalize_filename(_decode_filename(filename)), remote_size))
-            entries.append(checksums)
+            remote_entries.append(checksums)
 
-    # At this point we have a list of tuples which start with the algorithm name:
-    manifest_data = {}
-    for batch in entries:
+    for batch in remote_entries:
         for entry in batch:
             manifest_data.setdefault(entry[0], []).append(entry[1:])
 
     for algorithm, values in manifest_data.items():
         manifest_filename = 'manifest-%s.txt' % algorithm
 
-        with open_text_file(manifest_filename, 'a+', encoding=encoding) as manifest:
+        with open_text_file(manifest_filename, 'w', encoding=encoding) as manifest:
             for digest, filename, byte_count in values:
                 manifest.write("%s  %s\n" % (digest, _encode_filename(filename)))
+                num_files[algorithm] += 1
+                total_bytes[algorithm] += byte_count
 
-    return total_bytes, num_files
+    # We'll use sets of the values for the error checks and eventually return the payload oxum values:
+    byte_value_set = set(total_bytes.values())
+    file_count_set = set(num_files.values())
+
+    # allow a bag with an empty payload
+    if not byte_value_set and not file_count_set:
+        return 0, 0
+
+    if len(file_count_set) != 1:
+        raise RuntimeError(_('Expected the same number of files for each checksum'))
+
+    if len(byte_value_set) != 1:
+        raise RuntimeError(_('Expected the same number of bytes for each checksum'))
+
+    return byte_value_set.pop(), file_count_set.pop()
 
 
 def validate_remote_entries(remote_entries, bag_path="."):
@@ -322,10 +351,8 @@ class BDBag(Bag):
                 validate_remote_entries(self.remote_entries, self.path)
                 total_bytes, total_files = make_manifests('data', processes,
                                                           algorithms=self.algorithms,
-                                                          encoding=self.encoding)
-                total_bytes_remote, total_files_remote = update_manifests_from_remote(self.remote_entries, self.path)
-                total_bytes += total_bytes_remote
-                total_files += total_files_remote
+                                                          encoding=self.encoding,
+                                                          remote=self.remote_entries)
 
                 # Update fetch.txt
                 _make_fetch_file(self.path, self.remote_entries)

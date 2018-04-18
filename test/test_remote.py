@@ -37,6 +37,7 @@ class TestRemoteAPI(BaseTest):
         try:
             bag_dir = self.test_data_dir if not update else self.test_bag_dir
             bag = bdb.make_bag(bag_dir,
+                               algs=["md5", "sha1", "sha256", "sha512"],
                                update=update,
                                remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
             output = self.stream.getvalue()

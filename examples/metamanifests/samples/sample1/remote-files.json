@@ -1,0 +1,26 @@
+[
+  {
+    "filename": "CTD_chem_gene_ixns.csv.gz",
+    "md5": "b6cc92ede9fe075b626c2b212cc716c7",
+    "url": "http://ctdbase.org/reports/CTD_chem_gene_ixns.csv.gz",
+    "length": 22600418
+  },
+  {
+    "filename": "CTD_chem_gene_ixn_types.csv",
+    "md5": "60bf534afaeb15ef8098df2282df518f",
+    "url": "http://ctdbase.org/reports/CTD_chem_gene_ixn_types.csv",
+    "length": 1031
+  },
+  {
+    "filename": "CTD_chemicals.csv.gz",
+    "md5": "52691c2856a588edd5f88ffbbdd52ebd",
+    "url": "http://ctdbase.org/reports/CTD_chemicals.csv.gz",
+    "length": 9387851
+  },
+  {
+    "filename": "CTD_pathways.csv.gz",
+    "md5": "1c04ec49dc09fe61df0c49de051cd5d5",
+    "url": "http://ctdbase.org/reports/CTD_pathways.csv.gz",
+    "length": 38328
+  }
+]
