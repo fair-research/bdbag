@@ -1,6 +1,6 @@
 {
   "bag_metadata": {
-    "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
+    "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-ro-profile.json",
     "Contact-Name": "Steven Cox",
     "Contact-Orcid": "0000-0002-8561-4508",
     "Source-Organization": "RENCI"
