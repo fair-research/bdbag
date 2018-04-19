@@ -1,5 +1,6 @@
 import json
 from collections import OrderedDict
+import bagit
 from bagit import *
 from bagit import _, _can_read, _can_bag, _make_tag_file, _make_tagmanifest_file, _encode_filename, _decode_filename, \
     _calc_hashes,_walk
@@ -238,6 +239,24 @@ def _make_fetch_file(path, remote_entries):
                              (escape_url_path(remote_entries[filename]['url']),
                               remote_entries[filename]['length'],
                               _denormalize_filename(filename)))
+
+
+def _find_tag_files(bag_dir):
+    for dir in os.listdir(bag_dir):
+        if dir != 'data':
+            if os.path.isfile(dir) and not dir.startswith('tagmanifest-'):
+                yield dir
+            for dir_name, _, filenames in os.walk(dir):
+                for filename in filenames:
+                    if filename.startswith('tagmanifest-'):
+                        continue
+                    # remove everything up to the bag_dir directory
+                    p = os.path.join(dir_name, filename)
+                    yield p
+
+
+# monkeypatch bagit._find_tag_files with our version
+bagit._find_tag_files = _find_tag_files
 
 
 class BaggingInterruptedError(RuntimeError):

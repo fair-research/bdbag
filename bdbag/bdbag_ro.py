@@ -49,7 +49,7 @@ def write_bag_ro_metadata(obj, bag_path, metadata_path):
     if not os.path.exists(ro_metadata_path_dir):
         os.makedirs(ro_metadata_path_dir)
 
-    with open(os.path.abspath(ro_metadata_path), 'w') as ro_metadata:
+    with open(os.path.abspath(ro_metadata_path.strip()), 'w') as ro_metadata:
         json.dump(obj, ro_metadata, sort_keys=True, indent=4)
 
 

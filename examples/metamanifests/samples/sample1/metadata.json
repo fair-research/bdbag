@@ -122,7 +122,7 @@
         }
       }
     },
-    "annotations/CTD_chemicals.csv.jsonld ": {
+    "annotations/CTD_chemicals.csv.jsonld": {
       "@context": {
         "drugbank": "http://identifiers.org/drugbank/",
         "mesh": "http://identifiers.org/mesh/",
