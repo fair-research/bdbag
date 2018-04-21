@@ -193,9 +193,9 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
         e = bdbagit.FileMissing(path)
         if not quiet:
             logger.warning(
-                "%s. Resolve this file reference by either 1) adding the missing file to the bag payload or 2) adding "
-                "a remote file reference in fetch.txt. or 3) re-run in \"update\" mode in order to remove this file "
-                "from the bag manifest." % get_typed_exception(e))
+                "%s. Resolve this file reference by either 1) adding the missing file to the bag or 2) if the file is "
+                "a payload file, adding a remote file reference in fetch.txt. or 3) re-run in \"update\" mode in order "
+                "to remove this file from the bag manifest." % get_typed_exception(e))
     for path in only_on_fs:
         e = bdbagit.UnexpectedFile(path)
         if not quiet:
