@@ -18,7 +18,7 @@ class TestCli(BaseTest):
         super(TestCli, self).tearDown()
         logfile.flush()
 
-    def _test_successful_invocation(self, args, expected=None):
+    def _test_successful_invocation(self, args, expected=None, unexpected=None):
         output = ''
         try:
             output = subprocess.check_output(args, stderr=subprocess.STDOUT, universal_newlines=True)
@@ -29,11 +29,24 @@ class TestCli(BaseTest):
             logfile.writelines(output)
             if expected:
                 self.assertExpectedMessages(expected, output)
+            if unexpected:
+                self.assertUnexpectedMessages(unexpected, output)
 
     def test_create(self):
         args = ARGS + [self.test_data_dir]
         logfile.writelines(self.getTestHeader('create bag', args))
         self._test_successful_invocation(args)
+
+    def test_create_with_metadata(self):
+        args = ARGS + [self.test_data_dir,
+                       '--metadata-file', ospj(self.test_config_dir, 'test-metadata.json'),
+                       '--contact-name', 'nobody',
+                       '--ro-metadata-file', ospj(self.test_config_dir, 'test-ro-metadata.json')]
+        logfile.writelines(self.getTestHeader('create bag with metadata', args))
+        self._test_successful_invocation(args, ["Reading bag metadata from file:",
+                                                "Serializing ro-metadata to:",
+                                                "test-metadata.json",
+                                                "test-ro-metadata.json"])
 
     def test_update(self):
         args = ARGS + [self.test_bag_dir, '--update']
@@ -41,6 +54,30 @@ class TestCli(BaseTest):
         with open(ospj(self.test_bag_dir, 'data', 'NEWFILE.txt'), 'w') as nf:
             nf.write('Additional file added via unit test.')
         self._test_successful_invocation(args, ["NEWFILE.txt"])
+
+    def test_update_with_metadata(self):
+        args = ARGS + [self.test_bag_dir, '--update',
+                       '--metadata-file', ospj(self.test_config_dir, 'test-metadata.json'),
+                       '--contact-name', 'nobody',
+                       '--ro-metadata-file', ospj(self.test_config_dir, 'test-ro-metadata.json')]
+        logfile.writelines(self.getTestHeader('update bag with metadata', args))
+        self._test_successful_invocation(args, ["Reading bag metadata from file:",
+                                                "Serializing ro-metadata to:",
+                                                "test-metadata.json",
+                                                "test-ro-metadata.json",
+                                                "tagmanifest-md5.txt",
+                                                "tagmanifest-sha1.txt",
+                                                "tagmanifest-sha256.txt",
+                                                "tagmanifest-sha512.txt"])
+
+    def test_update_metadata_skip_manifests(self):
+        args = ARGS + [self.test_bag_dir, '--update', '--skip-manifests', '--contact-name', 'nobody']
+        logfile.writelines(self.getTestHeader('update bag metadata skip payload manifests', args))
+        self._test_successful_invocation(args, ["tagmanifest-md5.txt",
+                                                "tagmanifest-sha1.txt",
+                                                "tagmanifest-sha256.txt",
+                                                "tagmanifest-sha512.txt"],
+                                               ["Generating manifest lines for file"])
 
     def test_archive(self):
         args = ARGS + [self.test_bag_dir, '--archive', 'zip']

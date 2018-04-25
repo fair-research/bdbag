@@ -145,22 +145,22 @@ class TestAPI(BaseTest):
     def _test_create_or_update_bag_with_metadata(
             self, update=False, override_file_metadata=False, no_file_metadata=False):
         try:
-            metadata_param = None if not override_file_metadata else \
-                {
-                   "bag_metadata": {"Contact-Name": "nobody"},
-                   "ro_metadata": {
-                       "manifest.json": {
-                           "@context": ["https://w3id.org/bundle/context"],
-                           "@id": "../"
-                       }
-                   }
+            metadata_param = None if not override_file_metadata else {"Contact-Name": "nobody"}
+            ro_metadata_param = None if not override_file_metadata else {
+                "manifest.json": {
+                    "@context": ["https://w3id.org/bundle/context"],
+                    "@id": "../"
                 }
+            }
             bag_dir = self.test_bag_dir if update else self.test_data_dir
             bag = bdb.make_bag(bag_dir,
                                update=update,
                                metadata=metadata_param,
-                               metadata_file=None if no_file_metadata else (
-                                   ospj(self.test_config_dir, 'test-metadata.json')))
+                               metadata_file=None if no_file_metadata else
+                               ospj(self.test_config_dir, 'test-metadata.json'),
+                               ro_metadata=ro_metadata_param,
+                               ro_metadata_file=None if no_file_metadata else
+                               ospj(self.test_config_dir, 'test-ro-metadata.json'))
             output = self.stream.getvalue()
             self.assertIsInstance(bag, bdbagit.BDBag)
             bag_info_txt = self.slurp_text_file(ospj(bag_dir, 'bag-info.txt')).splitlines()
@@ -168,6 +168,7 @@ class TestAPI(BaseTest):
                 self.assertIn('Contact-Name: nobody', bag_info_txt)
             if not no_file_metadata:
                 self.assertExpectedMessages(['Reading bag metadata from file', 'test-metadata.json'], output)
+                self.assertExpectedMessages(['Reading bag metadata from file', 'test-ro-metadata.json'], output)
                 self.assertIn('External-Description: Simple bdbag test', bag_info_txt)
                 ro_manifest_file = ospj(bag_dir, 'metadata', 'manifest.json')
                 self.assertTrue(os.path.isfile(ro_manifest_file))
@@ -211,8 +212,9 @@ class TestAPI(BaseTest):
             bag = bdb.make_bag(self.test_bag_dir,
                                update=True,
                                save_manifests=False,
-                               metadata={"bag_metadata": {"Contact-Name": "nobody"}},
-                               metadata_file=(ospj(self.test_config_dir, 'test-metadata.json')))
+                               metadata={"Contact-Name": "nobody"},
+                               metadata_file=ospj(self.test_config_dir, 'test-metadata.json'),
+                               ro_metadata_file=ospj(self.test_config_dir, 'test-ro-metadata.json'))
             output = self.stream.getvalue()
             self.assertIsInstance(bag, bdbagit.BDBag)
             self.assertExpectedMessages(['Reading bag metadata from file', 'test-metadata.json'], output)

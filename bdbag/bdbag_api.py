@@ -65,7 +65,7 @@ def read_metadata(metadata_file):
     else:
         metadata_file = os.path.abspath(metadata_file)
 
-    logger.info("Reading bag metadata from file %s" % metadata_file)
+    logger.info("Reading bag metadata from file: %s" % metadata_file)
     with open(metadata_file) as mf:
         metadata = mf.read()
         mf.close()
@@ -241,7 +241,9 @@ def make_bag(bag_path,
              metadata=None,
              metadata_file=None,
              remote_file_manifest=None,
-             config_file=DEFAULT_CONFIG_FILE):
+             config_file=DEFAULT_CONFIG_FILE,
+             ro_metadata=None,
+             ro_metadata_file=None):
     bag = None
     try:
         bag = bdbagit.BDBag(bag_path)
@@ -262,17 +264,14 @@ def make_bag(bag_path,
         bag_metadata = bag.info
 
     # file metadata
-    metadata_file_data = read_metadata(metadata_file)
-    bag_metadata.update(metadata_file_data.get("bag_metadata", dict()))
-    ro_metadata = metadata_file_data.get("ro_metadata")
+    bag_metadata.update(read_metadata(metadata_file))
+    bag_ro_metadata = read_metadata(ro_metadata_file)
 
     # parameterized metadata
     if metadata:
-        bag_metadata.update(metadata.get("bag_metadata", dict()))
-        if ro_metadata:
-            ro_metadata.update(metadata.get("ro_metadata", dict()))
-        else:
-            ro_metadata = metadata.get("ro_metadata")
+        bag_metadata.update(metadata)
+    if ro_metadata:
+        bag_ro_metadata.update(ro_metadata)
 
     if 'Bagging-Date' not in bag_metadata:
         bag_metadata['Bagging-Date'] = datetime.date.strftime(datetime.date.today(), "%Y-%m-%d")
@@ -291,8 +290,8 @@ def make_bag(bag_path,
                     logger.warning(
                         "Manifests must be updated due to bag payload change or checksum configuration change.")
                     save_manifests = True
-                if ro_metadata:
-                    bdbro.serialize_bag_ro_metadata(ro_metadata, bag_path)
+                if bag_ro_metadata:
+                    bdbro.serialize_bag_ro_metadata(bag_ro_metadata, bag_path)
                 bag.save(bag_processes, manifests=save_manifests)
             except Exception as e:
                 logger.error("Exception while updating bag manifests: %s", e)
@@ -310,8 +309,8 @@ def make_bag(bag_path,
                                checksums=bag_algorithms,
                                remote_entries=remote_files)
         logger.info('Created bag: %s' % bag_path)
-        if ro_metadata:
-            bdbro.serialize_bag_ro_metadata(ro_metadata, bag_path)
+        if bag_ro_metadata:
+            bdbro.serialize_bag_ro_metadata(bag_ro_metadata, bag_path)
             bag.save(bag_processes)
     return bag
 

@@ -1,0 +1,186 @@
+{
+  "manifest.json": {
+    "@context": [ "https://w3id.org/bundle/context" ],
+    "@id": "../",
+    "history": "https://github.com/NCATS-Tangerine/smartBag/commits/master",
+    "createdOn": "2018-02-08T12:23:00Z",
+    "createdBy": {
+      "name": "Steven Cox",
+      "orcid": "http://orcid.org/0000-0002-8561-4508"
+    },
+    "aggregates": [
+      { "uri": "../data/CTD_chem_gene_ixn_types.csv",
+        "mediatype": "text/csv"
+      },
+      { "uri": "../data/CTD_chemicals.csv",
+        "mediatype": "text/csv"
+      },
+      { "uri": "../data/CTD_pathways.csv",
+        "mediatype": "text/csv"
+      }
+    ],
+    "annotations": [
+      { "about": ["../data/analyse.py", "../data/numbers.csv", "../data/results.txt"],
+        "content": "../README.md",
+        "oa:motivatedBy": "oa:describing"
+      },
+      { "about": "../data/CTD_chem_gene_ixn_types.csv",
+        "content": "annotations/CTD_chem_gene_ixn_types.csv.jsonld",
+        "createdBy": {
+          "name": "Steven Cox",
+          "orcid": "http://orcid.org/0000-0002-8561-4508"
+        }
+      }
+    ]
+  },
+  "annotations/CTD_chem_gene_ixn_types.csv.jsonld": {
+    "@context": {
+      "schema": "http://schema.org/",
+      "object": "schema:object",
+      "TypeName": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "Code": {
+        "@type": "schema:code",
+        "@id": "schema:code"
+      },
+      "Description": {
+        "@type": "schema:description",
+        "@id": "schema:description"
+      },
+      "ParentCode": {
+        "@type": "schema:code",
+        "@id": "schema:parentItem"
+      },
+      "results": {
+        "@id": "schema:object",
+        "@type": "schema:object",
+        "@container": "@set"
+      }
+    }
+  },
+  "annotations/CTD_chem_gene_ixns.csv.jsonld": {
+    "@context": {
+      "schema": "http://schema.org/",
+      "object": "schema:object",
+      "mesh": "http://identifiers.org/mesh",
+      "casrn": "http://identifiers.org/casrn",
+      "ncbigene": "http://identifiers.org/ncbigene",
+      "ncbitaxon": "http://identifiers.org/ncbitaxon",
+      "pubmed": "http:/identifiers.org/pubemd",
+      "ChemicalName": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "ChemicalID": {
+        "@type": "mesh:",
+        "@id": "mesh:"
+      },
+      "CasRN": {
+        "@type": "casrn:",
+        "@id": "casrn"
+      },
+      "GeneSymbol": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "GeneID": {
+        "@type": "ncbigene:",
+        "@id": "ncbigene:"
+      },
+      "GeneForms": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "Organism": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "OrganismID": {
+        "@type": "ncbitaxon:",
+        "@id": "ncbitaxon:"
+      },
+      "Interaction": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "InteractionActions": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "PubMedIDs": {
+        "@type": "pubmed:",
+        "@id": "pubmed:"
+      }
+    }
+  },
+  "annotations/CTD_chemicals.csv.jsonld": {
+    "@context": {
+      "drugbank": "http://identifiers.org/drugbank/",
+      "mesh": "http://identifiers.org/mesh/",
+      "schema": "http://schema.org/",
+      "object": "schema:object",
+      "ChemicalName": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "ChemicalID": {
+        "@type": "mesh:",
+        "@id": "mesh:"
+      },
+      "CasRN": {
+      },
+      "Definition": {
+        "@type": "schema:description",
+        "@id": "schema:description"
+      },
+      "ParentIDs": {
+      },
+      "TreeNumbers": {
+      },
+      "ParentTreeNumbers": {
+      },
+      "Synonyms": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "DrugBankIDs": {
+        "@type": "drugbank:",
+        "@id": "drugbank:"
+      }
+    }
+  },
+  "annotations/CTD_pathways.csv.jsonld": {
+    "@context": {
+      "kegg": "http://identifiers.org/kegg.pathway/",
+      "schema": "http://schema.org/",
+      "object": "schema:object",
+      "PathwayName": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "PathwayID": {
+        "@type": "kegg:",
+        "@id": "kegg:"
+      }
+    }
+  },
+  "provenance/results.prov.jsonld": {
+    "@context": {
+      "prov": "http://www.w3.org/ns/prov#"
+    },
+    "@id": "../../data/results.txt",
+    "@type": "prov:Entity",
+    "prov:wasGeneratedBy": {
+      "@type": "prov:Activity",
+      "prov:hadPlan": {
+        "@id": "../../data/analyse.py"
+      },
+      "prov:used": {
+        "@id": "../../data/numbers.csv"
+      },
+      "prov:endedAtTime": "2015-07-02T11:00:00Z"
+    }
+  }
+}

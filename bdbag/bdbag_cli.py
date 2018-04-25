@@ -101,6 +101,9 @@ def parse_cli():
     metadata_file_arg = standard_args.add_argument(
         '--metadata-file', metavar='<file>', help="Optional path to a JSON formatted metadata file")
 
+    ro_metadata_file_arg = standard_args.add_argument(
+        '--ro-metadata-file', metavar='<file>', help="Optional path to a JSON formatted RO metadata file")
+
     remote_file_manifest_arg = standard_args.add_argument(
         '--remote-file-manifest', metavar='<file>',
         help="Optional path to a JSON formatted remote file manifest configuration file used to add remote file entries"
@@ -180,6 +183,11 @@ def parse_cli():
                          "to apply any changes.\n\n" % (metadata_file_arg.option_strings, update_arg.option_strings))
         sys.exit(2)
 
+    if args.ro_metadata_file and not args.update and is_bag:
+        sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
+                         "to apply any changes.\n\n" % (ro_metadata_file_arg.option_strings, update_arg.option_strings))
+        sys.exit(2)
+
     if args.prune_manifests and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
                          "to apply any changes.\n\n" % (prune_manifests_arg.option_strings, update_arg.option_strings))
@@ -229,14 +237,15 @@ def main():
                     args.checksum = ['md5', 'sha1', 'sha256', 'sha512']
                 # create or update the bag depending on the input arguments
                 bdb.make_bag(path,
-                             args.checksum,
-                             args.update,
-                             args.skip_manifests,
-                             args.prune_manifests,
-                             BAG_METADATA if BAG_METADATA else None,
-                             args.metadata_file,
-                             args.remote_file_manifest,
-                             args.config_file)
+                             algs=args.checksum,
+                             update=args.update,
+                             save_manifests=not args.skip_manifests,
+                             prune_manifests=args.prune_manifests,
+                             metadata=BAG_METADATA if BAG_METADATA else None,
+                             metadata_file=args.metadata_file,
+                             remote_file_manifest=args.remote_file_manifest,
+                             config_file=args.config_file,
+                             ro_metadata_file=args.ro_metadata_file)
 
         # otherwise just extract the bag if it is an archive and no other conflicting options specified
         elif not (args.validate or args.validate_profile or args.resolve_fetch):
