@@ -7,5 +7,5 @@ a `bdbag` using exclusively remote file references via `fetch.txt`, but with a c
 Invoke the following `bdbag` command from the bdbag source root directory to test this example:
 ```bash
 mkdir ro-test
-bdbag --update --remote-file-manifest ./examples/metamanifests/samples/sample1/remote-files.json --metadata ./examples/metamanifests/samples/sample1/metadata.json ./ro-test
+bdbag --update --remote-file-manifest ./examples/metamanifests/samples/sample1/remote-files.json --metadata-file ./examples/metamanifests/samples/sample1/metadata.json --ro-metadata-file ./examples/metamanifests/samples/sample1/ro_metadata.json ./ro-test
 ```
