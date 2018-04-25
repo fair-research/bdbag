@@ -1,7 +1,7 @@
 # BDBag/RO "Meta-Manifest" Examples
 Sample configuration files for creating and updating BDBags with Research Object metadata from JSON "meta-manifests".
 
-The directory `samples/sample1` contains two files, `metadata.json` and `remote-files.json` that can be used to create 
+The directory `samples/sample1` contains three files, `metadata.json`, `ro_metadata.json` and `remote-files.json` that can be used to create 
 a `bdbag` using exclusively remote file references via `fetch.txt`, but with a complete set of bag-local RO metadata and customizable `bag-info.txt` metadata fields.
 
 Invoke the following `bdbag` command from the bdbag source root directory to test this example:
