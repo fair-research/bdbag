@@ -229,6 +229,20 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_update_bag_change_metadata_nested_dict(self):
+        logger.info(self.getTestHeader('update bag change metadata with nested dict'))
+        try:
+            bag = bdb.make_bag(self.test_bag_dir,
+                               update=True,
+                               save_manifests=False,
+                               metadata_file=ospj(self.test_config_dir, 'test-ro-metadata.json'))
+            output = self.stream.getvalue()
+            self.assertIsInstance(bag, bdbagit.BDBag)
+            self.assertExpectedMessages(['Reading bag metadata from file', 'test-ro-metadata.json'], output)
+            self.assertExpectedMessages(["Nested dictionary content not supported in tag file: [bag-info.txt]"], output)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def test_update_bag_prune(self):
         logger.info(self.getTestHeader('update bag prune manifests'))
         try:

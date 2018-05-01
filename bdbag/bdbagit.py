@@ -2,7 +2,7 @@ import json
 from collections import OrderedDict
 import bagit
 from bagit import *
-from bagit import _, _can_read, _can_bag, _make_tag_file, _make_tagmanifest_file, _encode_filename, _decode_filename, \
+from bagit import _, _can_read, _can_bag, _make_tagmanifest_file, _encode_filename, _decode_filename, \
     _calc_hashes,_walk
 from bdbag import escape_url_path, VERSION, BAGIT_VERSION, PROJECT_URL
 
@@ -257,6 +257,28 @@ def _find_tag_files(bag_dir):
 
 # monkeypatch bagit._find_tag_files with our version
 bagit._find_tag_files = _find_tag_files
+
+
+def _make_tag_file(bag_info_path, bag_info):
+    headers = sorted(bag_info.keys())
+    with open_text_file(bag_info_path, 'w') as f:
+        for h in headers:
+            values = bag_info[h]
+            if not isinstance(values, list):
+                values = [values]
+            for txt in values:
+                if isinstance(txt, dict):
+                    LOGGER.warning(_("Nested dictionary content not supported in tag file: [%s]. "
+                                     "Skipping element \"%s\" with value %s." %
+                                     (bag_info_path, h, json.dumps(txt))))
+                    continue
+                # strip CR, LF and CRLF so they don't mess up the tag file
+                txt = re.sub(r'\n|\r|(\r\n)', '', force_unicode(txt))
+                f.write("%s: %s\n" % (h, txt))
+
+
+# monkeypatch bagit._make_tag_file with our version
+bagit._make_tag_file = _make_tag_file
 
 
 class BaggingInterruptedError(RuntimeError):
