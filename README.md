@@ -4,7 +4,7 @@
 #### Big Data Bag Utilities
 
 The *bdbag* utilities are a collection of software programs for working with
-[BagIt](https://datatracker.ietf.org/doc/draft-kunze-bagit/) packages that conform the Bagit and Bagit/RO profiles.
+[BagIt](https://datatracker.ietf.org/doc/draft-kunze-bagit/) packages that conform to the Bagit and Bagit/RO profiles.
 
 The *bdbag* [profiles](https://github.com/fair-research/bdbag/tree/master/profiles) specify the use of the fetch.txt file, require serialization, and specify what manifests must be provided with a *bdbag*.
 
@@ -23,6 +23,8 @@ Enhanced bag support includes:
 * Built-in support for creation of bags with [Bagit/RO profile](https://github.com/ResearchObject/bagit-ro) compatibility.
 
 An experimental Graphical User Interface (GUI) for *bdbag* can be found [here](https://github.com/fair-research/bdbag_gui).
+
+The technical paper, [``I'll take that to go: Big data bags and minimal identifiers for exchange of large, complex datasets"](https://zenodo.org/record/820878) explains the motivation for BDBags, provides details on the design and implementation, and gives examples of use. 
 
 ### Dependencies
 
