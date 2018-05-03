@@ -24,7 +24,11 @@ Enhanced bag support includes:
 
 An experimental Graphical User Interface (GUI) for *bdbag* can be found [here](https://github.com/fair-research/bdbag_gui).
 
-The technical paper, [``I'll take that to go: Big data bags and minimal identifiers for exchange of large, complex datasets"](https://zenodo.org/record/820878) explains the motivation for BDBags, provides details on the design and implementation, and gives examples of use. 
+#### Technical Papers
+
+["I'll take that to go: Big data bags and minimal identifiers for exchange of large, complex datasets"](https://zenodo.org/record/820878) explains the motivation for BDBags and the related Minid construct, provides details on design and implementation, and gives examples of use. 
+
+["Reproducible big data science: A case study in continuous FAIRness"](https://www.biorxiv.org/content/early/2018/02/27/268755) presents a data analysis use case in which BDBags and Minids are used to capture a transcription factor binding site analysis.
 
 ### Dependencies
 
