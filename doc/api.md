@@ -28,7 +28,11 @@ The command-line interface is built upon the API in this manner and can be used 
 
 <a name="bdbag_api"></a>
 ### bdbag_api.py
-The primary Python file which contains the *bdbag* API functions.
+The primary Python file which contains the *bdbag* API functions.  After installing bdbag, append the following to the top of your script.
+
+```python
+from bdbag import bdbag_api
+```
 
 -----
 
