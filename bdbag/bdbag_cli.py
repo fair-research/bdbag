@@ -133,7 +133,7 @@ def parse_cli():
         'path', metavar="<path>", help="Path to a bag directory or bag archive file.")
 
     metadata_args = parser.add_argument_group('Bag metadata arguments')
-    headers = bagit.STANDARD_BAG_INFO_HEADERS.copy()
+    headers = list(bagit.STANDARD_BAG_INFO_HEADERS)
     headers.append("Contact-Orcid")
     for header in sorted(headers):
         metadata_args.add_argument('--%s' % header.lower(), action=AddMetadataAction)
