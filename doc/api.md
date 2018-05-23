@@ -17,7 +17,7 @@ The command-line interface is built upon the API in this manner and can be used 
     * [revert_bag(bag_path)](#revert_bag)
     * [prune_bag_manifests(bag)](#prune_bag_manifests)
     * [check_payload_consistency(bag, skip_remote=False, quiet=False)](#check_payload_consistency)
-    * [make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE)](#make_bag)
+    * [make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE, ro_metadata=None, ro_metadata_file=None)](#make_bag)
     * [resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE)](#resolve_fetch)
     * [archive_bag(bag_path, bag_archiver)](#archive_bag)
     * [extract_bag(bag_path, output_path=None, temp=False)](#extract_bag)
@@ -149,10 +149,12 @@ Creates or updates the bag denoted by the `bag_path` argument.
 |prune_manifests|`boolean`|Removes any file and tagfile manifests for checksums that are not listed in the `algs` variable.  This parameter is only meaningful during update operations, otherwise it is ignored.
 |metadata|`dict`|A dictionary of key-value pairs that will be written directly to the bag's 'bag-info.txt' file.
 |metadata_file|`string`|A JSON file representation of metadata that will be written directly to the bag's 'bag-info.txt' file. The format of this metadata is described [here](./config.md#metadata).
-|remote_file_manifest|`string`|A JSON file representation of remote file entries that will be used to add remote files to the bag file manifest(s) and used to create the bag's `fetch.txt`. The format of this file is described [here](./config.md/#remote-file-manifest).
+|remote_file_manifest|`string`|A path to a JSON file representation of remote file entries that will be used to add remote files to the bag file manifest(s) and used to create the bag's `fetch.txt`. The format of this file is described [here](./config.md/#remote-file-manifest).
 |config_file|`string`|A JSON file representation of configuration data that is used during bag creation and update. The format of this file is described [here](./config.md#bdbag.json).
+|ro_metadata|`dict`|A dictionary that will be used to serialize data into one or more JSON files into the bag's `metadata` directory. The format of this metadata is described [here](./config.md#ro_metadata)
+|ro_metadata_file|`string`|A path to a JSON file representation of RO metadata that will be used to serialize data into one or more JSON files into the bag's `metadata` directory. The format of this metadata is described [here](./config.md#ro_metadata).
 
-**Returns**: `bag` - An instantiated [bagit-python](https://github.com/fair-research/bagit-python/blob/master/bagit.py) `bag` class object.
+**Returns**: `bag` - An instantiated [bagit-python](https://github.com/fair-research/bagit-python/blob/master/bagit.py) `bag` compatible class object.
 
 -----
 

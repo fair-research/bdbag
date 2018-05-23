@@ -12,8 +12,8 @@ import bdbag.bdbagit as bdbagit
 import bdbag.bdbagit_profile as bdbp
 import bdbag.bdbag_ro as bdbro
 from collections import OrderedDict
-from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL, BAG_PROFILE_TAG, DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, \
-    DEFAULT_CONFIG_PATH, get_typed_exception
+from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, BDBAG_RO_PROFILE_ID, \
+    DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_PATH, get_typed_exception
 from bdbag.fetch.fetcher import fetch_bag_files
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
@@ -272,6 +272,8 @@ def make_bag(bag_path,
         bag_metadata.update(metadata)
     if ro_metadata:
         bag_ro_metadata.update(ro_metadata)
+    if bag_ro_metadata:
+        bag_metadata.update({BAG_PROFILE_TAG: BDBAG_RO_PROFILE_ID})
 
     if 'Bagging-Date' not in bag_metadata:
         bag_metadata['Bagging-Date'] = datetime.date.strftime(datetime.date.today(), "%Y-%m-%d")

@@ -70,9 +70,9 @@ def fetch_file(url, size, path, auth, **kwargs):
                 return True
         return False
     elif SCHEME_TAG == scheme:
-        logger.info("The fetch entry for file %s specifies the tag URL %s. Tag URLs generally represent files that are "
-                    "not directly addressable by URL and therefore cannot be automatically fetched. Such files must be "
-                    "resolved outside of the context of this software." % (path, url))
+        logger.info("The fetch entry for file %s specifies the tag URI %s. Tag URIs may represent objects that "
+                    "cannot be directly resolvable as network resources and therefore cannot be automatically "
+                    "fetched. Such files must be acquired outside of the context of this software." % (path, url))
         return True
     else:
         logger.warning(UNIMPLEMENTED % scheme)

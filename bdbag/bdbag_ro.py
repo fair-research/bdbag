@@ -1,6 +1,7 @@
 import os
 import json
 import copy
+import uuid
 from collections import OrderedDict
 from bdbag import guess_mime_type, add_mime_types, escape_url_path, VERSION, BAGIT_VERSION
 from datetime import datetime
@@ -29,7 +30,7 @@ def check_input(obj):
             "bdbag_ro: invalid input object type (%s), expected (dict)" % type(obj).__name__)
 
 
-def read_bag_ro_metadata(bag_path, metadata_path):
+def read_bag_ro_metadata(bag_path, metadata_path="manifest.json"):
     bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata", metadata_path))
 
     with open(bag_ro_metadata_path) as mf:
@@ -38,7 +39,7 @@ def read_bag_ro_metadata(bag_path, metadata_path):
     return json.loads(metadata, object_pairs_hook=OrderedDict)
 
 
-def write_bag_ro_metadata(obj, bag_path, metadata_path):
+def write_bag_ro_metadata(obj, bag_path, metadata_path="manifest.json"):
 
     check_input(obj)
 
@@ -203,7 +204,7 @@ def add_annotation(obj, about, uri=None, content=None, motivatedBy=None):
     return annotation
 
 
-def make_bundled_as(uri=None, folder=None, filename=None):
+def make_bundled_as(uri="urn:uuid:%s" % str(uuid.uuid4()), folder=None, filename=None):
 
     if uri is None and folder is None and filename is None:
         return None

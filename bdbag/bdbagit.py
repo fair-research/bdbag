@@ -236,7 +236,7 @@ def _make_fetch_file(path, remote_entries):
     with open_text_file(fetch_file_path, 'w') as fetch_file:
         for filename in sorted(remote_entries.keys()):
             fetch_file.write("%s\t%s\t%s\n" %
-                             (escape_url_path(remote_entries[filename]['url']),
+                             (escape_url_path(remote_entries[filename]['url'], "%/:=&?~#+!$,;'@()*[]"),
                               remote_entries[filename]['length'],
                               _denormalize_filename(filename)))
 

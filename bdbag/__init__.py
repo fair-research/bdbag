@@ -95,9 +95,9 @@ def parse_content_disposition(value):
     return n
 
 
-def escape_url_path(url):
+def escape_url_path(url, safe='/'):
     urlparts = urlsplit(url)
-    path = urlquote(urlunquote(urlparts.path), '/')
+    path = urlquote(urlunquote(urlparts.path), safe=safe)
     query = urlquote(urlunquote(urlparts.query))
     fragment = urlquote(urlunquote(urlparts.fragment))
     return urlunsplit((urlparts.scheme, urlparts.netloc, path, query, fragment))

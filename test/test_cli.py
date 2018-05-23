@@ -41,6 +41,7 @@ class TestCli(BaseTest):
         args = ARGS + [self.test_data_dir,
                        '--metadata-file', ospj(self.test_config_dir, 'test-metadata.json'),
                        '--contact-name', 'nobody',
+                       '--contact-orcid', '0000-0000-0000-0000',
                        '--ro-metadata-file', ospj(self.test_config_dir, 'test-ro-metadata.json')]
         logfile.writelines(self.getTestHeader('create bag with metadata', args))
         self._test_successful_invocation(args, ["Reading bag metadata from file:",

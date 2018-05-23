@@ -111,20 +111,6 @@ Below is a sample *keychain.json* file:
 ]
 ```
 
-<a name="metadata"></a>
-## *metadata*
-A metadata configuration file consists of a single JSON object containing a set of JSON key-value pairs that will be
-written as-is to the bag's `bag-info.txt` file.
-
-Below is a sample *metadata* configuration file:
-```json
-{
-    "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
-    "External-Description": "Simple bdbag test",
-    "Arbitrary-Metadata-Field": "This is completely arbitrary"
-}
-```
-
 <a name="remote-file-manifest"></a>
 ## *remote-file-manifest*
 A *remote-file-manifest* configuration file is a JSON array containing a list of JSON objects that have the following attributes:
@@ -156,4 +142,76 @@ Below is a sample *remote-file-manifest* configuration file:
         "sha256": "cacc1abf711425d3c554277a5989df269cefaa906d27f1aaa72205d30224ed5f"
     }
 ]
+```
+
+<a name="metadata"></a>
+## *metadata*
+A metadata configuration file consists of a single JSON object containing a set of JSON key-value pairs that will be
+written as-is to the bag's `bag-info.txt` file.
+
+Below is a sample *metadata* configuration file:
+```json
+{
+    "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
+    "External-Description": "Simple bdbag test",
+    "Arbitrary-Metadata-Field": "This is completely arbitrary"
+}
+```
+
+<a name="ro_metadata"></a>
+## *ro_metadata*
+A Research Object metadata configuration file consists of a single JSON object containing a set of JSON key-object pairs where the `key` is a `/` delimited relative file path and the `object` is any aribitratily complex JSON content. This format allows `bdbag` to process all RO metadata as an aggregation which can then be serialized into individual JSON file components relative to the bag's `metadata` directory.
+
+Below is a sample *ro_metadata* configuration file:
+```json
+{
+  "manifest.json": {
+    "@context": [ "https://w3id.org/bundle/context" ],
+    "@id": "../",
+    "createdOn": "2018-02-08T12:23:00Z",
+    "aggregates": [
+      { "uri": "../data/CTD_chem_gene_ixn_types.csv",
+        "mediatype": "text/csv"
+      },
+      { "uri": "../data/CTD_chemicals.csv",
+        "mediatype": "text/csv"
+      },
+      { "uri": "../data/CTD_pathways.csv",
+        "mediatype": "text/csv"
+      }
+    ],
+    "annotations": [
+      { "about": "../data/CTD_chem_gene_ixn_types.csv",
+        "content": "annotations/CTD_chem_gene_ixn_types.csv.jsonld"
+      }
+    ]
+  },
+  "annotations/CTD_chem_gene_ixn_types.csv.jsonld": {
+    "@context": {
+      "schema": "http://schema.org/",
+      "object": "schema:object",
+      "TypeName": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "Code": {
+        "@type": "schema:code",
+        "@id": "schema:code"
+      },
+      "Description": {
+        "@type": "schema:description",
+        "@id": "schema:description"
+      },
+      "ParentCode": {
+        "@type": "schema:code",
+        "@id": "schema:parentItem"
+      },
+      "results": {
+        "@id": "schema:object",
+        "@type": "schema:object",
+        "@container": "@set"
+      }
+    }
+  }
+}
 ```

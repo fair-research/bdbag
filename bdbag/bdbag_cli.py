@@ -39,73 +39,87 @@ def parse_cli():
 
     standard_args = parser.add_argument_group('Bag arguments')
 
-    update_arg = standard_args.add_argument(
-        '--update', action="store_true",
+    update_arg = "--update"
+    standard_args.add_argument(
+        update_arg, action="store_true",
         help="Update an existing bag dir, regenerating manifests and fetch.txt if necessary.")
 
-    revert_arg = standard_args.add_argument(
-        '--revert', action="store_true",
+    revert_arg = "--revert"
+    standard_args.add_argument(
+        revert_arg, action="store_true",
         help="Revert an existing bag directory back to a normal directory, deleting all bag metadata files. "
              "Payload files in the \'data\' directory will be moved back to the directory root, and the \'data\' "
              "directory will be deleted.")
 
+    archiver_arg = "--archiver"
     standard_args.add_argument(
-        "--archiver", choices=['zip', 'tar', 'tgz'], help="Archive a bag using the specified format.")
+        archiver_arg, choices=['zip', 'tar', 'tgz'], help="Archive a bag using the specified format.")
 
-    checksum_arg = standard_args.add_argument(
-        "--checksum", action='append', choices=['md5', 'sha1', 'sha256', 'sha512', 'all'],
+    checksum_arg = "--checksum"
+    standard_args.add_argument(
+        checksum_arg, action='append', choices=['md5', 'sha1', 'sha256', 'sha512', 'all'],
         help="Checksum algorithm to use: can be specified multiple times with different values. "
              "If \'all\' is specified, every supported checksum will be generated")
 
-    skip_manifests_arg = standard_args.add_argument(
-        "--skip-manifests", action='store_true',
+    skip_manifests_arg = "--skip-manifests"
+    standard_args.add_argument(
+        skip_manifests_arg, action='store_true',
         help=str("If \'skip-manifests\' is specified in conjunction with %s, only tagfile manifests will be "
                  "regenerated, with payload manifests and fetch.txt (if any) left as is. This argument should be used "
-                 "when only bag metadata has changed." % update_arg.option_strings))
+                 "when only bag metadata has changed." % update_arg))
 
-    prune_manifests_arg = standard_args.add_argument(
-        "--prune-manifests", action='store_true',
+    prune_manifests_arg = "--prune-manifests"
+    standard_args.add_argument(
+        prune_manifests_arg, action='store_true',
         help="If specified, any existing checksum manifests not explicitly configured via either"
              " the \"checksum\" argument(s) or configuration file will be deleted from the bag during an update.")
 
-    fetch_arg = standard_args.add_argument(
-        '--resolve-fetch', choices=['all', 'missing'],
+    fetch_arg = "--resolve-fetch"
+    standard_args.add_argument(
+        fetch_arg, "--fetch", choices=['all', 'missing'],
         help="Download remote files listed in the bag's fetch.txt file. "
              "The \"missing\" option only attempts to fetch files that do not "
              "already exist in the bag payload directory. "
              "The \"all\" option causes all fetch files to be re-acquired,"
              " even if they already exist in the bag payload directory.")
 
+    validate_arg = "--validate"
     standard_args.add_argument(
-        '--validate', choices=['fast', 'full', 'structure'],
+        validate_arg, choices=['fast', 'full', 'structure'],
         help="Validate a bag directory or bag archive. If \"fast\" is specified, Payload-Oxum (if present) will be "
              "used to check that the payload files are present and accounted for. If \"full\" is specified, "
              "all checksums will be regenerated and compared to the corresponding entries in the manifest. " 
              "If \"structure\" is specified, the bag will be checked for structural validity only.")
 
+    validate_profile_arg = "--validate-profile"
     standard_args.add_argument(
-        '--validate-profile', action="store_true",
+        validate_profile_arg, action="store_true",
         help="Validate a bag against the profile specified by the bag's "
              "\"BagIt-Profile-Identifier\" metadata field, if present.")
 
+    config_file_arg = "--config-file"
     standard_args.add_argument(
-        '--config-file', default=DEFAULT_CONFIG_FILE, metavar='<file>',
+        config_file_arg, default=DEFAULT_CONFIG_FILE, metavar='<file>',
         help="Optional path to a configuration file. If this argument is not specified, the configuration file "
              "defaults to: %s " % DEFAULT_CONFIG_FILE)
 
+    keychain_file_arg = "--keychain-file"
     standard_args.add_argument(
-        '--keychain-file', default=DEFAULT_KEYCHAIN_FILE, metavar='<file>',
+        keychain_file_arg, default=DEFAULT_KEYCHAIN_FILE, metavar='<file>',
         help="Optional path to a keychain file. If this argument is not specified, the keychain file "
              "defaults to: %s " % DEFAULT_KEYCHAIN_FILE)
 
-    metadata_file_arg = standard_args.add_argument(
-        '--metadata-file', metavar='<file>', help="Optional path to a JSON formatted metadata file")
+    metadata_file_arg = "--metadata-file"
+    standard_args.add_argument(
+        metadata_file_arg, metavar='<file>', help="Optional path to a JSON formatted metadata file")
 
-    ro_metadata_file_arg = standard_args.add_argument(
-        '--ro-metadata-file', metavar='<file>', help="Optional path to a JSON formatted RO metadata file")
+    ro_metadata_file_arg = "--ro-metadata-file"
+    standard_args.add_argument(
+        ro_metadata_file_arg, metavar='<file>', help="Optional path to a JSON formatted RO metadata file")
 
-    remote_file_manifest_arg = standard_args.add_argument(
-        '--remote-file-manifest', metavar='<file>',
+    remote_file_manifest_arg = "--remote-file-manifest"
+    standard_args.add_argument(
+        remote_file_manifest_arg, metavar='<file>',
         help="Optional path to a JSON formatted remote file manifest configuration file used to add remote file entries"
              " to the bag manifest(s) and create the bag fetch.txt file.")
 
@@ -119,7 +133,9 @@ def parse_cli():
         'path', metavar="<path>", help="Path to a bag directory or bag archive file.")
 
     metadata_args = parser.add_argument_group('Bag metadata arguments')
-    for header in bagit.STANDARD_BAG_INFO_HEADERS:
+    headers = bagit.STANDARD_BAG_INFO_HEADERS.copy()
+    headers.append("Contact-Orcid")
+    for header in sorted(headers):
         metadata_args.add_argument('--%s' % header.lower(), action=AddMetadataAction)
 
     args = parser.parse_args()
@@ -154,53 +170,53 @@ def parse_cli():
     if args.resolve_fetch and is_file:
         sys.stderr.write("Error: It is not possible to resolve remote files directly into a bag archive. "
                          "The bag must first be extracted before the %s argument can be specified.\n\n" %
-                         fetch_arg.option_strings)
+                         fetch_arg)
         sys.exit(2)
 
     if args.update and args.resolve_fetch:
         sys.stderr.write("Error: The %s argument is not compatible with the %s argument.\n\n" %
-                         (update_arg.option_strings, fetch_arg.option_strings))
+                         (update_arg, fetch_arg))
         sys.exit(2)
 
     if args.remote_file_manifest and args.resolve_fetch:
         sys.stderr.write("Error: The %s argument is not compatible with the %s argument.\n\n" %
-                         (remote_file_manifest_arg.option_strings, fetch_arg.option_strings))
+                         (remote_file_manifest_arg, fetch_arg))
         sys.exit(2)
 
     is_bag = bdb.is_bag(path)
     if args.checksum and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
-                         "to apply any changes.\n\n" % (checksum_arg.option_strings, update_arg.option_strings))
+                         "to apply any changes.\n\n" % (checksum_arg, update_arg))
         sys.exit(2)
 
     if args.remote_file_manifest and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
-                         "to apply any changes.\n\n" % (remote_file_manifest_arg.option_strings, update_arg.option_strings))
+                         "to apply any changes.\n\n" % (remote_file_manifest_arg, update_arg))
         sys.exit(2)
 
     if args.metadata_file and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
-                         "to apply any changes.\n\n" % (metadata_file_arg.option_strings, update_arg.option_strings))
+                         "to apply any changes.\n\n" % (metadata_file_arg, update_arg))
         sys.exit(2)
 
     if args.ro_metadata_file and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
-                         "to apply any changes.\n\n" % (ro_metadata_file_arg.option_strings, update_arg.option_strings))
+                         "to apply any changes.\n\n" % (ro_metadata_file_arg, update_arg))
         sys.exit(2)
 
     if args.prune_manifests and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s for an existing bag requires the %s argument in order "
-                         "to apply any changes.\n\n" % (prune_manifests_arg.option_strings, update_arg.option_strings))
+                         "to apply any changes.\n\n" % (prune_manifests_arg, update_arg))
         sys.exit(2)
 
     if args.skip_manifests and not args.update and is_bag:
         sys.stderr.write("Error: Specifying %s requires the %s argument.\n\n" %
-                         (skip_manifests_arg.option_strings, update_arg.option_strings))
+                         (skip_manifests_arg, update_arg))
         sys.exit(2)
 
     if BAG_METADATA and not args.update and is_bag:
         sys.stderr.write("Error: Adding or modifying metadata %s for an existing bag requires the %s argument "
-                         "in order to apply any changes.\n\n" % (BAG_METADATA, update_arg.option_strings))
+                         "in order to apply any changes.\n\n" % (BAG_METADATA, update_arg))
         sys.exit(2)
 
     if args.revert and not is_bag:
@@ -209,7 +225,7 @@ def parse_cli():
 
     if args.revert and args.update and is_bag:
         sys.stderr.write("Error: The %s argument is not compatible with the %s argument.\n\n" %
-                         (revert_arg.option_strings, update_arg.option_strings))
+                         (revert_arg, update_arg))
         sys.exit(2)
 
     return args, is_bag, is_file

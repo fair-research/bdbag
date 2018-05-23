@@ -195,18 +195,21 @@ def parse_cli():
         'output_file', metavar="<output file>",
         help="Path of the filename where the remote file manifest will be written.")
 
-    checksum_arg = parser_crfm.add_argument(
-        "--checksum", action='append', required=True, choices=['md5', 'sha1', 'sha256', 'sha512', 'all'],
+    checksum_arg = "--checksum"
+    parser_crfm.add_argument(
+        checksum_arg, action='append', required=True, choices=['md5', 'sha1', 'sha256', 'sha512', 'all'],
         help="Checksum algorithm to use: can be specified multiple times with different values. "
              "If \'all\' is specified, every supported checksum will be generated")
 
-    base_payload_path_arg = parser_crfm.add_argument(
-        '--base-payload-path', metavar="<url>",
+    base_payload_path_arg = '--base-payload-path'
+    parser_crfm.add_argument(
+        base_payload_path_arg, metavar="<url>",
         help="An optional path prefix to prepend to each relative file path found while walking the input directory "
              "tree. All files will be rooted under this base directory path in any bag created from this manifest.")
 
-    base_url_arg = parser_crfm.add_argument(
-        '--base-url', metavar="<url>", required=True,
+    base_url_arg = "--base-url"
+    parser_crfm.add_argument(
+        base_url_arg, metavar="<url>", required=True,
         help="A URL root to prepend to each file listed in the manifest. Can be used to generate fetch URL "
              "fields dynamically.")
 
@@ -214,16 +217,18 @@ def parse_cli():
 #        '--url-map-file', metavar="<path>",
 #        help="Path to a JSON formatted file that maps file relative paths to URLs.")
 
-    url_formatter_arg = parser_crfm.add_argument(
-        "--url-formatter", choices=['none', 'append-path', 'append-filename'], default='none',
+    url_formatter_arg = "--url-formatter"
+    parser_crfm.add_argument(
+        url_formatter_arg , choices=['none', 'append-path', 'append-filename'], default='none',
         help="Format function for generating remote file URLs. "
              "If \'append-path\' is specified, the existing relative path including the filename will be appended to"
              " the %s argument. If \'append-path\' is specified, only the filename will be appended. If \"none\" is "
              "specified, the %s argument will be used as-is." %
-             (base_url_arg.option_strings, base_url_arg.option_strings))
+             (base_url_arg, base_url_arg))
 
-    streaming_json_arg = parser_crfm.add_argument(
-        "--streaming-json", action='store_true', default=False,
+    streaming_json_arg = "--streaming-json"
+    parser_crfm.add_argument(
+        streaming_json_arg, action='store_true', default=False,
         help=str("If \'streaming-json\' is specified, one JSON tuple object per line will be output to the output file."
                  "Enable this option if the default behavior produces a file that is prohibitively large to parse "
                  "entirely into system memory."))
@@ -250,21 +255,25 @@ def parse_cli():
         help="Optional path to a keychain file. If this argument is not specified, the keychain file "
              "defaults to: %s " % DEFAULT_KEYCHAIN_FILE)
 
-    grfm_base_payload_path_arg = parser_grfm.add_argument(
-        '--base-payload-path', metavar="<url>",
+    grfm_base_payload_path_arg = "--base-payload-path"
+    parser_grfm.add_argument(
+        grfm_base_payload_path_arg, metavar="<url>",
         help="An optional path prefix to prepend to each relative file path found while querying each URL for metadata."
              " All files will be rooted under this base directory path in any bag created from this manifest.")
 
-#    grfm_url_map_arg = parser_grfm.add_argument(
-#        '--url-map-file', metavar="<path>",
+#    grfm_url_map_arg = "--url-map-file"
+#     parser_grfm.add_argument(
+#        grfm_url_map_arg, metavar="<path>",
 #        help="Path to a JSON formatted file that maps file relative paths to URLs.")
 
+    preserve_url_path_arg = "--preserve-url-path"
     parser_grfm.add_argument(
-        '--preserve-url-path', default=False, action="store_true",
+        preserve_url_path_arg, default=False, action="store_true",
         help="Preserve the URL file path in the local payload.")
 
-    grfm_streaming_json_arg = parser_grfm.add_argument(
-        "--streaming-json", action='store_true', default=False,
+    grfm_streaming_json_arg = "--streaming-json"
+    parser_grfm.add_argument(
+        grfm_streaming_json_arg, action='store_true', default=False,
         help=str("If \'streaming-json\' is specified, one JSON tuple object per line will be output to the output file."
                  "Enable this option if the default behavior produces a file that is prohibitively large to parse "
                  "entirely into system memory."))
@@ -280,10 +289,12 @@ def parse_cli():
 
 def main():
 
-    sys.stderr.write('\n')
     args, parser = parse_cli()
     error = None
     result = 0
+
+    if not args.quiet:
+        sys.stderr.write('\n')
 
     try:
         if args.subparser is None:
@@ -298,7 +309,8 @@ def main():
         if result != 0:
             sys.stderr.write("\n%s" % error)
 
-    sys.stderr.write('\n')
+    if not args.quiet:
+        sys.stderr.write('\n')
 
     return result
 

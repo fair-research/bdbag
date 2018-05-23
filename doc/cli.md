@@ -28,6 +28,7 @@ usage: bdbag
 [--config-file <file>]
 [--keychain-file <file>]
 [--metadata-file <file>]
+[--ro-metadata-file <file>]
 [--remote-file-manifest <file>]
 [--quiet]
 [--debug]
@@ -42,6 +43,7 @@ These extended arguments are mapped directly to metadata fields in bag-info.txt:
 [--organization-address ORGANIZATION_ADDRESS]
 [--contact-name CONTACT_NAME] [--contact-phone CONTACT_PHONE]
 [--contact-email CONTACT_EMAIL]
+[--contact-orcid CONTACT_ORCID]
 [--external-description EXTERNAL_DESCRIPTION]
 [--external-identifier EXTERNAL_IDENTIFIER] [--bag-size BAG_SIZE]
 [--bag-group-identifier BAG_GROUP_IDENTIFIER]
@@ -125,6 +127,11 @@ Optional path to a JSON formatted metadata file. The configuration file format i
 [here](./config.md#metadata).
 
 ----
+##### `--ro-metadata-file <file>`
+Optional path to a JSON formatted Research Object metadata configuration file. The configuration file format is described
+[here](./config.md#ro_metadata).
+
+----
 ##### `--remote-file-manifest <file>`
 Optional path to a JSON formatted remote file manifest. The configuration file format is described
 [here](./config.md#remote-file-manifest).
@@ -161,6 +168,7 @@ This following table enumerates the various arguments and compatibility modes.
 |`--config-file`|bag dir only, create or update only|A config-file override can be specified whenever a bag is created or updated.
 |`--keychain-file`|bag dir only, used only when `--resolve-fetch` is specified|This argument is only meaningful in the context of remote file resolution.
 |`--metadata-file`|bag dir only, create or update only|A metadata config file can be specified whenever a bag is created or updated.
+|`--ro-metadata-file`|bag dir only, create or update only|A Research Object metadata config file can be specified whenever a bag is created or updated.
 |`--remote-file-manifest`|bag dir only, create or update only|A remote-file-manifest can be specified whenever a bag is created or updated.
 |any extended argument|bag dir only, create or update only|Any of the standard bag metadata extended arguments, e.g., `--source-organization` or `--contact-email` may be specified during create or update of a bag directory, but not a bag archive.
 
