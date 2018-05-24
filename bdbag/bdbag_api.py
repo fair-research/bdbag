@@ -10,9 +10,10 @@ import tarfile
 import zipfile
 import bdbag.bdbagit as bdbagit
 import bdbag.bdbagit_profile as bdbp
+import bdbag.bdbag_ro as bdbro
 from collections import OrderedDict
-from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL, BAG_PROFILE_TAG, DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, \
-    DEFAULT_CONFIG_PATH, get_typed_exception
+from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, BDBAG_RO_PROFILE_ID, \
+    DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_PATH, get_typed_exception
 from bdbag.fetch.fetcher import fetch_bag_files
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
@@ -60,11 +61,11 @@ def read_config(config_file, create_default=True):
 
 def read_metadata(metadata_file):
     if not metadata_file:
-        return {}
+        return dict()
     else:
         metadata_file = os.path.abspath(metadata_file)
 
-    logger.info("Reading bag metadata from file %s" % metadata_file)
+    logger.info("Reading bag metadata from file: %s" % metadata_file)
     with open(metadata_file) as mf:
         metadata = mf.read()
         mf.close()
@@ -192,9 +193,9 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
         e = bdbagit.FileMissing(path)
         if not quiet:
             logger.warning(
-                "%s. Resolve this file reference by either 1) adding the missing file to the bag payload or 2) adding "
-                "a remote file reference in fetch.txt. or 3) re-run in \"update\" mode in order to remove this file "
-                "from the bag manifest." % get_typed_exception(e))
+                "%s. Resolve this file reference by either 1) adding the missing file to the bag or 2) if the file is "
+                "a payload file, adding a remote file reference in fetch.txt. or 3) re-run in \"update\" mode in order "
+                "to remove this file from the bag manifest." % get_typed_exception(e))
     for path in only_on_fs:
         e = bdbagit.UnexpectedFile(path)
         if not quiet:
@@ -240,7 +241,9 @@ def make_bag(bag_path,
              metadata=None,
              metadata_file=None,
              remote_file_manifest=None,
-             config_file=DEFAULT_CONFIG_FILE):
+             config_file=DEFAULT_CONFIG_FILE,
+             ro_metadata=None,
+             ro_metadata_file=None):
     bag = None
     try:
         bag = bdbagit.BDBag(bag_path)
@@ -255,12 +258,22 @@ def make_bag(bag_path,
 
     # bag metadata merge order: config(if new, else if update use existing)->metadata_file->metadata
     if not update or (update and not os.path.isfile(os.path.join(bag_path, "bag-info.txt"))):
+        # config metadata
         bag_metadata = bag_config.get('bag_metadata', {}).copy()
     else:
         bag_metadata = bag.info
+
+    # file metadata
     bag_metadata.update(read_metadata(metadata_file))
+    bag_ro_metadata = read_metadata(ro_metadata_file)
+
+    # parameterized metadata
     if metadata:
         bag_metadata.update(metadata)
+    if ro_metadata:
+        bag_ro_metadata.update(ro_metadata)
+    if bag_ro_metadata:
+        bag_metadata.update({BAG_PROFILE_TAG: BDBAG_RO_PROFILE_ID})
 
     if 'Bagging-Date' not in bag_metadata:
         bag_metadata['Bagging-Date'] = datetime.date.strftime(datetime.date.today(), "%Y-%m-%d")
@@ -279,13 +292,15 @@ def make_bag(bag_path,
                     logger.warning(
                         "Manifests must be updated due to bag payload change or checksum configuration change.")
                     save_manifests = True
+                if bag_ro_metadata:
+                    bdbro.serialize_bag_ro_metadata(bag_ro_metadata, bag_path)
                 bag.save(bag_processes, manifests=save_manifests)
             except Exception as e:
                 logger.error("Exception while updating bag manifests: %s", e)
                 raise e
         else:
             logger.info("The directory %s is already a bag." % bag_path)
-
+    # otherwise, create
     else:
         remote_files = None
         if remote_file_manifest:
@@ -296,7 +311,9 @@ def make_bag(bag_path,
                                checksums=bag_algorithms,
                                remote_entries=remote_files)
         logger.info('Created bag: %s' % bag_path)
-
+        if bag_ro_metadata:
+            bdbro.serialize_bag_ro_metadata(bag_ro_metadata, bag_path)
+            bag.save(bag_processes)
     return bag
 
 

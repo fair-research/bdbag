@@ -1,6 +1,7 @@
 import os
 import json
 import copy
+import uuid
 from collections import OrderedDict
 from bdbag import guess_mime_type, add_mime_types, escape_url_path, VERSION, BAGIT_VERSION
 from datetime import datetime
@@ -29,36 +30,35 @@ def check_input(obj):
             "bdbag_ro: invalid input object type (%s), expected (dict)" % type(obj).__name__)
 
 
-def read_ro_manifest(path):
-    with open(path) as mf:
-        manifest = mf.read()
+def read_bag_ro_metadata(bag_path, metadata_path="manifest.json"):
+    bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata", metadata_path))
 
-    return json.loads(manifest, object_pairs_hook=OrderedDict)
+    with open(bag_ro_metadata_path) as mf:
+        metadata = mf.read()
 
-
-def read_bag_ro_manifest(bag_path):
-    bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata", "manifest.json"))
-
-    return read_ro_manifest(bag_ro_metadata_path)
+    return json.loads(metadata, object_pairs_hook=OrderedDict)
 
 
-def write_ro_manifest(obj, path):
+def write_bag_ro_metadata(obj, bag_path, metadata_path="manifest.json"):
 
     check_input(obj)
 
-    with open(os.path.abspath(path), 'w') as ro_manifest:
-        json.dump(obj, ro_manifest, sort_keys=True, indent=4)
-
-
-def write_bag_ro_manifest(manifest, bag_path):
-
     bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata"))
+    ro_metadata_path = os.path.join(bag_ro_metadata_path, metadata_path)
+    ro_metadata_path_dir = os.path.dirname(ro_metadata_path)
 
-    if not os.path.exists(bag_ro_metadata_path):
-        os.makedirs(bag_ro_metadata_path)
+    if not os.path.exists(ro_metadata_path_dir):
+        os.makedirs(ro_metadata_path_dir)
 
-    ro_manifest_path = os.path.join(bag_ro_metadata_path, "manifest.json")
-    write_ro_manifest(manifest, ro_manifest_path)
+    with open(os.path.abspath(ro_metadata_path.strip()), 'w') as ro_metadata:
+        json.dump(obj, ro_metadata, sort_keys=True, indent=4)
+
+
+def serialize_bag_ro_metadata(obj, bag_path):
+    logging.info("Serializing ro-metadata to: %s" % os.path.abspath(os.path.join(bag_path, "metadata")))
+    check_input(obj)
+    for k, v in obj.items():
+        write_bag_ro_metadata(v, bag_path, k)
 
 
 def init_ro_manifest(creator_name=None,
@@ -204,7 +204,7 @@ def add_annotation(obj, about, uri=None, content=None, motivatedBy=None):
     return annotation
 
 
-def make_bundled_as(uri=None, folder=None, filename=None):
+def make_bundled_as(uri="urn:uuid:%s" % str(uuid.uuid4()), folder=None, filename=None):
 
     if uri is None and folder is None and filename is None:
         return None

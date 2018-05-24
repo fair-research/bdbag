@@ -1,5 +1,6 @@
 # bdbag
 [![Build Status](https://travis-ci.org/fair-research/bdbag.svg)](https://travis-ci.org/fair-research/bdbag)
+[![Coverage Status](https://coveralls.io/repos/github/fair-research/bdbag/badge.svg?branch=master)](https://coveralls.io/github/fair-research/bdbag?branch=master)
 
 #### Big Data Bag Utilities
 

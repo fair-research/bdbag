@@ -1,4 +1,5 @@
 {
-    "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
-    "External-Description": "Simple bdbag test"
+  "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
+  "External-Description": "Simple bdbag test"
 }
+

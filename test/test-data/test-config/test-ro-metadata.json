@@ -1,0 +1,57 @@
+{
+  "manifest.json": {
+    "@context": [
+      "https://w3id.org/bundle/context"
+    ],
+    "@id": "../",
+    "aggregates": [
+      {
+        "uri": "../data/test2/test2.txt",
+        "mediatype": "text/plain"
+      }
+    ],
+    "annotations": [
+      {
+        "about": [
+          "../data/test1/test1.txt",
+          "../data/test2/test2.txt"
+        ],
+        "content": "../README.txt",
+        "oa:motivatedBy": "oa:describing"
+      }
+    ]
+  },
+  "annotations/test2/test2.txt.jsonld": {
+    "@context": {
+      "test": "http://identifiers.org/test.pathway/",
+      "schema": "http://schema.org/",
+      "object": "schema:object",
+      "TestName": {
+        "@type": "schema:name",
+        "@id": "schema:name"
+      },
+      "TestID": {
+        "@type": "test:",
+        "@id": "test"
+      }
+    }
+  },
+  "provenance/results.prov.jsonld": {
+    "@context": {
+      "prov": "http://www.w3.org/ns/prov#"
+    },
+    "@id": "../../data/results.txt",
+    "@type": "prov:Entity",
+    "prov:wasGeneratedBy": {
+      "@type": "prov:Activity",
+      "prov:hadPlan": {
+        "@id": "../../data/test1/test1.txt"
+      },
+      "prov:used": {
+        "@id": "../../data/test1/test1.txt"
+      },
+      "prov:endedAtTime": "2015-07-02T11:00:00Z"
+    }
+  }
+}
+

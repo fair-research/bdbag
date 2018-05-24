@@ -4,6 +4,7 @@ import sys
 import shutil
 import tempfile
 import unittest
+import bagit
 
 
 class BaseTest(unittest.TestCase):
@@ -74,3 +75,7 @@ class BaseTest(unittest.TestCase):
 
     def getTestHeader(self, desc, args=None):
         return str('\n\n[%s: %s]\n%s') % (self.__class__.__name__, desc, (' '.join(args) + '\n') if args else "")
+
+    def slurp_text_file(self, filename):
+        with bagit.open_text_file(filename) as f:
+            return f.read()

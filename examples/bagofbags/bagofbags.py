@@ -148,10 +148,7 @@ def main(argv):
         creator_name = 'bagofbags using BDBag version: %s (Bagit version: %s)' % (VERSION, BAGIT_VERSION),
         creator_uri='https://github.com/fair-research/bdbag/examples/bagofbags/')
     add_remote_file_manifest_to_ro(ro_manifest, minid_fields)
-    bag_metadata_dir = os.path.abspath(os.path.join(args.bagname, 'metadata'))
-    if not os.path.exists(bag_metadata_dir):
-        os.mkdir(bag_metadata_dir)
-    ro.write_ro_manifest(ro_manifest, osp.join(bag_metadata_dir, 'manifest.json'))
+    ro.write_bag_ro_metadata(ro_manifest, args.bagname, 'manifest.json')
 
     # Run make_bag again to include manifest.json in the checksums etc.
     bdb.make_bag(args.bagname, update=True)
