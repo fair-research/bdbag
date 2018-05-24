@@ -2,8 +2,9 @@
 [![Build Status](https://travis-ci.org/fair-research/bdbag.svg)](https://travis-ci.org/fair-research/bdbag)
 [![Coverage Status](https://coveralls.io/repos/github/fair-research/bdbag/badge.svg?branch=master)](https://coveralls.io/github/fair-research/bdbag?branch=master)
 [![PyPi Version](https://img.shields.io/pypi/v/bdbag.svg)](https://pypi.python.org/pypi/bdbag)
+[![PyPi Wheel](https://img.shields.io/pypi/wheel/bdbag.svg)](https://pypi.python.org/pypi/bdbag)
 [![Python Versions](https://img.shields.io/pypi/pyversions/bdbag.svg)](https://pypi.python.org/pypi/bdbag)
-[![License](https://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![License](https://img.shields.io/pypi/l/bdbag.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 #### Big Data Bag Utilities
 
