@@ -6,8 +6,8 @@ There are two global configuration files: [bdbag.json](#bdbag.json) and [keychai
 these files with simple default values are automatically created in
 the current user's home directory the first time a bag is created or opened.
 
-Additionally, two JSON-formatted configuration files can be passed as arguments to *bdbag* in order to supply input
-for certain bag creation and update functions.  These files are known as [metadata](#metadata) and
+Additionally, three JSON-formatted configuration files can be passed as arguments to *bdbag* in order to supply input
+for certain bag creation and update functions.  These files are known as [metadata](#metadata), [ro metadata](#ro_metadata) and
 [remote-file-manifest](#remote-file-manifest) configurations.
 
 <a name="bdbag.json"></a>
@@ -145,11 +145,11 @@ Below is a sample *remote-file-manifest* configuration file:
 ```
 
 <a name="metadata"></a>
-## *metadata*
-A metadata configuration file consists of a single JSON object containing a set of JSON key-value pairs that will be
-written as-is to the bag's `bag-info.txt` file.
+## *`bag-info` metadata*
+A `bag-info` metadata configuration file consists of a single JSON object containing a set of JSON key-value pairs that will be
+written as-is to the bag's `bag-info.txt` file.  NOTE: per the `bagit` specification, strings are the only supported value type in `bag-info.txt`.
 
-Below is a sample *metadata* configuration file:
+Below is a sample `bag-info` *metadata* configuration file:
 ```json
 {
     "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
@@ -159,10 +159,18 @@ Below is a sample *metadata* configuration file:
 ```
 
 <a name="ro_metadata"></a>
-## *ro_metadata*
-A Research Object metadata configuration file consists of a single JSON object containing a set of JSON key-object pairs where the `key` is a `/` delimited relative file path and the `object` is any aribitratily complex JSON content. This format allows `bdbag` to process all RO metadata as an aggregation which can then be serialized into individual JSON file components relative to the bag's `metadata` directory.
+## *`ro` metadata*
+A Research Object metadata configuration file consists of a single JSON object containing a set of JSON key-object pairs where
+the `key` is a `/` delimited relative file path and the `object` is any aribitratily complex JSON content. This format allows
+`bdbag` to process all RO metadata as an aggregation which can then be serialized into individual JSON file components relative
+to the bag's `metadata` directory.
 
-Below is a sample *ro_metadata* configuration file:
+NOTE: while this documentation refers to this configuration file a `ro` metadata file,
+the contents of this configuration file only have to conform to the [`bagit-ro`](https://github.com/ResearchObject/bagit-ro)
+conventions if `bagit-ro` compatibility is the goal. Otherwise, this mechanism can be used as a generic way to create any number of
+arbitrary JSON (or JSON-LD) metadata files as `bagit` tagfiles.
+
+Below is a sample *ro metadata* configuration file:
 ```json
 {
   "manifest.json": {

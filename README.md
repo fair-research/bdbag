@@ -37,7 +37,7 @@ An experimental Graphical User Interface (GUI) for *bdbag* can be found [here](h
 
 ### Dependencies
 
-* [Python 2.7](https://www.python.org/downloads/release/python-2711/) is the minimum Python version required.
+* [Python 2.7](https://www.python.org/downloads/release/python-27/) is the minimum Python version required.
 * The code and dependencies are also compatible with Python 3, versions 3.3 through 3.6.
 
 ### Installation
@@ -71,16 +71,17 @@ The unit tests can be run by invoking the following command from the root of the
 python setup.py test
 ```
 
-### Configuration
-
-See the [Configuration guide](./doc/config.md).
-
 ### Usage
 
 This software can be used from the command-line environment by running the **bdbag** script.  For detailed usage
 instructions, see the [CLI guide](./doc/cli.md).
 
+### Configuration
+
+Some components of the **bdbag** software can be configured via JSON-formatted configuration files.
+See the [Configuration guide](./doc/config.md) for further details.
+
 ### Application Programming Interface
 
 It is also possible to use **bdbag** from within other Python programs via an API.
-See the [API guide](./doc/api.md) for further details.
+See the [API guide](/doc/api.md) for further details.

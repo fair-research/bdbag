@@ -141,7 +141,7 @@ and that there are no additional files present that are not listed in either `fe
 -----
 
 <a name="make_bag"></a>
-#### make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE)  ⇒ `bag`
+#### make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE, ro_metadata=None, ro_metadata_file=None)  ⇒ `bag`
 Creates or updates the bag denoted by the `bag_path` argument.
 
 | Param | Type | Description |

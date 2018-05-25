@@ -8,13 +8,14 @@
 
 from setuptools import setup, find_packages
 
+with open('README.md') as readme_file:
+    readme = readme_file.read()
 
 setup(
     name="bdbag",
-    description="BigData Bag Utilities",
-    long_description=
-    "For more information on *bdbag*, visit: https://github.com/fair-research/bdbag/.\n\n"
-    "For more information on the GUI frontend for *bdbag*, visit: https://github.com/fair-research/bdbag_gui/.\n",
+    description="Big Data Bag Utilities",
+    long_description=readme,
+    long_description_content_type='text/markdown',
     url='https://github.com/fair-research/bdbag/',
     maintainer='USC Information Sciences Institute, Informatics Systems Research Division',
     maintainer_email='isrd-support@isi.edu',

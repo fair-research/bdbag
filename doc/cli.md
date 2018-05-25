@@ -39,18 +39,20 @@ usage: bdbag
 #### Extended arguments:
 These extended arguments are mapped directly to metadata fields in bag-info.txt:
 ```
-[--source-organization SOURCE_ORGANIZATION]
-[--organization-address ORGANIZATION_ADDRESS]
-[--contact-name CONTACT_NAME] [--contact-phone CONTACT_PHONE]
-[--contact-email CONTACT_EMAIL]
-[--contact-orcid CONTACT_ORCID]
-[--external-description EXTERNAL_DESCRIPTION]
-[--external-identifier EXTERNAL_IDENTIFIER] [--bag-size BAG_SIZE]
-[--bag-group-identifier BAG_GROUP_IDENTIFIER]
 [--bag-count BAG_COUNT]
-[--internal-sender-identifier INTERNAL_SENDER_IDENTIFIER]
-[--internal-sender-description INTERNAL_SENDER_DESCRIPTION]
+[--bag-group-identifier BAG_GROUP_IDENTIFIER]
+[--bag-size BAG_SIZE]
 [--bagit-profile-identifier BAGIT_PROFILE_IDENTIFIER]
+[--contact-email CONTACT_EMAIL]
+[--contact-name CONTACT_NAME]
+[--contact-orcid CONTACT_ORCID]
+[--contact-phone CONTACT_PHONE]
+[--external-description EXTERNAL_DESCRIPTION]
+[--external-identifier EXTERNAL_IDENTIFIER]
+[--internal-sender-description INTERNAL_SENDER_DESCRIPTION]
+[--internal-sender-identifier INTERNAL_SENDER_IDENTIFIER]
+[--organization-address ORGANIZATION_ADDRESS]
+[--source-organization SOURCE_ORGANIZATION]
 ```
 ----
 
@@ -407,7 +409,6 @@ Here's an example of what a `remote-file-manifest` looks like:
     "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
     "length":723,
     "filename":"bdbag-profile.json",
-    "md5":"4754a1f3204f8b2de547477117f65f6d",
     "sha256":"3039ea47828e032ea2fe63679281c50760e68b5773a76f5873c4ae7acdf87951"
   },
   {
@@ -467,7 +468,6 @@ ark:/88120/r8059v       632860  data/minid_v0.1_Nov_2015.pdf
 
 [mdarcy@dev ~]$  cat test_bag/manifest-md5.txt
 
-4754a1f3204f8b2de547477117f65f6d  data/bdbag-profile.json
 dad6891eb4148dfed2d162370983d06f  data/test1.txt
 11069c18ee13a990265cf944359dbca5  data/test2.txt
 
