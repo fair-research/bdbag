@@ -84,4 +84,4 @@ See the [Configuration guide](./doc/config.md) for further details.
 ### Application Programming Interface
 
 It is also possible to use **bdbag** from within other Python programs via an API.
-See the [API guide](/doc/api.md) for further details.
+See the [API guide](./doc/api.md) for further details.
