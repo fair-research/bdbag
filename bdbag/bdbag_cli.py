@@ -117,6 +117,12 @@ def parse_cli():
     standard_args.add_argument(
         ro_metadata_file_arg, metavar='<file>', help="Optional path to a JSON formatted RO metadata file")
 
+    ro_manifest_generate_arg = "--ro-manifest-generate"
+    standard_args.add_argument(
+        ro_manifest_generate_arg, choices=['overwrite', 'update'],
+        help="Automatically generate a basic RO metadata manifest.json file by introspecting a bag's metadata and "
+             "structure.")
+
     remote_file_manifest_arg = "--remote-file-manifest"
     standard_args.add_argument(
         remote_file_manifest_arg, metavar='<file>',
@@ -269,6 +275,9 @@ def main():
             if not args.quiet:
                 sys.stderr.write('\n')
             return result
+
+        if args.ro_manifest_generate:
+            bdb.generate_ro_manifest(path, True if args.ro_manifest_generate == "overwrite" else False)
 
         if args.resolve_fetch:
             if args.validate == 'full':

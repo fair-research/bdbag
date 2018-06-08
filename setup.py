@@ -19,10 +19,11 @@ setup(
     url='https://github.com/fair-research/bdbag/',
     maintainer='USC Information Sciences Institute, Informatics Systems Research Division',
     maintainer_email='isrd-support@isi.edu',
-    version="1.3.0",
+    version="1.3.1",
     packages=find_packages(),
     package_data={'bdbag': ['profiles/*.*']},
     test_suite='test',
+    tests_require=['mock', 'coverage'],
     entry_points={
         'console_scripts': [
             'bdbag = bdbag.bdbag_cli:main',
@@ -53,8 +54,7 @@ setup(
                       'tzlocal',
                       'requests',
                       'certifi',
-                      'bagit==1.6.4',
-                      'globus-sdk==1.3.0'],
+                      'bagit==1.6.4'],
     license='Apache 2.0',
     classifiers=[
         'Intended Audience :: Science/Research',

@@ -36,7 +36,7 @@ def resolve(identifier, resolvers=DEFAULT_ID_RESOLVERS):
                     urls.append(uri)
 
         if urls:
-            logger.info("The identifier %s resolved into the following locations: %s" % (identifier, urls))
+            logger.info("The identifier %s resolved into the following locations: [%s]" % (identifier, ', '.join(urls)))
         else:
             logger.warning("No file locations were found for identifier %s" % identifier)
 

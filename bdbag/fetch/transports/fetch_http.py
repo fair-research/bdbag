@@ -10,6 +10,8 @@ import bdbag.fetch.auth.keychain as keychain
 
 logger = logging.getLogger(__name__)
 
+Kilobyte = 1024
+Megabyte = 1024 ** 2
 CHUNK_SIZE = 1024 * 10240
 SESSIONS = dict()
 HEADERS = {'Connection': 'keep-alive'}
@@ -143,12 +145,15 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
                 for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
                     data_file.write(chunk)
                     total += len(chunk)
-            elapsed = datetime.datetime.now() - start
-            totalSecs = elapsed.total_seconds()
-            totalMBs = float(total) / float((1024 * 1024))
-            throughput = str("%.3f MB/second" % (totalMBs / totalSecs if totalSecs > 0 else 0.001))
-            logger.info('File [%s] transfer successful. %.3f MB transferred at %s. Elapsed time: %s. ' %
-                        (output_path, totalMBs, throughput, elapsed))
+            elapsed_time = datetime.datetime.now() - start
+            total_secs = elapsed_time.total_seconds()
+            transferred = \
+                float(total) / float(Kilobyte) if total < Megabyte else float(total) / float(Megabyte)
+            throughput = str(" at %.2f MB/second" % (transferred / total_secs)) if (total_secs >= 1) else ""
+            elapsed = str("Elapsed time: %s." % elapsed_time) if (total_secs > 0) else ""
+            summary = "%.3f %s transferred%s. %s" % \
+                      (transferred, "KB" if total < Megabyte else "MB", throughput, elapsed)
+            logger.info('File [%s] transfer successful. %s' % (output_path, summary))
             return True
 
     except requests.exceptions.RequestException as e:
