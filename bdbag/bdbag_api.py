@@ -555,11 +555,14 @@ def resolve_fetch(bag_path,
                   force=False,
                   callback=None,
                   keychain_file=DEFAULT_KEYCHAIN_FILE,
-                  config_file=DEFAULT_CONFIG_FILE):
+                  config_file=DEFAULT_CONFIG_FILE,
+                  filter_expr=None):
     bag = bdbagit.BDBag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=True):
-        logger.info("Attempting to resolve remote file references from fetch.txt...")
+        logger.info("Attempting to resolve remote file references from fetch.txt%s" %
+                    ("." if not filter_expr else ", using filter expression [%s]." % filter_expr))
         config = read_config(config_file if config_file else DEFAULT_CONFIG_FILE)
-        return fetch_bag_files(bag, keychain_file, force, callback, config)
+        return fetch_bag_files(bag, keychain_file,
+                               force=force, callback=callback, config=config, filter_expr=filter_expr)
     else:
         return True

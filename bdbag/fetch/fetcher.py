@@ -1,5 +1,6 @@
 import datetime
-from bdbag import ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS, DEFAULT_CONFIG, urlsplit
+from collections import namedtuple
+from bdbag import ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS, DEFAULT_CONFIG, urlsplit, filter_dict
 from bdbag.fetch.transports import *
 from bdbag.fetch.auth.keychain import *
 
@@ -16,8 +17,10 @@ SCHEME_ARK = 'ark'
 SCHEME_MINID = 'minid'
 SCHEME_TAG = 'tag'
 
+FetchEntry = namedtuple("FetchEntry", ["url", "length", "filename"])
 
-def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAULT_CONFIG):
+
+def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAULT_CONFIG, filter_expr=None):
 
     success = True
     auth = read_keychain(keychain_file)
@@ -25,11 +28,14 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
     current = 0
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     start = datetime.datetime.now()
-    for url, size, path in bag.fetch_entries():
-        output_path = os.path.normpath(os.path.join(bag.path, path))
+    for entry in map(FetchEntry._make, bag.fetch_entries()):
+        if filter_expr:
+            if not filter_dict(filter_expr, entry._asdict()):
+                continue
+        output_path = os.path.normpath(os.path.join(bag.path, entry.filename))
         local_size = os.path.getsize(output_path) if os.path.exists(output_path) else None
         try:
-            remote_size = int(size)
+            remote_size = int(entry.length)
         except ValueError:
             remote_size = None
         missing = True
@@ -42,7 +48,7 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
                 logger.debug("Not fetching already present file: %s" % output_path)
             pass
         else:
-            success = fetch_file(url, size, output_path, auth, resolvers=resolvers)
+            success = fetch_file(entry.url, entry.length, output_path, auth, resolvers=resolvers)
         if callback:
             current += 1
             if not callback(current, total):
