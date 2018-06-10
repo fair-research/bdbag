@@ -30,6 +30,7 @@ usage: bdbag
 [--metadata-file <file>]
 [--ro-metadata-file <file>]
 [--remote-file-manifest <file>]
+[--ro-manifest-generate {overwrite, update}]
 [--quiet]
 [--debug]
 [--help]
@@ -140,6 +141,11 @@ Optional path to a JSON formatted remote file manifest. The configuration file f
 This configuration file is used to add remote file entries to the bag manifest(s) and create the bag fetch.txt file.
 
 ----
+##### `--ro-manifest-generate {overwrite, update}`
+If specified, a RO `manifest.json` file will automatically be created in the `metadata` tagfile directory.
+The bag will be introspected and metadata from `bag-info.txt` along with lists of local payload files and files in `fetch.txt` will be used to generate the RO manifest.
+
+----
 ##### `--quiet`
 Suppress logging output.
 
@@ -172,6 +178,7 @@ This following table enumerates the various arguments and compatibility modes.
 |`--metadata-file`|bag dir only, create or update only|A metadata config file can be specified whenever a bag is created or updated.
 |`--ro-metadata-file`|bag dir only, create or update only|A Research Object metadata config file can be specified whenever a bag is created or updated.
 |`--remote-file-manifest`|bag dir only, create or update only|A remote-file-manifest can be specified whenever a bag is created or updated.
+|`--ro-manifest-generate`|bag dir only|An RO manifest may be auto-generated on any valid bag directory.
 |any extended argument|bag dir only, create or update only|Any of the standard bag metadata extended arguments, e.g., `--source-organization` or `--contact-email` may be specified during create or update of a bag directory, but not a bag archive.
 
 ----

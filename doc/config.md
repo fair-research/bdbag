@@ -165,7 +165,7 @@ the `key` is a `/` delimited relative file path and the `object` is any aribitra
 `bdbag` to process all RO metadata as an aggregation which can then be serialized into individual JSON file components relative
 to the bag's `metadata` directory.
 
-NOTE: while this documentation refers to this configuration file a `ro` metadata file,
+NOTE: while this documentation refers to this configuration file as a `ro` metadata file,
 the contents of this configuration file only have to conform to the [`bagit-ro`](https://github.com/ResearchObject/bagit-ro)
 conventions if `bagit-ro` compatibility is the goal. Otherwise, this mechanism can be used as a generic way to create any number of
 arbitrary JSON (or JSON-LD) metadata files as `bagit` tagfiles.
