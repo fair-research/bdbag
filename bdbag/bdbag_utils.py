@@ -8,7 +8,7 @@ import json
 import binascii
 from collections import namedtuple
 from csv import DictReader, Sniffer
-from bdbag import bdbag_api as bdb, parse_content_disposition, urlsplit
+from bdbag import bdbag_api as bdb, parse_content_disposition, urlsplit, filter_dict, FILTER_DOCSTRING
 from bdbag import get_typed_exception as gte
 from bdbag.fetch.transports.fetch_http import get_session
 from bdbag.fetch.auth.keychain import read_keychain, DEFAULT_KEYCHAIN_FILE
@@ -42,7 +42,7 @@ def create_rfm_from_filesystem(args):
                 rfm_entry["length"] = os.path.getsize(input_file)
                 rfm_entry.update(compute_file_hashes(input_file, args.checksum))
 
-                if filter_entry(args.filter, rfm_entry):
+                if not filter_dict(args.filter, rfm_entry):
                     continue
 
                 if args.streaming_json:
@@ -106,7 +106,7 @@ def create_rfm_from_url_list(args):
             if content_type:
                 rfm_entry["content_type"] = content_type
 
-            if filter_entry(args.filter, rfm_entry):
+            if not filter_dict(args.filter, rfm_entry):
                 continue
 
             if args.streaming_json:
@@ -132,7 +132,7 @@ def create_rfm_from_file(args):
             rows = json.load(input_file)
 
         for row in rows:
-            if filter_entry(args.filter, row):
+            if not filter_dict(args.filter, row):
                 continue
             rfm_entry = dict()
             rfm_entry["url"] = row[args.url_col]
@@ -156,52 +156,6 @@ def create_rfm_from_file(args):
         logger.info("Writing %d entries to remote file manifest" % len(entries))
         rfm_file.write(json.dumps(entries, sort_keys=True, indent=2))
         logger.info("Successfully created remote file manifest: %s" % args.output_file)
-
-
-def filter_entry(expr, entry):
-    if not expr:
-        return False
-
-    filter_neg = False
-    filter_substring = False
-    if "==" in expr:
-        filter_col, filter_val = expr.split("==", 1)
-    elif "!=" in expr:
-        filter_col, filter_val = expr.split("!=", 1)
-        filter_neg = True
-    elif "=*" in expr:
-        filter_col, filter_val = expr.split("=*", 1)
-        filter_substring = True
-    elif "!*" in expr:
-        filter_col, filter_val = expr.split("!*", 1)
-        filter_substring = True
-        filter_neg = True
-    else:
-        raise ValueError("Unsupported operator type in filter expression: %s" % expr)
-
-    result = False
-    if filter_val and filter_col:
-        filter_val = filter_val.strip()
-        filter_col = filter_col.strip()
-        if filter_col in set(entry.keys()):
-            value = str(entry[filter_col])
-            if filter_neg:
-                if filter_substring:
-                    if filter_val in value:
-                        result = True
-                else:
-                    if filter_val == value:
-                        result = True
-            else:
-                if filter_substring:
-                    if filter_val not in value:
-                        result = True
-                else:
-                    if filter_val != value:
-                        result = True
-            if result:
-                logger.debug("Excluding [%s] because it does not match the filter expression: [%s]." % (value, expr))
-    return result
 
 
 def deduplicate_rfm_entries(rfm):
@@ -371,10 +325,10 @@ def create_crfm_fs_subparser(subparsers):
 
     crfm_fs_input_filter_arg = "--filter"
     parser_crfm_fs.add_argument(
-        crfm_fs_input_filter_arg, metavar="<column><operator><filter>",
-        help="A simple expression of the form <column><operator><filter> where: <column> is the name of a column in "
-             "the input file to be filtered on, <operator> is either equal \"==\", not equal \"!=\", wildcard equal "
-             "\"=*\", or wildcard not equal \"!*\", and filter is a string pattern to be matched against.")
+        crfm_fs_input_filter_arg, metavar="<column><operator><value>",
+        help="A simple expression of the form <column><operator><value> where: <column> is the name of a column in "
+             "the generated remote file manifest entry to be filtered on, <operator> is one of the following tokens; "
+             "%s, and <value> is a string pattern or integer to be filtered against." % FILTER_DOCSTRING)
 
     url_formatter_arg = "--url-formatter"
     parser_crfm_fs.add_argument(
@@ -418,10 +372,10 @@ def create_crfm_file_subparser(subparsers):
 
     crfm_file_input_filter_arg = "--filter"
     parser_crfm_file.add_argument(
-        crfm_file_input_filter_arg, metavar="<column><operator><filter>",
-        help="A simple expression of the form <column><operator><filter> where: <column> is the name of a column in "
-             "the input file to be filtered on, <operator> is either equal \"==\", not equal \"!=\", wildcard equal "
-             "\"=*\", or wildcard not equal \"!*\", and filter is a string pattern to be matched against.")
+        crfm_file_input_filter_arg, metavar="<column><operator><value>",
+        help="A simple expression of the form <column><operator><value> where: <column> is the name of a column in "
+             "the input file to be filtered on, <operator> is one of the following tokes; %s, and <value> is a string "
+             "pattern or integer to be filtered against." % FILTER_DOCSTRING)
 
     crfm_file_input_url_arg = "--url-col"
     parser_crfm_file.add_argument(
@@ -501,10 +455,10 @@ def create_crfm_urls_subparser(subparsers):
 
     crfm_urls_input_filter_arg = "--filter"
     parser_crfm_urls.add_argument(
-        crfm_urls_input_filter_arg, metavar="<column><operator><filter>",
-        help="A simple expression of the form <column><operator><filter> where: <column> is the name of a column in "
-             "the input file to be filtered on, <operator> is either equal \"==\", not equal \"!=\", wildcard equal "
-             "\"=*\", or wildcard not equal \"!*\", and filter is a string pattern to be matched against.")
+        crfm_urls_input_filter_arg, metavar="<column><operator><value>",
+        help="A simple expression of the form <column><operator><value> where: <column> is the name of a header in "
+             "the result headers to be filtered on, <operator> is one of the following tokens; %s, and <value> is a "
+             "string pattern or integer to be filtered against." % FILTER_DOCSTRING)
 
     disable_hash_decode_base64_arg = "--disable-hash-decode-base64"
     parser_crfm_urls.add_argument(

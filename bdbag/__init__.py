@@ -1,8 +1,16 @@
 import os
 import re
 import sys
+import logging
 import mimetypes
 from pkg_resources import get_distribution, DistributionNotFound
+
+if sys.version_info > (3,):
+    from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
+    from urllib.request import urlretrieve, urlopen
+else:
+    from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen
+    from urlparse import urlsplit, urlunsplit
 
 if not mimetypes.inited:
     mimetypes.init()
@@ -40,12 +48,15 @@ DEFAULT_CONFIG = {
     ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
 }
 
-if sys.version_info > (3,):
-    from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
-    from urllib.request import urlretrieve, urlopen
-else:
-    from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen
-    from urlparse import urlsplit, urlunsplit
+CONTENT_DISP_REGEX = re.compile(r"^filename[*]=UTF-8''(?P<name>[-_.~A-Za-z0-9%]+)$")
+FILTER_REGEX = re.compile(r"(?P<column>^.*)(?P<operator>==|!=|=\*|!\*|\^\*|\$\*|>=|>|<=|<)(?P<value>.*$)")
+FILTER_DOCSTRING = "\"==\" (equal), " \
+                   "\"!=\" (not equal), " \
+                   "\"=*\" (wildcard substring equal), " \
+                   "\"!*\" (wildcard substring not equal), " \
+                   "\"^*\" (wildcard starts with), " \
+                   "\"$*\" (wildcard ends with), " \
+                   "or \">\", \">=\", \"<\", \"<=\""
 
 
 def get_typed_exception(e):
@@ -75,7 +86,7 @@ def guess_mime_type(file_path):
 
 
 def parse_content_disposition(value):
-    m = re.match("^filename[*]=UTF-8''(?P<name>[-_.~A-Za-z0-9%]+)$", value)
+    m = CONTENT_DISP_REGEX.match(value)
     if not m:
         raise ValueError('Cannot parse content-disposition "%s".' % value)
 
@@ -101,3 +112,61 @@ def escape_url_path(url, safe='/'):
     query = urlquote(urlunquote(urlparts.query))
     fragment = urlquote(urlunquote(urlparts.fragment))
     return urlunsplit((urlparts.scheme, urlparts.netloc, path, query, fragment))
+
+
+def filter_dict(expr, entry):
+    if not expr:
+        return False
+    match = FILTER_REGEX.search(expr)
+    if not match:
+        raise ValueError("Unable to parse expression: %s" % expr)
+
+    expr_dict = match.groupdict()
+    filter_col = expr_dict["column"]
+    filter_val = expr_dict["value"]
+    operator = expr_dict["operator"]
+
+    filter_neg = filter_substring = filter_relation = filter_startswith = filter_endswith = False
+    if "!=" == operator:
+        filter_neg = True
+    elif "=*" == operator:
+        filter_substring = True
+    elif "^*" == operator:
+        filter_startswith = True
+    elif "$*" == operator:
+        filter_endswith = True
+    elif "!*" == operator:
+        filter_substring = True
+        filter_neg = True
+    elif (">" == operator) or (">=" == operator) or ("<" == operator) or ("<=" == operator):
+        filter_relation = True
+    else:
+        raise ValueError("Unsupported operator type in filter expression: %s" % expr)
+
+    result = False
+    filter_val = filter_val.strip()
+    filter_col = filter_col.strip()
+    if filter_col in set(entry.keys()):
+        value = entry[filter_col]
+        if filter_neg:
+            if filter_substring:
+                result = filter_val not in str(value)
+            else:
+                result = filter_val != value
+        else:
+            if filter_substring:
+                result = filter_val in str(value)
+            elif filter_startswith:
+                result = str(value).startswith(filter_val)
+            elif filter_endswith:
+                result = str(value).endswith(filter_val)
+            elif filter_relation:
+                statement = "%d%s%d" % (int(value), operator, int(filter_val))
+                result = eval(statement)
+            else:
+                result = filter_val == value
+        if not result:
+            logging.debug(
+                "Excluding [%s:%s] because it does not match the filter expression: [%s]." % (filter_col, value, expr))
+
+    return result
