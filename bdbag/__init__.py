@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import json
 import logging
 import mimetypes
 from pkg_resources import get_distribution, DistributionNotFound
@@ -167,6 +168,7 @@ def filter_dict(expr, entry):
                 result = filter_val == value
         if not result:
             logging.debug(
-                "Excluding [%s:%s] because it does not match the filter expression: [%s]." % (filter_col, value, expr))
+                "Excluding %s because it does not match the filter expression: [%s]." %
+                (json.dumps(entry), expr))
 
     return result
