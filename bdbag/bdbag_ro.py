@@ -205,8 +205,7 @@ def add_aggregate(obj, uri, mediatype=None, conforms_to=None, bundled_as=None, u
     return aggregate
 
 
-def add_annotation(obj, about, uri="urn:uuid:%s" % str(uuid.uuid4()),
-                   content=None, motivatedBy=None, update_existing=False):
+def add_annotation(obj, about, uri=None, content=None, motivatedBy=None, update_existing=False):
 
     check_input(obj)
 
@@ -214,7 +213,7 @@ def add_annotation(obj, about, uri="urn:uuid:%s" % str(uuid.uuid4()),
     annotation = dict()
     annotation['about'] = about
     if uri:
-        annotation['uri'] = uri
+        annotation['uri'] = uri if uri else "urn:uuid:%s" % str(uuid.uuid4())
     if content:
         annotation['content'] = content
     if motivatedBy:
@@ -235,18 +234,14 @@ def add_annotation(obj, about, uri="urn:uuid:%s" % str(uuid.uuid4()),
     return annotation
 
 
-def make_bundled_as(uri="urn:uuid:%s" % str(uuid.uuid4()), folder=None, filename=None):
-
-    if uri is None and folder is None and filename is None:
-        return None
+def make_bundled_as(uri=None, folder=None, filename=None):
 
     if filename and folder is None:
         raise ValueError("When specifying a \"filename\" attribute for a bundledAs object, the \"folder\" attribute "
                          "must also be specified.")
 
     bundled_as = dict()
-    if uri:
-        bundled_as['uri'] = uri
+    bundled_as['uri'] = uri if uri else "urn:uuid:%s" % str(uuid.uuid4())
     if filename:
         bundled_as['filename'] = filename
     if folder is not None:
