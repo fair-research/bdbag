@@ -128,7 +128,9 @@ def filter_dict(expr, entry):
     operator = expr_dict["operator"]
 
     filter_neg = filter_substring = filter_relation = filter_startswith = filter_endswith = False
-    if "!=" == operator:
+    if "==" == operator:
+        pass
+    elif "!=" == operator:
         filter_neg = True
     elif "=*" == operator:
         filter_substring = True
@@ -162,8 +164,12 @@ def filter_dict(expr, entry):
             elif filter_endswith:
                 result = str(value).endswith(filter_val)
             elif filter_relation:
-                statement = "%d%s%d" % (int(value), operator, int(filter_val))
-                result = eval(statement)
+                try:
+                    statement = "%d%s%d" % (int(value), operator, int(filter_val))
+                    result = eval(statement)
+                except Exception as e:
+                    logging.warning("Unable to evaluate filter expression [%s]: %s" %
+                                    (expr, get_typed_exception(e)))
             else:
                 result = filter_val == value
         if not result:
