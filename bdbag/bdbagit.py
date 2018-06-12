@@ -447,6 +447,8 @@ class BDBag(Bag):
             # well formed:
             parsed_url = urlparse(url)
 
+            # only check for a scheme component since per the spec the URL field is actually a URI per
+            # RFC3986 (https://tools.ietf.org/html/rfc3986)
             if not all(parsed_url.scheme):
                 raise BagError(_('Malformed URL in fetch.txt: %s') % url)
 

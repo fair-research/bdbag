@@ -938,7 +938,7 @@ class TestFetch(SelfCleaningTestCase):
 
     def test_fetch_validation(self):
         with open(j(self.tmpdir, 'fetch.txt'), 'w') as fetch_txt:
-            print('https://photojournal.jpl.nasa.gov/jpeg/PIA21390.jpg 143435 data/loc/3314493806_6f1db86d66_o_d.jpg',
+            print('tag:photojournal.jpl.nasa.gov,2017:PIA21390.jpg 143435 data/loc/3314493806_6f1db86d66_o_d.jpg',
                   file=fetch_txt)
 
         os.remove(j(self.tmpdir, 'data/loc/3314493806_6f1db86d66_o_d.jpg'))
