@@ -117,7 +117,7 @@ def escape_url_path(url, safe='/'):
 
 def filter_dict(expr, entry):
     if not expr:
-        return False
+        return True
     match = FILTER_REGEX.search(expr)
     if not match:
         raise ValueError("Unable to parse expression: %s" % expr)
