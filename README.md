@@ -74,14 +74,21 @@ python setup.py test
 ### Usage
 
 This software can be used from the command-line environment by running the **bdbag** script.  For detailed usage
-instructions, see the [CLI guide](./doc/cli.md).
+instructions, see the [CLI Guide](./doc/cli.md).
 
 ### Configuration
 
 Some components of the **bdbag** software can be configured via JSON-formatted configuration files.
-See the [Configuration guide](./doc/config.md) for further details.
+See the [Configuration Guide](./doc/config.md) for further details.
 
 ### Application Programming Interface
 
 It is also possible to use **bdbag** from within other Python programs via an API.
-See the [API guide](./doc/api.md) for further details.
+See the [API Guide](./doc/api.md) for further details.
+
+### Utilities
+
+A CLI utility module is provided for various ancillary tasks commonly involved with authoring **bdbags**.
+See the [Utility Guide](./doc/utils.md) for further details.
+
+
