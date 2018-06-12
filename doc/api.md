@@ -19,6 +19,7 @@ The command-line interface is built upon the API in this manner and can be used 
     * [check_payload_consistency(bag, skip_remote=False, quiet=False)](#check_payload_consistency)
     * [make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE, ro_metadata=None, ro_metadata_file=None)](#make_bag)
     * [resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE)](#resolve_fetch)
+    * [generate_ro_manifest(bag_path, overwrite=False)](#generate_ro_manifest)
     * [archive_bag(bag_path, bag_archiver)](#archive_bag)
     * [extract_bag(bag_path, output_path=None, temp=False)](#extract_bag)
     * [validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE)](#validate_bag)
@@ -26,8 +27,11 @@ The command-line interface is built upon the API in this manner and can be used 
     * [validate_bag_serialization(bag_path, bag_profile)](#validate_bag_serialization)
     * [validate_bag_structure(bag_path, skip_remote=True)](#validate_bag_structure)
 
+* [bdbag](#bdbag_module)
+    * [filter_dict](#filter_dict)
+
 <a name="bdbag_api"></a>
-### bdbag_api.py
+## bdbag_api.py
 The primary Python file which contains the *bdbag* API functions.  After installing bdbag, append the following to the top of your script.
 
 ```python
@@ -40,6 +44,7 @@ from bdbag import bdbag_api
 #### configure_logging(level=logging.INFO, logpath=None)
 Set the logging level and optional output path for log statements.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |level|[Python logging module level constant](https://docs.python.org/2/library/logging.html#logging-levels)|The logging event filter level.
@@ -58,6 +63,7 @@ Creates the default configuration file `bdbag.json` if it does not already exist
 Reads the configuration file specified by `config_file` into a dictionary object. If the file path specified is
 the default configuration file location `~/.bdbag/bdbag.json`, and that file does not already exist, it is created.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |config_file|`string`|A normalized, absolute path to a configuration file.
@@ -71,6 +77,7 @@ the default configuration file location `~/.bdbag/bdbag.json`, and that file doe
 Reads the configuration file specified by `metadata_file` into a dictionary object.  The format of `metadata_file` is
 described [here](./config.md#metadata).
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |metadata_file|`string`|A normalized, absolute path to a metadata file.
@@ -83,6 +90,7 @@ described [here](./config.md#metadata).
 #### is_bag(bag_path) ⇒ `boolean`
 Checks if the path denoted by `bag_path` is a directory that contains a valid bag structure.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to the bag location.
@@ -95,6 +103,7 @@ Checks if the path denoted by `bag_path` is a directory that contains a valid ba
 #### cleanup_bag(bag_path)
 Deletes the directory tree denoted by `bag_path`.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
@@ -105,6 +114,7 @@ Deletes the directory tree denoted by `bag_path`.
 #### revert_bag(bag_path)
 Revert an existing bag directory back to a normal directory, deleting all bag metadata files. Payload files in the `data` directory will be moved back to the directory root, and the `data` directory will be deleted.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
@@ -116,6 +126,7 @@ Revert an existing bag directory back to a normal directory, deleting all bag me
 For the given `bag` object, removes any file and tagfile manifests for checksums that are not listed in that object's
 `algs` member variable.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag|`bag`|a `bag` object such as that returned by `make_bag`
@@ -129,6 +140,7 @@ For the given `bag` object, removes any file and tagfile manifests for checksums
 Checks if the payload files in the bag's `data` directory are consistent with the bag's file manifests and the bag's
 `fetch.txt` file, if any.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag|`bag`|a `bag` object such as that returned by `make_bag`
@@ -144,6 +156,7 @@ and that there are no additional files present that are not listed in either `fe
 #### make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE, ro_metadata=None, ro_metadata_file=None)  ⇒ `bag`
 Creates or updates the bag denoted by the `bag_path` argument.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
@@ -155,15 +168,15 @@ Creates or updates the bag denoted by the `bag_path` argument.
 |metadata_file|`string`|A JSON file representation of metadata that will be written directly to the bag's 'bag-info.txt' file. The format of this metadata is described [here](./config.md#metadata).
 |remote_file_manifest|`string`|A path to a JSON file representation of remote file entries that will be used to add remote files to the bag file manifest(s) and used to create the bag's `fetch.txt`. The format of this file is described [here](./config.md/#remote-file-manifest).
 |config_file|`string`|A JSON file representation of configuration data that is used during bag creation and update. The format of this file is described [here](./config.md#bdbag.json).
-|ro_metadata|`dict`|A dictionary that will be used to serialize data into one or more JSON files into the bag's `metadata` directory. The format of this metadata is described [here](./config.md#ro_metadata)
+|ro_metadata|`dict`|A dictionary that will be used to serialize data into one or more JSON files into the bag's `metadata` directory. The format of this metadata is described [here](./config.md#ro_metadata).
 |ro_metadata_file|`string`|A path to a JSON file representation of RO metadata that will be used to serialize data into one or more JSON files into the bag's `metadata` directory. The format of this metadata is described [here](./config.md#ro_metadata).
 
-**Returns**: `bag` - An instantiated [bagit-python](https://github.com/fair-research/bagit-python/blob/master/bagit.py) `bag` compatible class object.
+**Returns**: `bag` - An instantiated [bagit-python](https://github.com/LibraryOfCongress/bagit-python/blob/master/bagit.py) `bag` compatible class object.
 
 -----
 
 <a name="resolve_fetch"></a>
-#### resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE) ⇒ `boolean`
+#### resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE, filter_expr=None) ⇒ `boolean`
 Attempt to download files listed in the bag's `fetch.txt` file.  The method of transfer is dependent on the protocol
 scheme of the URL field in `fetch.txt`.  Note that not all file transfer protocols are supported at this time.
 
@@ -171,13 +184,51 @@ Additionally, some URLs may require authentication in order to retrieve protecte
 `keychain.json` configuration file must be configured with the appropriate authentication mechanism and credentials to
 use for a given base URL. The documentation for `keychain.json` can be found [here](./config.md#keychain.json).
 
+<a name="resolve_fetch_filter"></a>
+##### Filter Expressions (Selective Fetch)
+The argument `filter_expr` takes a string of the form: `<column><operator><value>` where:
+*  `column` is one of the following literal values corresponding to the field names in `fetch.txt`: `url`, `length`, or `filename`
+* `<operator>` is a predefined token. See syntax [below](#filter_dict_syntax).
+* `value` is a string or integer
+
+With this mechanism you can do various string-based pattern matching on `filename` and `url`. For example:
+
+* `filter_expr="filename$*.txt"`
+* `filter_expr="filename^*README"`
+* `filter_expr="filename==data/change.log"`
+* `filter_expr="url=*/requirements/"`
+
+The above commands will get all files ending with ".txt", all files beginning with "README", the exact file "data/change.log", and all urls containing "/requirements/" in the url path.
+
+You can also use `length` and the integer relation operators to easily limit the size of the files retrieved, for example:
+
+* `filter_expr="length<=1000000"`
+
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
 |force|`boolean`|A `boolean` value indicating whether to retrieve all listed files in `fetch.txt` or only those which are not currently found in the bag payload directory.
 |keychain_file|`string`|A normalized, absolute path to a `keychain.json` file, or if not specified, the default location will be used: `~/.bdbag/keychain.json`
+|filter_expr|`string`|A string of the form: `<column><operator><value>`. See syntax [below](#filter_dict_syntax).
 
 **Returns**: `boolean` - If all remote files were resolved successfully or not. Also returns `True` if the function invocation resulted in a NOOP.
+
+-----
+
+<a name="generate_ro_manifest"></a>
+#### generate_ro_manifest(bag_path, overwrite=False)
+Automatically create a RO `manifest.json` file in the `metadata` tagfile directory.
+The bag will be introspected and metadata from `bag-info.txt`, along with lists of local payload files and files in `fetch.txt`, will be used to generate the RO manifest.
+
+Note: the contents of the `manifest.json` file output by this method are limited to what can be automatically generated by introspecting the bag structure and it's metadata.
+Currently, this includes only provenance members of the top-level RO object, and the list of aggregated resources (`aggregates`) contained within the bag.
+
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|bag_path|`string`|A normalized, absolute path to a bag directory.
+|overwrite|`boolean`|A `boolean` value indicating whether to overwrite or update to any existing RO `metadata/manifest.json` file.
 
 -----
 
@@ -188,6 +239,7 @@ Creates a single, serialized bag archive file from the directory specified by `b
 compliant, i.e., complies with the rules of **"Section 4: Serialization"** of the
 [BagIt Specification](https://datatracker.ietf.org/doc/draft-kunze-bagit/).
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
@@ -201,6 +253,7 @@ compliant, i.e., complies with the rules of **"Section 4: Serialization"** of th
 #### extract_bag(bag_path, output_path=None, temp=False) ⇒ `string`
 Extracts the bag specified by `bag_path` to the based directory specified by `output_path`, or, if the `temp` parameter is specified, an operating system dependent temporary path.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
@@ -219,6 +272,7 @@ If `fast` is `True`, then only the total count of payload files and the total by
 `Payload-Oxum` metadata field, if present.  Otherwise, checksums will be recalculated for every file present in the bag
 payload directory and compared against the checksum values in the file manifest(s).
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory or bag archive file.
@@ -235,6 +289,7 @@ before profile validation and then the temporary directory is deleted after prof
 
 If a `profile_path` is specified, the bag is validated against that profile. Otherwise, this function checks the bag's `bag-info.txt` for a valid `BagIt-Profile-Identifier` metadata field and attemps to resolve that field's value as a URL link to the profile.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory or bag archive file.
@@ -248,6 +303,7 @@ If a `profile_path` is specified, the bag is validated against that profile. Oth
 Validates a bag archive's serialization format against a bag profile's `Serialization` and `Accept-Serialization`
 constraints, if any.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag archive file.
@@ -260,6 +316,7 @@ constraints, if any.
 #### validate_bag_structure(bag_path, check_remote=False)
 Checks a bag's structural conformance as well as payload consistency between file manifests, the filesystem, and fetch.txt.
 
+##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory or bag archive file.
@@ -267,3 +324,44 @@ Checks a bag's structural conformance as well as payload consistency between fil
 
 **Throws**: `BagValidationError` - If the bag structure could not be validated.
 
+-----
+<a name="bdbag_module"></a>
+## bdbag (`__init__.py`)
+Some shared utility functions exist at the `bdbag` module level in `__init__.py`.
+To make use of these functions, after installing bdbag append the following to the top of your script.
+
+```python
+from bdbag import <function name>
+```
+
+-----
+<a name="filter_dict"></a>
+#### filter_dict(expr, entry)
+Evaluates the dictionary variable `entry` against the filter expression `expr`,
+where `expr` is a string of the form: `<column><operator><value>`.
+The set of operators is syntactically limited. See syntax [below](#filter_dict_syntax).
+
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|expr|`string`|A string of the form: `<column><operator><value>`. See syntax [below](#filter_dict_syntax).
+|entry|`dict`|A dictionary containing the data to be filtered.
+
+<a name="filter_dict_syntax"></a>
+##### Filter Expression Syntax
+* `column` is a name of a key in the input dictionary.
+* `<operator>` is one of the following predefined tokens:
+
+	| Operator | Description |
+	| --- | --- |
+	|==| equal
+	|!=| not equal
+	|=*| wildcard substring equal
+	|!*| wildcard substring not equal
+	|^*| wildcard starts with
+	|$*| wildcard ends with
+	|>| greater than
+	|>=| greater than or equal to
+	|<| less than
+	|<=| less than or equal to
+* `value` is a string or integer

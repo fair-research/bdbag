@@ -1,0 +1,14 @@
+[
+  {
+    "uri": "https://raw.githubusercontent.com/",
+    "auth_uri": "",
+    "auth_type": "http-form",
+    "auth_method": "post",
+    "auth_params": {
+      "username": "fake",
+      "password": "fake!",
+      "username_field": "username",
+      "password_field": "password"
+    }
+  }
+]

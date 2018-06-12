@@ -101,7 +101,8 @@ def add_file_metadata(manifest,
                       authored_on=None,
                       authored_by=None,
                       conforms_to=None,
-                      bundled_as=None):
+                      bundled_as=None,
+                      update_existing=False):
 
     check_input(manifest)
 
@@ -109,7 +110,13 @@ def add_file_metadata(manifest,
         raise ValueError("Error while adding file metadata to RO manifest. "
                          "At least one of the parameters \"source_url\" or \"local_path\" must be specified")
 
-    path = local_path if local_path else source_url
+    path = source_url
+    if local_path:
+        path = local_path
+    elif bundled_as:
+        filename = bundled_as.get("filename")
+        path = filename
+
     if not conforms_to:
         file_ext = os.path.splitext(path)[1][1:]
         file_ext = file_ext.lstrip(".") if file_ext else None
@@ -131,7 +138,8 @@ def add_file_metadata(manifest,
                       uri=escape_url_path(uri),
                       mediatype=media_type,
                       conforms_to=conforms_to,
-                      bundled_as=bundled_as),
+                      bundled_as=bundled_as,
+                      update_existing=update_existing),
         retrieved_from=retrieved_from,
         retrieved_on=retrieved_on,
         retrieved_by=retrieved_by,
@@ -164,7 +172,7 @@ def add_provenance(obj, created_on=None, created_by=None, authored_on=None, auth
     return obj
 
 
-def add_aggregate(obj, uri, mediatype=None, conforms_to=None, bundled_as=None):
+def add_aggregate(obj, uri, mediatype=None, conforms_to=None, bundled_as=None, update_existing=False):
 
     check_input(obj)
 
@@ -178,13 +186,26 @@ def add_aggregate(obj, uri, mediatype=None, conforms_to=None, bundled_as=None):
     if bundled_as:
         aggregate['bundledAs'] = bundled_as
 
-    aggregates.append(aggregate)
+    exists = False
+    if update_existing:
+        for i, item in enumerate(aggregates):
+            if aggregate['uri'] == item['uri']:
+                ba = item.get('bundledAs')
+                ba_uri = ba.get('uri') if ba else None
+                if ba_uri:
+                    aggregate['bundledAs']['uri'] = ba_uri
+                aggregates[i] = aggregate
+                exists = True
+                break
+
+    if not exists:
+        aggregates.append(aggregate)
     obj['aggregates'] = aggregates
 
     return aggregate
 
 
-def add_annotation(obj, about, uri=None, content=None, motivatedBy=None):
+def add_annotation(obj, about, uri=None, content=None, motivatedBy=None, update_existing=False):
 
     check_input(obj)
 
@@ -192,30 +213,35 @@ def add_annotation(obj, about, uri=None, content=None, motivatedBy=None):
     annotation = dict()
     annotation['about'] = about
     if uri:
-        annotation['uri'] = uri
+        annotation['uri'] = uri if uri else "urn:uuid:%s" % str(uuid.uuid4())
     if content:
         annotation['content'] = content
     if motivatedBy:
         annotation['oa:motivatedBy'] = motivatedBy
 
-    annotations.append(annotation)
+    exists = false
+    if update_existing:
+        for i, item in enumerate(annotations):
+            if annotation['about'] == item["about"]:
+                annotation['uri'] = item.get('uri', uri)
+                annotations[i] = annotation
+                exists = True
+                break
+    if not exists:
+        annotations.append(annotation)
     obj['annotations'] = annotations
 
     return annotation
 
 
-def make_bundled_as(uri="urn:uuid:%s" % str(uuid.uuid4()), folder=None, filename=None):
-
-    if uri is None and folder is None and filename is None:
-        return None
+def make_bundled_as(uri=None, folder=None, filename=None):
 
     if filename and folder is None:
         raise ValueError("When specifying a \"filename\" attribute for a bundledAs object, the \"folder\" attribute "
                          "must also be specified.")
 
     bundled_as = dict()
-    if uri:
-        bundled_as['uri'] = uri
+    bundled_as['uri'] = uri if uri else "urn:uuid:%s" % str(uuid.uuid4())
     if filename:
         bundled_as['filename'] = filename
     if folder is not None:

@@ -430,13 +430,27 @@ class BDBag(Bag):
         self._validate_structure()
         self._validate_bagittxt()
 
-        # this check is bypassed because it attempts to validate URL scheme and netloc,
-        # and bdbag supports non-standard URLs, e.g., "ark:/"
-        # self.validate_fetch()
+        self.validate_fetch()
 
         self._validate_contents(processes=processes, fast=fast, completeness_only=completeness_only, callback=callback)
 
         return True
+
+    def validate_fetch(self):
+        """Validate the fetch.txt file
+
+        Raises `BagError` for errors and otherwise returns no value
+        """
+        for url, file_size, filename in self.fetch_entries():
+            # fetch_entries will raise a BagError for unsafe filenames
+            # so at this point we will check only that the URL is minimally
+            # well formed:
+            parsed_url = urlparse(url)
+
+            # only check for a scheme component since per the spec the URL field is actually a URI per
+            # RFC3986 (https://tools.ietf.org/html/rfc3986)
+            if not all(parsed_url.scheme):
+                raise BagError(_('Malformed URL in fetch.txt: %s') % url)
 
     def _validate_contents(self, processes=1, fast=False, completeness_only=False, callback=None):
         if fast and not self.has_oxum():

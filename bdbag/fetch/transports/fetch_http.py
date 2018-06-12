@@ -10,6 +10,8 @@ import bdbag.fetch.auth.keychain as keychain
 
 logger = logging.getLogger(__name__)
 
+Kilobyte = 1024
+Megabyte = 1024 ** 2
 CHUNK_SIZE = 1024 * 10240
 SESSIONS = dict()
 HEADERS = {'Connection': 'keep-alive'}
@@ -51,10 +53,9 @@ def get_session(url, auth_config):
                     break
 
             # if we get here the assumption is that the auth_type is either http-basic or http-form
-            if not keychain.has_auth_attr(auth, 'auth_uri'):
-                logging.warning("Missing required parameter [auth_uri] for auth_type [%s] for keychain entry [%s]" %
-                                (auth.auth_type, auth.uri))
-                continue
+            auth_uri = auth.uri
+            if keychain.has_auth_attr(auth, 'auth_uri'):
+                auth_uri = auth.auth_uri
 
             if not (keychain.has_auth_attr(auth.auth_params, 'username') and
                     keychain.has_auth_attr(auth.auth_params, 'password')):
@@ -69,22 +70,22 @@ def get_session(url, auth_config):
                 if keychain.has_auth_attr(auth.auth_params, 'auth_method'):
                     auth_method = auth.auth_params.auth_method.lower()
                 if auth_method == 'post':
-                    response = session.post(auth.auth_uri, auth=session.auth)
+                    response = session.post(auth_uri, auth=session.auth)
                 elif auth_method == 'get':
-                    response = session.get(auth.auth_uri, auth=session.auth)
+                    response = session.get(auth_uri, auth=session.auth)
                 else:
                     logging.warning("Unsupported auth_method [%s] for auth_type [%s] for keychain entry [%s]" %
                                     (auth_method, auth.auth_type, auth.uri))
             elif auth.auth_type == 'http-form':
-                response = session.post(auth.auth_uri,
+                response = session.post(auth_uri,
                                         {auth.auth_params.username_field or "username": auth.auth_params.username,
                                          auth.auth_params.password_field or "password": auth.auth_params.password})
             if response.status_code > 203:
                 logger.warning(
                     'Authentication failed with Status Code: %s %s\n' % (response.status_code, response.text))
             else:
-                logger.info("Session established: %s", auth.auth_uri)
-                SESSIONS[auth.auth_uri] = session
+                logger.info("Session established: %s", auth.uri)
+                SESSIONS[auth.uri] = session
                 break
 
         except Exception as e:
@@ -143,12 +144,15 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
                 for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
                     data_file.write(chunk)
                     total += len(chunk)
-            elapsed = datetime.datetime.now() - start
-            totalSecs = elapsed.total_seconds()
-            totalMBs = float(total) / float((1024 * 1024))
-            throughput = str("%.3f MB/second" % (totalMBs / totalSecs if totalSecs > 0 else 0.001))
-            logger.info('File [%s] transfer successful. %.3f MB transferred at %s. Elapsed time: %s. ' %
-                        (output_path, totalMBs, throughput, elapsed))
+            elapsed_time = datetime.datetime.now() - start
+            total_secs = elapsed_time.total_seconds()
+            transferred = \
+                float(total) / float(Kilobyte) if total < Megabyte else float(total) / float(Megabyte)
+            throughput = str(" at %.2f MB/second" % (transferred / total_secs)) if (total_secs >= 1) else ""
+            elapsed = str("Elapsed time: %s." % elapsed_time) if (total_secs > 0) else ""
+            summary = "%.3f %s transferred%s. %s" % \
+                      (transferred, "KB" if total < Megabyte else "MB", throughput, elapsed)
+            logger.info('File [%s] transfer successful. %s' % (output_path, summary))
             return True
 
     except requests.exceptions.RequestException as e:

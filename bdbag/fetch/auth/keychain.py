@@ -75,7 +75,7 @@ def read_keychain(keychain_file, create_default=True):
 
 
 def has_auth_attr(auth, attr, quiet=False):
-    if getattr(auth, attr) is None:
+    if getattr(auth, attr, None) is None:
         if not quiet:
             logger.warning("Unable to locate attribute [%s] in keychain entry for uri: %s" %
                            (attr, getattr(auth, 'uri', '')))

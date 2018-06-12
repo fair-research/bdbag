@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 import bagit
-from bdbag import bdbag_api as bdb, get_typed_exception, DEFAULT_CONFIG_FILE, VERSION
+from bdbag import bdbag_api as bdb, get_typed_exception, DEFAULT_CONFIG_FILE, FILTER_DOCSTRING, VERSION
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
 BAG_METADATA = dict()
@@ -83,6 +83,13 @@ def parse_cli():
              "The \"all\" option causes all fetch files to be re-acquired,"
              " even if they already exist in the bag payload directory.")
 
+    fetch_filter_arg = "--fetch-filter"
+    standard_args.add_argument(
+        fetch_filter_arg, metavar="<column><operator><value>",
+        help="A simple expression of the form <column><operator><value> where: <column> is the name of a column in "
+             "the bag's fetch.txt to be filtered on, <operator> is one of the following tokens; %s, and <value> is a "
+             "string pattern or integer to be filtered against." % FILTER_DOCSTRING)
+
     validate_arg = "--validate"
     standard_args.add_argument(
         validate_arg, choices=['fast', 'full', 'structure'],
@@ -116,6 +123,12 @@ def parse_cli():
     ro_metadata_file_arg = "--ro-metadata-file"
     standard_args.add_argument(
         ro_metadata_file_arg, metavar='<file>', help="Optional path to a JSON formatted RO metadata file")
+
+    ro_manifest_generate_arg = "--ro-manifest-generate"
+    standard_args.add_argument(
+        ro_manifest_generate_arg, choices=['overwrite', 'update'],
+        help="Automatically generate a basic RO metadata manifest.json file by introspecting a bag's metadata and "
+             "structure.")
 
     remote_file_manifest_arg = "--remote-file-manifest"
     standard_args.add_argument(
@@ -165,6 +178,11 @@ def parse_cli():
     if args.revert and is_file:
         sys.stderr.write("Error: An existing bag archive cannot be reverted in-place. "
                          "The bag must first be extracted and then reverted.\n\n")
+        sys.exit(2)
+
+    if args.fetch_filter and not args.resolve_fetch:
+        sys.stderr.write("Error: The %s argument can only be used with the %s argument.\n\n" %
+                         (fetch_filter_arg, fetch_arg))
         sys.exit(2)
 
     if args.resolve_fetch and is_file:
@@ -270,13 +288,18 @@ def main():
                 sys.stderr.write('\n')
             return result
 
+        if args.ro_manifest_generate:
+            bdb.generate_ro_manifest(path, True if args.ro_manifest_generate == "overwrite" else False,
+                                     config_file=args.config_file)
+
         if args.resolve_fetch:
             if args.validate == 'full':
                 sys.stderr.write(ASYNC_TRANSFER_VALIDATION_WARNING)
             bdb.resolve_fetch(path,
                               force=True if args.resolve_fetch == 'all' else False,
                               keychain_file=args.keychain_file,
-                              config_file=args.config_file)
+                              config_file=args.config_file,
+                              filter_expr=args.fetch_filter)
 
         if args.validate:
             if is_file:

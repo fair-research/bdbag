@@ -3,9 +3,10 @@ import platform
 import logging
 from bdbag import urlsplit, get_typed_exception
 import bdbag.fetch.auth.keychain as keychain
-import globus_sdk
 
 logger = logging.getLogger(__name__)
+globus_sdk = None
+globus_sdk_name = "globus_sdk"
 
 
 def validate_auth_config(auth):
@@ -36,6 +37,17 @@ def authenticate(url, auth_config):
 
 
 def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
+
+    # locate library
+    global globus_sdk
+    if globus_sdk is None:
+        try:
+            globus_sdk = __import__(globus_sdk_name)
+        except ImportError:
+            pass
+    if globus_sdk is None:
+        raise RuntimeError("Cannot fetch file using Globus Transfer: unable to find the Globus SDK. "
+                           "Ensure that the Python module \"%s\" is installed." % globus_sdk_name)
 
     try:
         src_endpoint = urlsplit(url).hostname

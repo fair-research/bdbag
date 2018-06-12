@@ -1,14 +1,13 @@
 import os
 import sys
+import json
 import shutil
 import logging
 import unittest
-import bdbag
-import bdbag.bdbagit as bdbagit
 from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
-from bdbag import bdbag_api as bdb
+from bdbag import bdbag_api as bdb, bdbag_ro as bdbro, bdbagit as bdbagit, filter_dict, get_typed_exception
 from test.test_common import BaseTest
 
 if sys.version_info > (3,):
@@ -39,7 +38,7 @@ class TestAPI(BaseTest):
             bag = bdb.make_bag(self.test_data_dir)
             self.assertIsInstance(bag, bdbagit.BDBag)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_cleanup_bag(self):
         logger.info(self.getTestHeader('cleanup bag'))
@@ -47,7 +46,7 @@ class TestAPI(BaseTest):
             bdb.cleanup_bag(self.test_bag_dir)
             self.assertFalse(ospe(self.test_bag_dir), "Failed to cleanup bag directory")
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_ensure_bag_path_exists(self):
         logger.info(self.getTestHeader('ensure bag path exists, save existing'))
@@ -56,7 +55,7 @@ class TestAPI(BaseTest):
             self.assertTrue(ospe(self.test_bag_dir), "Bag directory does not exist")
             self.assertTrue(ospe(saved_bag_path), "Saved bag path does not exist")
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_ensure_bag_path_exists_delete_existing(self):
         logger.info(self.getTestHeader('ensure bag path exists, delete existing'))
@@ -64,7 +63,7 @@ class TestAPI(BaseTest):
             bdb.ensure_bag_path_exists(self.test_bag_dir, save=False)
             self.assertTrue(ospe(self.test_bag_dir), "Bag directory does not exist")
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_create_bag_with_config(self):
         logger.info(self.getTestHeader('create bag with config'))
@@ -83,7 +82,7 @@ class TestAPI(BaseTest):
                 baginfo_txt = bi.read()
             self.assertIn('Contact-Name: bdbag test', baginfo_txt)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_revert_bag(self):
         logger.info(self.getTestHeader('revert bag'))
@@ -105,7 +104,7 @@ class TestAPI(BaseTest):
             self.assertTrue(ospif(ospj(self.test_bag_dir, ospj('test2', 'test2.txt'))))
             self.assertFalse(ospe(ospj(self.test_bag_dir, 'data')))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_update_bag_add_file(self):
         logger.info(self.getTestHeader('update bag add file'))
@@ -117,7 +116,7 @@ class TestAPI(BaseTest):
             self.assertIsInstance(bag, bdbagit.BDBag)
             self.assertExpectedMessages(['NEWFILE.txt'], output)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_update_bag_remove_file(self):
         logger.info(self.getTestHeader('update bag remove file'))
@@ -128,7 +127,7 @@ class TestAPI(BaseTest):
             self.assertIsInstance(bag, bdbagit.BDBag)
             self.assertUnexpectedMessages(['test1.txt'], output)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_update_bag_change_file(self):
         logger.info(self.getTestHeader('update bag change file'))
@@ -140,7 +139,7 @@ class TestAPI(BaseTest):
             self.assertIsInstance(bag, bdbagit.BDBag)
             self.assertExpectedMessages(['README.txt'], output)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def _test_create_or_update_bag_with_metadata(
             self, update=False, override_file_metadata=False, no_file_metadata=False):
@@ -180,7 +179,7 @@ class TestAPI(BaseTest):
                     self.assertIn(ro_test_line, ro_manifest_txt)
 
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_create_bag_with_file_metadata_only(self):
         logger.info(self.getTestHeader('create bag with file metadata only'))
@@ -227,7 +226,7 @@ class TestAPI(BaseTest):
                                            'updating manifest-sha512.txt',
                                            'updating manifest-md5.txt'], output)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_update_bag_change_metadata_nested_dict(self):
         logger.info(self.getTestHeader('update bag change metadata with nested dict'))
@@ -241,7 +240,7 @@ class TestAPI(BaseTest):
             self.assertExpectedMessages(['Reading bag metadata from file', 'test-ro-metadata.json'], output)
             self.assertExpectedMessages(["Nested dictionary content not supported in tag file: [bag-info.txt]"], output)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_update_bag_prune(self):
         logger.info(self.getTestHeader('update bag prune manifests'))
@@ -255,16 +254,16 @@ class TestAPI(BaseTest):
             self.assertFalse(ospif(ospj(self.test_bag_dir, 'tagmanifest-sha256.txt')))
             self.assertFalse(ospif(ospj(self.test_bag_dir, 'tagmanifest-sha512.txt')))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_update_bag_duplicate_manifest_entry_from_remote(self):
         logger.info(self.getTestHeader('update bag with fetch.txt entry for local file'))
         try:
             with self.assertRaises(bdbagit.BagManifestConflict) as ar:
                 bdb.make_bag(self.test_bag_invalid_state_duplicate_manifest_fetch_dir, update=True)
-            logger.error(bdbag.get_typed_exception(ar.exception))
+            logger.error(get_typed_exception(ar.exception))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_create_bag_duplicate_manifest_entry_from_remote(self):
         logger.info(self.getTestHeader('create bag with fetch.txt entry for local file'))
@@ -274,9 +273,9 @@ class TestAPI(BaseTest):
             with self.assertRaises(bdbagit.BagManifestConflict) as ar:
                 bdb.make_bag(self.test_data_dir,
                              remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
-            logger.error(bdbag.get_typed_exception(ar.exception))
+            logger.error(get_typed_exception(ar.exception))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_update_bag_invalid_fetch_entry(self):
         logger.info(self.getTestHeader('update bag with invalid fetch.txt entry with missing length'))
@@ -288,9 +287,9 @@ class TestAPI(BaseTest):
                          'test-fetch-http.txt\t-\tdata/test-fetch-http.txt\n')
             with self.assertRaises(ValueError) as ar:
                 bdb.make_bag(self.test_bag_update_invalid_fetch_dir, update=True)
-            logger.error(bdbag.get_typed_exception(ar.exception))
+            logger.error(get_typed_exception(ar.exception))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_create_bag_invalid_fetch_entry(self):
         logger.info(self.getTestHeader('create bag with invalid fetch.txt entry with missing length'))
@@ -298,9 +297,9 @@ class TestAPI(BaseTest):
             with self.assertRaises(ValueError) as ar:
                 bdb.make_bag(self.test_data_dir,
                              remote_file_manifest=ospj(self.test_config_dir, 'test-invalid-fetch-manifest.json'))
-            logger.error(bdbag.get_typed_exception(ar.exception))
+            logger.error(get_typed_exception(ar.exception))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_archive_bag_zip(self):
         logger.info(self.getTestHeader('archive bag zip format'))
@@ -308,7 +307,7 @@ class TestAPI(BaseTest):
             archive_file = bdb.archive_bag(self.test_bag_dir, 'zip')
             self.assertTrue(ospif(archive_file))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_archive_bag_tgz(self):
         logger.info(self.getTestHeader('archive bag tgz format'))
@@ -316,7 +315,7 @@ class TestAPI(BaseTest):
             archive_file = bdb.archive_bag(self.test_bag_dir, 'tgz')
             self.assertTrue(ospif(archive_file))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_archive_bag_tar(self):
         logger.info(self.getTestHeader('archive bag tar format'))
@@ -324,7 +323,7 @@ class TestAPI(BaseTest):
             archive_file = bdb.archive_bag(self.test_bag_dir, 'tar')
             self.assertTrue(ospif(archive_file))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_extract_bag_archive_zip(self):
         logger.info(self.getTestHeader('extract bag zip format'))
@@ -334,7 +333,7 @@ class TestAPI(BaseTest):
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_extract_bag_archive_tgz(self):
         logger.info(self.getTestHeader('extract bag tgz format'))
@@ -344,7 +343,7 @@ class TestAPI(BaseTest):
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_extract_bag_archive_tar(self):
         logger.info(self.getTestHeader('extract bag tar format'))
@@ -354,28 +353,28 @@ class TestAPI(BaseTest):
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_complete_bag_full(self):
         logger.info(self.getTestHeader('test full validation complete bag'))
         try:
             bdb.validate_bag(self.test_bag_dir, fast=False)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_complete_bag_fast(self):
         logger.info(self.getTestHeader('test fast validation complete bag'))
         try:
             bdb.validate_bag(self.test_bag_dir, fast=True)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_complete_bag_structure(self):
         logger.info(self.getTestHeader('test structure validation complete bag'))
         try:
             bdb.validate_bag_structure(self.test_bag_dir)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_incomplete_bag_full(self):
         logger.info(self.getTestHeader('test full validation incomplete bag'))
@@ -386,21 +385,21 @@ class TestAPI(BaseTest):
                 bdb.validate_bag,
                 self.test_bag_incomplete_dir, fast=False)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_incomplete_bag_fast(self):
         logger.info(self.getTestHeader('test fast validation incomplete bag'))
         try:
-            self.assertRaises(bdbagit.BagValidationError,  bdb.validate_bag, self.test_bag_incomplete_dir, fast=True)
+            self.assertRaises(bdbagit.BagValidationError, bdb.validate_bag, self.test_bag_incomplete_dir, fast=True)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_incomplete_bag_structure(self):
         logger.info(self.getTestHeader('test structure validation incomplete bag'))
         try:
             bdb.validate_bag_structure(self.test_bag_incomplete_dir)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_invalid_bag_structure_manifest(self):
         logger.info(self.getTestHeader('test structure validation invalid bag manifest'))
@@ -409,7 +408,7 @@ class TestAPI(BaseTest):
                               bdb.validate_bag_structure,
                               self.test_bag_invalid_structure_manifest_dir)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_invalid_bag_structure_filesystem(self):
         logger.info(self.getTestHeader('test structure validation invalid bag filesystem'))
@@ -418,7 +417,7 @@ class TestAPI(BaseTest):
                               bdb.validate_bag_structure,
                               self.test_bag_invalid_structure_filesystem_dir)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_invalid_bag_structure_fetch(self):
         logger.info(self.getTestHeader('test structure validation invalid bag fetch.txt'))
@@ -427,7 +426,7 @@ class TestAPI(BaseTest):
                               bdb.validate_bag_structure,
                               self.test_bag_invalid_structure_fetch_dir)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_invalid_bag_state_manifest_fetch(self):
         logger.info(self.getTestHeader('test bag state validation invalid bag manifest with missing fetch.txt'))
@@ -437,7 +436,7 @@ class TestAPI(BaseTest):
                               self.test_bag_invalid_state_manifest_fetch_dir,
                               skip_remote=False)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
 
     def test_validate_invalid_bag_state_fetch_filesize(self):
         logger.info(self.getTestHeader('test bag state validation invalid local file size of fetch.txt file ref'))
@@ -447,7 +446,127 @@ class TestAPI(BaseTest):
                               self.test_bag_invalid_state_fetch_filesize_dir,
                               skip_remote=False)
         except Exception as e:
-            self.fail(bdbag.get_typed_exception(e))
+            self.fail(get_typed_exception(e))
+
+    def test_filter_dict(self):
+        logger.info(self.getTestHeader('test filter function'))
+
+        msg = "evaluating filter expression: %s"
+        test_url = "http://example.com/files/examples/README.txt"
+        test_length = 250624
+        test_filename = "data/examples/README.txt"
+        test_entry = {"url": test_url,
+                      "length": test_length,
+                      "filename": test_filename}
+        pos_exprs = ["url==%s" % test_url,
+                     "url!=http://foo",
+                     "url=*/files/",
+                     "filename!*/files/",
+                     "filename^*data/",
+                     "filename$*.txt",
+                     "length>250623",
+                     "length>=250624",
+                     "length<250625",
+                     "length<=250624"]
+        neg_exprs = ["url!=%s" % test_url,
+                     "url==http://foo",
+                     "url=*/fils/",
+                     "filename!*/examples/",
+                     "filename^*dat/",
+                     "filename$*.tx",
+                     "length>250624",
+                     "length>=250625",
+                     "length<250624",
+                     "length<=250623",
+                     "length<=-"]
+        bad_exprs = ["url*=http://foo", "url=http://foo"]
+        try:
+            for expr in pos_exprs:
+                result = filter_dict(expr, test_entry)
+                self.assertTrue(result, msg % expr)
+            for expr in neg_exprs:
+                result = filter_dict(expr, test_entry)
+                self.assertFalse(result, msg % expr)
+            for expr in bad_exprs:
+                self.assertRaises(ValueError, filter_dict, expr, test_entry)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    ro_test_aggregates = [
+        {
+            "bundledAs": {
+                "filename": "test-fetch-http.txt",
+                "folder": "../data/",
+            },
+            "mediatype": "text/plain",
+            "uri": "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt"
+        },
+        {
+            "bundledAs": {
+                "filename": "test-fetch-identifier.txt",
+                "folder": "../data/",
+            },
+            "mediatype": "text/plain",
+            "uri": "http://n2t.net/ark%3A/57799/b9dd5t"
+        },
+        {
+            "mediatype": "text/plain",
+            "uri": "../data/README.txt"
+        },
+        {
+            "mediatype": "text/plain",
+            "uri": "../data/test1/test1.txt"
+        },
+        {
+            "mediatype": "text/plain",
+            "uri": "../data/test2/test2.txt"
+        }
+    ]
+
+    def test_generate_ro_manifest_update(self):
+        logger.info(self.getTestHeader('create bag with auto-generation of RO manifest in update mode'))
+        try:
+            bdb.make_bag(self.test_data_dir, algs=['md5', 'sha1', 'sha256', 'sha512'],
+                         remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
+            bdb.generate_ro_manifest(self.test_data_dir, overwrite=True)
+            ro = bdbro.read_bag_ro_metadata(self.test_data_dir)
+            old_agg_dict = dict()
+            for entry in ro.get("aggregates", []):
+                old_agg_dict[entry["uri"]] = entry
+            bdbro.add_file_metadata(ro, local_path="../data/FAKE.txt", bundled_as=bdbro.make_bundled_as())
+            bdbro.write_bag_ro_metadata(ro, self.test_data_dir)
+
+            bdb.generate_ro_manifest(self.test_data_dir, overwrite=False)
+            ro = bdbro.read_bag_ro_metadata(self.test_data_dir)
+            for entry in ro.get("aggregates", []):
+                if entry["uri"] in old_agg_dict:
+                    self.assertTrue(entry["bundledAs"]["uri"] == old_agg_dict[entry["uri"]]["bundledAs"]["uri"])
+
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_generate_ro_manifest_overwrite(self):
+        logger.info(self.getTestHeader('create bag with auto-generation of RO manifest in overwrite mode'))
+        try:
+            bdb.make_bag(self.test_data_dir, algs=['md5', 'sha1', 'sha256', 'sha512'],
+                         remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
+            bdb.generate_ro_manifest(self.test_data_dir, overwrite=True)
+            ro = bdbro.read_bag_ro_metadata(self.test_data_dir)
+            agg_dict = dict()
+            for entry in ro.get("aggregates", []):
+                agg_dict[entry["uri"]] = entry
+            for test_entry in self.ro_test_aggregates:
+                self.assertTrue(test_entry["uri"] in agg_dict)
+                entry = agg_dict[test_entry["uri"]]
+                bundled_as = entry.get("bundledAs")
+                if bundled_as:
+                    if "filename" in bundled_as:
+                        self.assertTrue(test_entry["bundledAs"]["filename"] == bundled_as["filename"])
+                    if "folder" in bundled_as:
+                        self.assertTrue(test_entry["bundledAs"]["folder"] == bundled_as["folder"])
+
+        except Exception as e:
+            self.fail(get_typed_exception(e))
 
 
 if __name__ == '__main__':

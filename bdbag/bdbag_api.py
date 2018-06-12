@@ -3,17 +3,17 @@ import errno
 import logging
 import json
 import shutil
-import time
-import datetime
 import tempfile
 import tarfile
 import zipfile
 import bdbag.bdbagit as bdbagit
 import bdbag.bdbagit_profile as bdbp
 import bdbag.bdbag_ro as bdbro
+from datetime import date, datetime
+from tzlocal import get_localzone
 from collections import OrderedDict
 from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, BDBAG_RO_PROFILE_ID, \
-    DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_PATH, get_typed_exception
+    DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_PATH, DEFAULT_ID_RESOLVERS, ID_RESOLVER_TAG, get_typed_exception
 from bdbag.fetch.fetcher import fetch_bag_files
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
@@ -75,7 +75,7 @@ def read_metadata(metadata_file):
 def cleanup_bag(bag_path, save=False):
     logger.info("Cleaning up bag dir: %s" % bag_path)
     if save:
-        saved_bag_path = ''.join([bag_path, '_', time.strftime("%Y-%m-%d_%H.%M.%S")])
+        saved_bag_path = ''.join([bag_path, '_', datetime.strftime(datetime.now(), "%Y-%m-%d_%H.%M.%S")])
         logger.info("Moving bag %s to %s" % (bag_path, saved_bag_path))
         shutil.move(bag_path, saved_bag_path)
         return saved_bag_path
@@ -276,7 +276,10 @@ def make_bag(bag_path,
         bag_metadata.update({BAG_PROFILE_TAG: BDBAG_RO_PROFILE_ID})
 
     if 'Bagging-Date' not in bag_metadata:
-        bag_metadata['Bagging-Date'] = datetime.date.strftime(datetime.date.today(), "%Y-%m-%d")
+        bag_metadata['Bagging-Date'] = date.strftime(date.today(), "%Y-%m-%d")
+
+    if 'Bagging-Time' not in bag_metadata:
+        bag_metadata['Bagging-Time'] = datetime.strftime(datetime.now(tz=get_localzone()), "%H:%M:%S %Z")
 
     if 'Bag-Software-Agent' not in bag_metadata:
         bag_metadata['Bag-Software-Agent'] = \
@@ -374,7 +377,7 @@ def extract_bag(bag_path, output_path=None, temp=False):
         elif not output_path:
             output_path = os.path.splitext(bag_path)[0]
             if os.path.exists(output_path):
-                newpath = ''.join([output_path, '-', time.strftime("%Y-%m-%d_%H_%M_%S")])
+                newpath = ''.join([output_path, '-', datetime.strftime(datetime.now(), "%Y-%m-%d_%H.%M.%S")])
                 logger.info("Specified output path %s already exists, moving existing directory to %s" %
                             (output_path, newpath))
                 shutil.move(output_path, newpath)
@@ -493,7 +496,8 @@ def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False
             if is_json_stream:
                 entry = json.loads(entry, object_pairs_hook=OrderedDict)
 
-            entry['filename'] = ''.join(['data', '/', entry['filename']])
+            filename = ''.join(['data', '/', entry['filename']])
+            url = entry['url'][0] if isinstance(entry['url'], list) else entry['url']
 
             add = True
             for alg in bdbagit.CHECKSUM_ALGOS:
@@ -502,22 +506,68 @@ def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False
                         add = False
                     if add:
                         bdbagit.make_remote_file_entry(
-                            remote_files, entry['filename'], entry['url'], entry['length'], alg, entry[alg])
+                            remote_files, filename, url, entry['length'], alg, entry[alg])
 
         rfm_in.close()
 
     return remote_files
 
 
+def generate_ro_manifest(bag_path, overwrite=False, config_file=DEFAULT_CONFIG_FILE):
+    bag = bdbagit.BDBag(bag_path)
+    bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata", "manifest.json"))
+    exists = os.path.isfile(bag_ro_metadata_path)
+    if exists and not overwrite:
+        logger.info("Auto-generating RO manifest: update existing file.")
+        ro_metadata = bdbro.read_bag_ro_metadata(bag_path)
+    else:
+        logger.info("Auto-generating RO manifest: %s." %
+                    "creating new file" if not exists else "overwrite existing file")
+        ro_metadata = bdbro.init_ro_manifest(author_name=bag.info.get("Contact-Name"),
+                                             author_orcid=bag.info.get("Contact-Orcid"),
+                                             creator_name=bdbro.BAG_CREATOR_NAME,
+                                             creator_uri=bdbro.BAG_CREATOR_URI)
+
+    config = read_config(config_file)
+    resolvers = config.get(ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS) if config else DEFAULT_ID_RESOLVERS
+    fetched = bag.fetch_entries()
+    local = bag.payload_files()
+
+    for url, length, filename in fetched:
+        if url.startswith("minid:") or url.startswith("ark:"):
+            url = "".join(["http://", resolvers[0], "/", url])
+        bdbro.add_file_metadata(ro_metadata,
+                                source_url=url,
+                                bundled_as=bdbro.make_bundled_as(
+                                    folder=os.path.dirname(filename),
+                                    filename=os.path.basename(filename)),
+                                update_existing=True)
+
+    for path in local:
+        bdbro.add_file_metadata(ro_metadata,
+                                local_path=path.replace("\\", "/"),
+                                bundled_as=bdbro.make_bundled_as(),
+                                update_existing=True)
+
+    bdbro.write_bag_ro_metadata(ro_metadata, bag_path)
+    profile = bag.info.get(BAG_PROFILE_TAG)
+    if profile == BDBAG_PROFILE_ID:
+        bag.info.update({BAG_PROFILE_TAG: BDBAG_RO_PROFILE_ID})
+    bag.save()
+
+
 def resolve_fetch(bag_path,
                   force=False,
                   callback=None,
                   keychain_file=DEFAULT_KEYCHAIN_FILE,
-                  config_file=DEFAULT_CONFIG_FILE):
+                  config_file=DEFAULT_CONFIG_FILE,
+                  filter_expr=None):
     bag = bdbagit.BDBag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=True):
-        logger.info("Attempting to resolve remote file references from fetch.txt...")
+        logger.info("Attempting to resolve remote file references from fetch.txt%s" %
+                    ("." if not filter_expr else ", using filter expression [%s]." % filter_expr))
         config = read_config(config_file if config_file else DEFAULT_CONFIG_FILE)
-        return fetch_bag_files(bag, keychain_file, force, callback, config)
+        return fetch_bag_files(bag, keychain_file,
+                               force=force, callback=callback, config=config, filter_expr=filter_expr)
     else:
         return True

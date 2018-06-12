@@ -1,7 +1,9 @@
 import os
 import sys
 import logging
+import mock
 import unittest
+import requests
 import bdbag
 import bdbag.bdbagit as bdbagit
 import bdbag.bdbagit_profile as bdbagit_profile
@@ -18,6 +20,21 @@ else:
 
 logging.basicConfig(filename='test_remote.log', filemode='w', level=logging.DEBUG)
 logger = logging.getLogger()
+
+PATCHED_REQUESTS_GET = None
+PATCH_REQUESTS_POST = None
+
+
+def mocked_request_auth_get_success(*args, **kwargs):
+    args[0].auth = None
+    PATCHED_REQUESTS_GET.stop()
+    return BaseTest.MockResponse({}, 200)
+
+
+def mocked_request_auth_post_success(*args, **kwargs):
+    args[0].auth = None
+    PATCHED_REQUESTS_POST.stop()
+    return BaseTest.MockResponse({}, 201)
 
 
 class TestRemoteAPI(BaseTest):
@@ -100,9 +117,77 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-#    def test_resolve_fetch_http_auth(self):
-#        # TODO
-#        pass
+    def _test_resolve_fetch_http_with_filter(self, expr, files=list(frozenset())):
+        logger.info(self.getTestHeader('test resolve fetch http with filter expression "%s"' % expr))
+        try:
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir, filter_expr=expr)
+            for test_file in files:
+                self.assertTrue(ospif(ospj(self.test_bag_fetch_http_dir, test_file)))
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_with_filter1(self):
+        self._test_resolve_fetch_http_with_filter("length<500", ["data/test-fetch-http.txt"])
+
+    def test_resolve_fetch_http_with_filter2(self):
+        self._test_resolve_fetch_http_with_filter("filename==data/test-fetch-http.txt", ["data/test-fetch-http.txt"])
+
+    def test_resolve_fetch_http_with_filter3(self):
+        self._test_resolve_fetch_http_with_filter("url=*/test-data/test-http/",
+                                                  ["data/test-fetch-http.txt", "data/test-fetch-identifier.txt"])
+
+    def test_resolve_fetch_http_basic_auth_get(self):
+        logger.info(self.getTestHeader('test resolve fetch http basic auth GET'))
+        try:
+            global PATCHED_REQUESTS_GET
+            PATCHED_REQUESTS_GET = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+                                                       get=mocked_request_auth_get_success,
+                                                       auth=None,
+                                                       create=True)
+
+            PATCHED_REQUESTS_GET.start()
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                              keychain_file=ospj(self.test_config_dir, 'test-keychain-1.json'))
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def _test_resolve_fetch_http_auth_post(self, keychain_file):
+        try:
+            global PATCHED_REQUESTS_POST
+            PATCHED_REQUESTS_POST = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+                                                        post=mocked_request_auth_post_success,
+                                                        auth=None,
+                                                        create=True)
+            PATCHED_REQUESTS_POST.start()
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                              keychain_file=ospj(self.test_config_dir, keychain_file))
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_basic_auth_post(self):
+        logger.info(self.getTestHeader('test resolve fetch http basic auth POST'))
+        self._test_resolve_fetch_http_auth_post("test-keychain-2.json")
+
+    def test_resolve_fetch_http_form_auth_post(self):
+        logger.info(self.getTestHeader('test resolve fetch http form auth POST'))
+        self._test_resolve_fetch_http_auth_post("test-keychain-3.json")
+
+    def test_resolve_fetch_http_cookie_auth(self):
+        logger.info(self.getTestHeader('test resolve fetch http cookie auth'))
+        try:
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                              keychain_file=ospj(self.test_config_dir, 'test-keychain-4.json'))
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
 
     def test_resolve_fetch_ark(self):
         logger.info(self.getTestHeader('test resolve fetch ark'))
