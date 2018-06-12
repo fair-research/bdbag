@@ -126,7 +126,7 @@ The `remote-file-manifest` is structured as a JSON array containing a list of JS
 * `length`: The length of the file in bytes. This value MUST be present.
 * `filename`: The filename (or path), relative to the bag 'data' directory as it will be referenced in the bag
 manifest(s) and fetch.txt files. This value MUST be present.
-* AT LEAST ONE or more (and ONLY ONE of each) of the following `algorithm:checksum` key-value pairs:
+* AT LEAST one (and ONLY one of each) of the following `algorithm:checksum` key-value pairs:
   * `md5`:`<md5 hex value>`
   * `sha1`:`<sha1 hex value>`
   * `sha256`:`<sha256 hex value>`

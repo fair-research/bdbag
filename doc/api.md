@@ -31,7 +31,7 @@ The command-line interface is built upon the API in this manner and can be used 
     * [filter_dict](#filter_dict)
 
 <a name="bdbag_api"></a>
-### bdbag_api.py
+## bdbag_api.py
 The primary Python file which contains the *bdbag* API functions.  After installing bdbag, append the following to the top of your script.
 
 ```python
@@ -211,6 +211,7 @@ You can also use `length` and the integer relation operators to easily limit the
 |force|`boolean`|A `boolean` value indicating whether to retrieve all listed files in `fetch.txt` or only those which are not currently found in the bag payload directory.
 |keychain_file|`string`|A normalized, absolute path to a `keychain.json` file, or if not specified, the default location will be used: `~/.bdbag/keychain.json`
 |filter_expr|`string`|A string of the form: `<column><operator><value>`. See syntax [below](#filter_dict_syntax).
+
 **Returns**: `boolean` - If all remote files were resolved successfully or not. Also returns `True` if the function invocation resulted in a NOOP.
 
 -----
@@ -325,7 +326,7 @@ Checks a bag's structural conformance as well as payload consistency between fil
 
 -----
 <a name="bdbag_module"></a>
-### bdbag (`__init__.py`)
+## bdbag (`__init__.py`)
 Some shared utility functions exist at the `bdbag` module level in `__init__.py`.
 To make use of these functions, after installing bdbag append the following to the top of your script.
 
