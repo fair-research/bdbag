@@ -19,7 +19,7 @@ setup(
     url='https://github.com/fair-research/bdbag/',
     maintainer='USC Information Sciences Institute, Informatics Systems Research Division',
     maintainer_email='isrd-support@isi.edu',
-    version="1.3.1",
+    version="1.4.0",
     packages=find_packages(),
     package_data={'bdbag': ['profiles/*.*']},
     test_suite='test',
