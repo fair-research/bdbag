@@ -19,6 +19,7 @@ defaults when performing various bag manipulation functions.
 The format of *bdbag.json* is a single JSON object containing a set of JSON child objects (used as
 configuration sub-sections) which control various default behaviors of the software. Currently, only the sub-section `bag_config` is supported.
 
+##### Parameters
 | Parameter | Description | Parent Object|
 | --- | --- | --- |
 |*bag_config*|This is the parent object for all bag-related defaults.| Object root
@@ -53,6 +54,7 @@ be encountered while trying to resolve (download) the files listed in a bag's fe
 The format of `keychain.json` is a JSON array containing a list of JSON objects, each of which specify a set of parameters used to
 configure the authentication method and credentials to use for a specifed base URL.
 
+##### Parameters
 | Parameter | Description |
 | --- | --- |
 |*uri*|This is the base URI used to specify when authentication should be used.  When a URI reference is encountered in fetch.txt, an attempt will be made to match it against all base URIs specified in *keychain.json* and if a match is found, the request will be authenticated before file retrieval is attempted.
@@ -113,17 +115,24 @@ Below is a sample *keychain.json* file:
 
 <a name="remote-file-manifest"></a>
 ## *remote-file-manifest*
-A *remote-file-manifest* configuration file is a JSON array containing a list of JSON objects that have the following attributes:
+A *remote-file-manifest* configuration file is used by `bdbag` during bag creation and update as a way
+to include files in a bag that are not necesarily present on the local system, and therefore cannot be hashed.
+The file is processed by `bdbag` and the data used to generate both payload manifest entries and `fetch.txt`
+entries in the result bag.
 
-* `url`: The url where the file can be located or dereferenced from.
-* `length`: The length of the file in bytes.
+The `remote-file-manifest` is structured as a JSON array containing a list of JSON objects that have the following attributes:
+
+* `url`: The url where the file can be located or dereferenced from. This value MUST be present.
+* `length`: The length of the file in bytes. This value MUST be present.
 * `filename`: The filename (or path), relative to the bag 'data' directory as it will be referenced in the bag
-manifest(s) and fetch.txt files.
-* One or more (only one of each) of the following `algorithm:checksum` key-value pairs:
+manifest(s) and fetch.txt files. This value MUST be present.
+* AT LEAST ONE or more (and ONLY ONE of each) of the following `algorithm:checksum` key-value pairs:
   * `md5`:`<md5 hex value>`
   * `sha1`:`<sha1 hex value>`
   * `sha256`:`<sha256 hex value>`
   * `sha512`:`<sha512 hex value>`
+* Other legal JSON keys and values of arbitrary complexity MAY be included, as long as the basic
+requirements of the structure (as described above) are fulfilled.
 
 Below is a sample *remote-file-manifest* configuration file:
 ```json

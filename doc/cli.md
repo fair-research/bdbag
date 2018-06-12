@@ -23,6 +23,7 @@ usage: bdbag
 [--skip-manifests]
 [--prune-manifests]
 [--resolve-fetch {all,missing}]
+[--fetch-filter <column><operator><value>]
 [--validate {fast,full,structure}]
 [--validate-profile]
 [--config-file <file>]
@@ -103,6 +104,39 @@ already exist in the bag payload directory. The `all` option causes all fetch fi
 already exist in the bag payload directory.
 
 ----
+##### `--fetch-filter <column><operator><value>`
+Selectively fetch files where entries in `fetch.txt` match the filter expression `<column><operator><value>` where:
+*  `column` is one of the following literal values corresponding to the field names in `fetch.txt`: `url`, `length`, or `filename`
+* `<operator>` is one of the following predefined tokens:
+
+	| Operator | Description |
+	| --- | --- |
+	|==| equal
+	|!=| not equal
+	|=*| wildcard substring equal
+	|!*| wildcard substring not equal
+	|^*| wildcard starts with
+	|$*| wildcard ends with
+	|>| greater than
+	|>=| greater than or equal to
+	|<| less than
+	|<=| less than or equal to
+* `value` is a string or integer
+
+With this mechanism you can do various string-based pattern matching on `filename` and `url`. Using `missing` as the mode for `--resolve-fetch`,  you can invoke the command multiple times with a different filter to perform a effective disjunction. For example:
+
+* `bdbag --resolve-fetch missing --fetch-filter filename$*.txt ./my-bag`
+* `bdbag --resolve fetch missing --fetch-filter filename^*README ./my-bag`
+* `bdbag --resolve fetch missing --fetch-filter filename==data/change.log ./my-bag`
+* `bdbag --resolve fetch missing --fetch-filter url=*/requirements/ ./my-bag`
+
+The above commands will get all files ending with ".txt", all files beginning with "README", the exact file "data/change.log", and all urls containing "/requirements/" in the url path.
+
+You can also use `length` and the integer relation operators to easily limit the size of the files retrieved, for example:
+
+* `bdbag --resolve-fetch all --fetch-filter length<=1000000`
+
+----
 ##### `--validate {fast,full,structure}`
 Validate a bag directory or bag archive. If `fast` is specified, the `Payload-Oxum` metadata field (if present) will be
 used to check that the payload files are present and accounted for. If `full` is specified, all checksums will
@@ -171,6 +205,7 @@ This following table enumerates the various arguments and compatibility modes.
 |`--prune-manifests`|bag dir only, update only|Unused manifests may only be pruned from an existing bag during an update operation.
 |`--skip-manifests`|bag dir only, update only|Skipping the recalculation of payload checksums may only be performed on an existing bag during an update operation.
 |`--resolve-fetch`|bag dir only, no create or update|The resolution (download) of files listed in fetch.txt cannot be executed when creating or updating a bag.
+|`--fetch-filter`|bag dir only, fetch only|A fetch filter is only relevant during a `--resolve-fetch`.
 |`--validate`|all|A bag directory or a bag archive can be validated.  If a bag archive is to be validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.
 |`--validate-profile`|all|A bag directory or a bag archive can have its profile validated.  If a bag archive is to have its profile validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.
 |`--config-file`|bag dir only, create or update only|A config-file override can be specified whenever a bag is created or updated.
