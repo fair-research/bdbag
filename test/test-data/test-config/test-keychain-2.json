@@ -1,0 +1,12 @@
+[
+  {
+    "uri": "https://raw.githubusercontent.com/fair-research/",
+    "auth_uri": "",
+    "auth_type": "http-basic",
+    "auth_params": {
+      "auth_method": "post",
+      "username": "fake",
+      "password": "fake!"
+    }
+  }
+]

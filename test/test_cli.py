@@ -225,6 +225,13 @@ class TestCliArgParsing(BaseTest):
         self._test_bad_argument_error_handling(
             args, ["Specifying", "requires the", "argument"])
 
+    def test_fetch_filter_without_fetch(self):
+        args = ARGS + ['--fetch-filter', 'a!=b',
+                       ospj(self.test_bag_dir)]
+        logfile.writelines(self.getTestHeader('--fetch-filter without --resolve-fetch', args))
+        self._test_bad_argument_error_handling(
+            args, ["argument can only be used with"])
+
 
 if __name__ == '__main__':
     unittest.main()

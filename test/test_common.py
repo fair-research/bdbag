@@ -76,6 +76,15 @@ class BaseTest(unittest.TestCase):
     def getTestHeader(self, desc, args=None):
         return str('\n\n[%s: %s]\n%s') % (self.__class__.__name__, desc, (' '.join(args) + '\n') if args else "")
 
-    def slurp_text_file(self, filename):
+    @staticmethod
+    def slurp_text_file(filename):
         with bagit.open_text_file(filename) as f:
             return f.read()
+
+    class MockResponse:
+        def __init__(self, json_data, status_code):
+            self.json_data = json_data
+            self.status_code = status_code
+
+        def json(self):
+            return self.json_data
