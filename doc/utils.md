@@ -44,6 +44,7 @@ usage: bdbag-utils create-rfm-from-filesystem [-h] --checksum
                                               <input path> <output file>
 ```
 
+----
 ##### `--checksum {md5,sha1,sha256,sha512,all}`
 *Required*
 
@@ -134,6 +135,7 @@ usage: bdbag-utils create-rfm-from-file [-h] [--input-format {csv,json}]
                                         <input file> <output file>
 ```
 
+----
 ##### `--input-format {csv,json}`
 *Required*
 
@@ -229,6 +231,7 @@ usage: bdbag-utils create-rfm-from-url-list [-h] [--keychain-file <file>]
                                             <input file> <output file>
 ```
 
+----
 ##### `--keychain-file <file>`
 *Optional*
 
