@@ -13,7 +13,7 @@ from datetime import date, datetime
 from tzlocal import get_localzone
 from collections import OrderedDict
 from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, BDBAG_RO_PROFILE_ID, \
-    DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_PATH, get_typed_exception
+    DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_PATH, DEFAULT_ID_RESOLVERS, ID_RESOLVER_TAG, get_typed_exception
 from bdbag.fetch.fetcher import fetch_bag_files
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
@@ -513,7 +513,7 @@ def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False
     return remote_files
 
 
-def generate_ro_manifest(bag_path, overwrite=False):
+def generate_ro_manifest(bag_path, overwrite=False, config_file=DEFAULT_CONFIG_FILE):
     bag = bdbagit.BDBag(bag_path)
     bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata", "manifest.json"))
     exists = os.path.isfile(bag_ro_metadata_path)
@@ -527,10 +527,15 @@ def generate_ro_manifest(bag_path, overwrite=False):
                                              author_orcid=bag.info.get("Contact-Orcid"),
                                              creator_name=bdbro.BAG_CREATOR_NAME,
                                              creator_uri=bdbro.BAG_CREATOR_URI)
+
+    config = read_config(config_file)
+    resolvers = config.get(ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS) if config else DEFAULT_ID_RESOLVERS
     fetched = bag.fetch_entries()
     local = bag.payload_files()
 
     for url, length, filename in fetched:
+        if url.startswith("minid:") or url.startswith("ark:"):
+            url = "".join(["http://", resolvers[0], "/", url])
         bdbro.add_file_metadata(ro_metadata,
                                 source_url=url,
                                 bundled_as=bdbro.make_bundled_as(

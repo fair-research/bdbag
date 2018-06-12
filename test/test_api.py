@@ -507,7 +507,7 @@ class TestAPI(BaseTest):
                 "folder": "../data/",
             },
             "mediatype": "text/plain",
-            "uri": "ark:/57799/b9dd5t"
+            "uri": "http://n2t.net/ark%3A/57799/b9dd5t"
         },
         {
             "mediatype": "text/plain",
@@ -524,13 +524,13 @@ class TestAPI(BaseTest):
     ]
 
     def test_generate_ro_manifest_update(self):
-        logger.info(self.getTestHeader('create bag with auto-generation of RO manifest'))
+        logger.info(self.getTestHeader('create bag with auto-generation of RO manifest in update mode'))
         try:
             bdb.make_bag(self.test_data_dir, algs=['md5', 'sha1', 'sha256', 'sha512'],
                          remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
             bdb.generate_ro_manifest(self.test_data_dir, overwrite=True)
-            old_agg_dict = dict()
             ro = bdbro.read_bag_ro_metadata(self.test_data_dir)
+            old_agg_dict = dict()
             for entry in ro.get("aggregates", []):
                 old_agg_dict[entry["uri"]] = entry
             bdbro.add_file_metadata(ro, local_path="../data/FAKE.txt", bundled_as=bdbro.make_bundled_as())
@@ -546,25 +546,24 @@ class TestAPI(BaseTest):
             self.fail(get_typed_exception(e))
 
     def test_generate_ro_manifest_overwrite(self):
-        logger.info(self.getTestHeader('create bag with auto-generation of RO manifest'))
+        logger.info(self.getTestHeader('create bag with auto-generation of RO manifest in overwrite mode'))
         try:
             bdb.make_bag(self.test_data_dir, algs=['md5', 'sha1', 'sha256', 'sha512'],
                          remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
             bdb.generate_ro_manifest(self.test_data_dir, overwrite=True)
-            with open(ospj(self.test_data_dir, "metadata", "manifest.json"), "r") as ro_manifest:
-                ro = json.load(ro_manifest)
-                agg_dict = dict()
-                for entry in ro.get("aggregates", []):
-                    agg_dict[entry["uri"]] = entry
-                for test_entry in self.ro_test_aggregates:
-                    self.assertTrue(test_entry["uri"] in agg_dict)
-                    entry = agg_dict[test_entry["uri"]]
-                    bundled_as = entry.get("bundledAs")
-                    if bundled_as:
-                        if "filename" in bundled_as:
-                            self.assertTrue(test_entry["bundledAs"]["filename"] == bundled_as["filename"])
-                        if "folder" in bundled_as:
-                            self.assertTrue(test_entry["bundledAs"]["folder"] == bundled_as["folder"])
+            ro = bdbro.read_bag_ro_metadata(self.test_data_dir)
+            agg_dict = dict()
+            for entry in ro.get("aggregates", []):
+                agg_dict[entry["uri"]] = entry
+            for test_entry in self.ro_test_aggregates:
+                self.assertTrue(test_entry["uri"] in agg_dict)
+                entry = agg_dict[test_entry["uri"]]
+                bundled_as = entry.get("bundledAs")
+                if bundled_as:
+                    if "filename" in bundled_as:
+                        self.assertTrue(test_entry["bundledAs"]["filename"] == bundled_as["filename"])
+                    if "folder" in bundled_as:
+                        self.assertTrue(test_entry["bundledAs"]["folder"] == bundled_as["folder"])
 
         except Exception as e:
             self.fail(get_typed_exception(e))

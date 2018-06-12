@@ -289,7 +289,8 @@ def main():
             return result
 
         if args.ro_manifest_generate:
-            bdb.generate_ro_manifest(path, True if args.ro_manifest_generate == "overwrite" else False)
+            bdb.generate_ro_manifest(path, True if args.ro_manifest_generate == "overwrite" else False,
+                                     config_file=args.config_file)
 
         if args.resolve_fetch:
             if args.validate == 'full':
