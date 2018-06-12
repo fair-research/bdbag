@@ -53,10 +53,9 @@ def get_session(url, auth_config):
                     break
 
             # if we get here the assumption is that the auth_type is either http-basic or http-form
-            if not keychain.has_auth_attr(auth, 'auth_uri'):
-                logging.warning("Missing required parameter [auth_uri] for auth_type [%s] for keychain entry [%s]" %
-                                (auth.auth_type, auth.uri))
-                continue
+            auth_uri = auth.uri
+            if keychain.has_auth_attr(auth, 'auth_uri'):
+                auth_uri = auth.auth_uri
 
             if not (keychain.has_auth_attr(auth.auth_params, 'username') and
                     keychain.has_auth_attr(auth.auth_params, 'password')):
@@ -71,22 +70,22 @@ def get_session(url, auth_config):
                 if keychain.has_auth_attr(auth.auth_params, 'auth_method'):
                     auth_method = auth.auth_params.auth_method.lower()
                 if auth_method == 'post':
-                    response = session.post(auth.auth_uri, auth=session.auth)
+                    response = session.post(auth_uri, auth=session.auth)
                 elif auth_method == 'get':
-                    response = session.get(auth.auth_uri, auth=session.auth)
+                    response = session.get(auth_uri, auth=session.auth)
                 else:
                     logging.warning("Unsupported auth_method [%s] for auth_type [%s] for keychain entry [%s]" %
                                     (auth_method, auth.auth_type, auth.uri))
             elif auth.auth_type == 'http-form':
-                response = session.post(auth.auth_uri,
+                response = session.post(auth_uri,
                                         {auth.auth_params.username_field or "username": auth.auth_params.username,
                                          auth.auth_params.password_field or "password": auth.auth_params.password})
             if response.status_code > 203:
                 logger.warning(
                     'Authentication failed with Status Code: %s %s\n' % (response.status_code, response.text))
             else:
-                logger.info("Session established: %s", auth.auth_uri)
-                SESSIONS[auth.auth_uri] = session
+                logger.info("Session established: %s", auth.uri)
+                SESSIONS[auth.uri] = session
                 break
 
         except Exception as e:
