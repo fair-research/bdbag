@@ -491,24 +491,27 @@ def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False
             is_json_stream = True
         else:
             fetch = json.load(rfm_in, object_pairs_hook=OrderedDict)
+        try:
+            for entry in fetch:
+                if is_json_stream:
+                    entry = json.loads(entry, object_pairs_hook=OrderedDict)
 
-        for entry in fetch:
-            if is_json_stream:
-                entry = json.loads(entry, object_pairs_hook=OrderedDict)
-
-            filename = ''.join(['data', '/', entry['filename']])
-            url = entry['url'][0] if isinstance(entry['url'], list) else entry['url']
-
-            add = True
-            for alg in bdbagit.CHECKSUM_ALGOS:
-                if alg in entry:
-                    if strict and alg not in algs:
-                        add = False
-                    if add:
-                        bdbagit.make_remote_file_entry(
-                            remote_files, filename, url, entry['length'], alg, entry[alg])
-
-        rfm_in.close()
+                filename = ''.join(['data', '/', entry['filename']])
+                url = entry['url'][0] if isinstance(entry['url'], list) else entry['url']
+                hash_provided = (bdbagit.CHECKSUM_ALGOS - set(entry.keys())) != bdbagit.CHECKSUM_ALGOS
+                if not hash_provided:
+                    raise ValueError("A remote file manifest entry did not provide a required hash value: %s" %
+                                     json.dumps(entry))
+                add = True
+                for alg in bdbagit.CHECKSUM_ALGOS:
+                    if alg in entry:
+                        if strict and alg not in algs:
+                            add = False
+                        if add:
+                            bdbagit.make_remote_file_entry(
+                                remote_files, filename, url, entry['length'], alg, entry[alg])
+        finally:
+            rfm_in.close()
 
     return remote_files
 

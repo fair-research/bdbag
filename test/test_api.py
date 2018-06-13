@@ -291,12 +291,22 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
-    def test_create_bag_invalid_fetch_entry(self):
+    def test_create_bag_invalid_fetch_entry_length(self):
         logger.info(self.getTestHeader('create bag with invalid fetch.txt entry with missing length'))
         try:
             with self.assertRaises(ValueError) as ar:
                 bdb.make_bag(self.test_data_dir,
-                             remote_file_manifest=ospj(self.test_config_dir, 'test-invalid-fetch-manifest.json'))
+                             remote_file_manifest=ospj(self.test_config_dir, 'test-invalid-fetch-manifest-1.json'))
+            logger.error(get_typed_exception(ar.exception))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_create_bag_invalid_fetch_entry_missing_checksum(self):
+        logger.info(self.getTestHeader('create bag with invalid fetch.txt entry with missing checksum(s)'))
+        try:
+            with self.assertRaises(ValueError) as ar:
+                bdb.make_bag(self.test_data_dir,
+                             remote_file_manifest=ospj(self.test_config_dir, 'test-invalid-fetch-manifest-2.json'))
             logger.error(get_typed_exception(ar.exception))
         except Exception as e:
             self.fail(get_typed_exception(e))

@@ -172,9 +172,9 @@ def filter_dict(expr, entry):
                                     (expr, get_typed_exception(e)))
             else:
                 result = filter_val == value
-        if not result:
-            logging.debug(
-                "Excluding %s because it does not match the filter expression: [%s]." %
-                (json.dumps(entry), expr))
+    if not result:
+        logging.debug(
+            "Excluding %s because it does not match the filter expression: [%s]." %
+            (json.dumps(entry), expr))
 
     return result
