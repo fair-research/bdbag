@@ -4,6 +4,7 @@ import sys
 import json
 import logging
 import mimetypes
+from requests.utils import requote_uri
 from pkg_resources import get_distribution, DistributionNotFound
 
 if sys.version_info > (3,):
@@ -107,12 +108,18 @@ def parse_content_disposition(value):
     return n
 
 
-def escape_url_path(url, safe='/'):
-    urlparts = urlsplit(url)
-    path = urlquote(urlunquote(urlparts.path), safe=safe)
-    query = urlquote(urlunquote(urlparts.query))
-    fragment = urlquote(urlunquote(urlparts.fragment))
-    return urlunsplit((urlparts.scheme, urlparts.netloc, path, query, fragment))
+def escape_uri(uri, illegal_only=True, safe="/"):
+    if not uri:
+        return uri
+
+    if illegal_only:
+        return requote_uri(uri)
+    else:
+        urlparts = urlsplit(uri)
+        path = urlquote(urlunquote(urlparts.path), safe=safe)
+        query = urlquote(urlunquote(urlparts.query), safe=safe)
+        fragment = urlquote(urlunquote(urlparts.fragment), safe=safe)
+        return urlunsplit((urlparts.scheme, urlparts.netloc, path, query, fragment))
 
 
 def filter_dict(expr, entry):

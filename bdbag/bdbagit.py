@@ -2,9 +2,8 @@ import json
 from collections import OrderedDict
 import bagit
 from bagit import *
-from bagit import _, _can_read, _can_bag, _make_tagmanifest_file, _encode_filename, _decode_filename, \
-    _calc_hashes,_walk
-from bdbag import escape_url_path, VERSION, BAGIT_VERSION, PROJECT_URL
+from bagit import _, _can_read, _can_bag, _make_tagmanifest_file, _encode_filename, _decode_filename, _calc_hashes,_walk
+from bdbag import escape_uri, VERSION, BAGIT_VERSION, PROJECT_URL
 
 LOGGER = logging.getLogger(__name__)
 
@@ -236,7 +235,7 @@ def _make_fetch_file(path, remote_entries):
     with open_text_file(fetch_file_path, 'w') as fetch_file:
         for filename in sorted(remote_entries.keys()):
             fetch_file.write("%s\t%s\t%s\n" %
-                             (escape_url_path(remote_entries[filename]['url'], "%/:=&?~#+!$,;'@()*[]"),
+                             (escape_uri(remote_entries[filename]['url']),
                               remote_entries[filename]['length'],
                               _denormalize_filename(filename)))
 

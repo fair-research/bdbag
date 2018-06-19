@@ -3,7 +3,7 @@ import json
 import copy
 import uuid
 from collections import OrderedDict
-from bdbag import guess_mime_type, add_mime_types, escape_url_path, VERSION, BAGIT_VERSION
+from bdbag import guess_mime_type, add_mime_types, escape_uri, VERSION, BAGIT_VERSION
 from datetime import datetime
 from tzlocal import get_localzone
 import logging
@@ -125,17 +125,17 @@ def add_file_metadata(manifest,
     if not media_type:
         media_type = guess_mime_type(path)
 
-    uri = source_url
+    uri = source_url = escape_uri(source_url)
     retrieved_from = None
 
     if local_path:
-        uri = ensure_payload_path_prefix(local_path)
+        uri = escape_uri(ensure_payload_path_prefix(local_path))
         if source_url:
             retrieved_from = dict(retrievedFrom=source_url)
 
     add_provenance(
         add_aggregate(manifest,
-                      uri=escape_url_path(uri),
+                      uri=uri,
                       mediatype=media_type,
                       conforms_to=conforms_to,
                       bundled_as=bundled_as,
@@ -213,7 +213,7 @@ def add_annotation(obj, about, uri=None, content=None, motivatedBy=None, update_
     annotation = dict()
     annotation['about'] = about
     if uri:
-        annotation['uri'] = uri if uri else "urn:uuid:%s" % str(uuid.uuid4())
+        annotation['uri'] = uri if uri else uuid.uuid4().urn
     if content:
         annotation['content'] = content
     if motivatedBy:
@@ -241,7 +241,7 @@ def make_bundled_as(uri=None, folder=None, filename=None):
                          "must also be specified.")
 
     bundled_as = dict()
-    bundled_as['uri'] = uri if uri else "urn:uuid:%s" % str(uuid.uuid4())
+    bundled_as['uri'] = uri if uri else uuid.uuid4().urn
     if filename:
         bundled_as['filename'] = filename
     if folder is not None:

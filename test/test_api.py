@@ -517,7 +517,7 @@ class TestAPI(BaseTest):
                 "folder": "../data/",
             },
             "mediatype": "text/plain",
-            "uri": "http://n2t.net/ark%3A/57799/b9dd5t"
+            "uri": "http://n2t.net/ark:/57799/b9dd5t"
         },
         {
             "mediatype": "text/plain",
