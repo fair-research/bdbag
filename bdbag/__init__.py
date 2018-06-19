@@ -7,6 +7,8 @@ import mimetypes
 from requests.utils import requote_uri
 from pkg_resources import get_distribution, DistributionNotFound
 
+__version__ = "1.4.2"
+
 if sys.version_info > (3,):
     from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
     from urllib.request import urlretrieve, urlopen
@@ -14,19 +16,16 @@ else:
     from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen
     from urlparse import urlsplit, urlunsplit
 
-if not mimetypes.inited:
-    mimetypes.init()
-
 try:
     VERSION = get_distribution("bdbag").version
 except DistributionNotFound:
-    VERSION = '0.0.dev0'
+    VERSION = __version__ + '-dev'
 PROJECT_URL = 'https://github.com/fair-research/bdbag'
 
 try:
     BAGIT_VERSION = get_distribution("bagit").version
 except DistributionNotFound:
-    BAGIT_VERSION = '0.0.dev0'
+    BAGIT_VERSION = 'unknown'
 
 BAG_PROFILE_TAG = 'BagIt-Profile-Identifier'
 BDBAG_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json'
@@ -59,6 +58,9 @@ FILTER_DOCSTRING = "\"==\" (equal), " \
                    "\"^*\" (wildcard starts with), " \
                    "\"$*\" (wildcard ends with), " \
                    "or \">\", \">=\", \"<\", \"<=\""
+
+if not mimetypes.inited:
+    mimetypes.init()
 
 
 def get_typed_exception(e):
