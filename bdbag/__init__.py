@@ -5,9 +5,10 @@ import json
 import logging
 import mimetypes
 from requests.utils import requote_uri
+from distutils.util import strtobool
 from pkg_resources import get_distribution, DistributionNotFound
 
-__version__ = "1.4.2"
+__version__ = "1.5.0"
 
 if sys.version_info > (3,):
     from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
@@ -31,24 +32,6 @@ BAG_PROFILE_TAG = 'BagIt-Profile-Identifier'
 BDBAG_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json'
 BDBAG_RO_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-ro-profile.json'
 
-ID_RESOLVER_TAG = 'identifier_resolvers'
-DEFAULT_ID_RESOLVERS = ['n2t.net', 'identifiers.org']
-
-DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser('~'), '.bdbag')
-DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')
-DEFAULT_CONFIG = {
-    'bag_config':
-    {
-        'bag_algorithms': ['md5', 'sha256'],
-        'bag_processes': 1,
-        'bag_metadata':
-        {
-            BAG_PROFILE_TAG: BDBAG_PROFILE_ID
-        }
-    },
-    ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
-}
-
 CONTENT_DISP_REGEX = re.compile(r"^filename[*]=UTF-8''(?P<name>[-_.~A-Za-z0-9%]+)$")
 FILTER_REGEX = re.compile(r"(?P<column>^.*)(?P<operator>==|!=|=\*|!\*|\^\*|\$\*|>=|>|<=|<)(?P<value>.*$)")
 FILTER_DOCSTRING = "\"==\" (equal), " \
@@ -61,6 +44,10 @@ FILTER_DOCSTRING = "\"==\" (equal), " \
 
 if not mimetypes.inited:
     mimetypes.init()
+
+
+def stob(string):
+    return bool(strtobool(str(string)))
 
 
 def get_typed_exception(e):

@@ -36,7 +36,7 @@ def authenticate(url, auth_config):
     return None, None
 
 
-def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
+def get_file(url, output_path, auth_config, **kwargs):
 
     # locate library
     global globus_sdk
@@ -57,6 +57,7 @@ def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
         else:
             dest_path = os.path.abspath(output_path)
 
+        token = kwargs.get("token")
         if not token:
             token, dest_endpoint = authenticate(url, auth_config)
         if token is None:
@@ -64,6 +65,7 @@ def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
                         "Check keychain.json for valid parameters.")
             return False
 
+        dest_endpoint = kwargs.get("dest_endpoint")
         if dest_endpoint is None:
             logger.warn("A valid Globus destination endpoint must be specified. "
                         "Check keychain.json for valid parameters.")

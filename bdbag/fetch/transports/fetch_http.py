@@ -7,6 +7,7 @@ from requests.packages.urllib3.util.retry import Retry
 import certifi
 from bdbag import urlsplit, get_typed_exception
 import bdbag.fetch.auth.keychain as keychain
+import bdbag.fetch.auth.cookies as cookies
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +116,7 @@ def get_new_session():
     return session
 
 
-def get_file(url, output_path, auth_config, headers=None, session=None):
+def get_file(url, output_path, auth_config, headers=None, session=None, **kwargs):
 
     try:
         if not session:
@@ -128,7 +129,7 @@ def get_file(url, output_path, auth_config, headers=None, session=None):
         else:
             headers.update(HEADERS)
         logger.info("Attempting GET from URL: %s" % url)
-        r = session.get(url, headers=headers, stream=True, verify=certifi.where())
+        r = session.get(url, headers=headers, stream=True, verify=certifi.where(), cookies=kwargs.get("cookies"))
         if r.status_code == 401:
             session = get_session(url, auth_config)
             r = session.get(url, headers=headers, stream=True, verify=certifi.where())

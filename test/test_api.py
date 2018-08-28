@@ -311,6 +311,29 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_create_bag_mixed_checksums_allowed(self):
+        logger.info(self.getTestHeader('allow create bag with non-uniform checksum(s) per file'))
+        try:
+            bdb.make_bag(self.test_data_dir,
+                         remote_file_manifest=ospj(self.test_config_dir,
+                                                   'test-fetch-manifest-mixed-checksums.json'))
+            bdb.validate_bag(self.test_bag_dir, fast=True)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_create_bag_mixed_checksums_disallowed(self):
+        logger.info(self.getTestHeader('disallow create bag with non-uniform checksum(s) per file'))
+        try:
+            with self.assertRaises(RuntimeError) as ar:
+                bdb.make_bag(self.test_data_dir,
+                             remote_file_manifest=ospj(self.test_config_dir,
+                                                       'test-fetch-manifest-mixed-checksums.json'),
+                             config_file=(ospj(self.test_config_dir, 'test-config-2.json')))
+            self.assertExpectedMessages([str(ar.exception)], "Expected the same number of files for each checksum")
+            logger.error(get_typed_exception(ar.exception))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_archive_bag_zip(self):
         logger.info(self.getTestHeader('archive bag zip format'))
         try:

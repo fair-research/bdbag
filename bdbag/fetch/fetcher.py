@@ -1,8 +1,10 @@
 import datetime
 from collections import namedtuple
-from bdbag import ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS, DEFAULT_CONFIG, urlsplit, filter_dict
+from bdbag import urlsplit, filter_dict
+from bdbag.bdbag_config import *
 from bdbag.fetch.transports import *
 from bdbag.fetch.auth.keychain import *
+from bdbag.fetch.auth.cookies import *
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +22,12 @@ SCHEME_TAG = 'tag'
 FetchEntry = namedtuple("FetchEntry", ["url", "length", "filename"])
 
 
-def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAULT_CONFIG, filter_expr=None):
+def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAULT_CONFIG, filter_expr=None, **kwargs):
 
     success = True
     auth = read_keychain(keychain_file)
     resolvers = config.get(ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS) if config else DEFAULT_ID_RESOLVERS
+    cookies = load_and_merge_cookie_jars(find_cookie_jars(config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG])))
     current = 0
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     start = datetime.datetime.now()
@@ -48,7 +51,13 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
                 logger.debug("Not fetching already present file: %s" % output_path)
             pass
         else:
-            success = fetch_file(entry.url, entry.length, output_path, auth, resolvers=resolvers)
+            success = fetch_file(entry.url,
+                                 entry.length,
+                                 output_path,
+                                 auth,
+                                 resolvers=resolvers,
+                                 cookies=cookies,
+                                 **kwargs)
         if callback:
             current += 1
             if not callback(current, total):
@@ -64,15 +73,15 @@ def fetch_file(url, size, path, auth, **kwargs):
 
     scheme = urlsplit(url, allow_fragments=True).scheme.lower()
     if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
-        return fetch_http.get_file(url, path, auth)
+        return fetch_http.get_file(url, path, auth, **kwargs)
     if SCHEME_FTP == scheme:
-        return fetch_ftp.get_file(url, path, auth)
+        return fetch_ftp.get_file(url, path, auth, **kwargs)
     elif SCHEME_GLOBUS == scheme:
-        return fetch_globus.get_file(url, path, auth)
+        return fetch_globus.get_file(url, path, auth, **kwargs)
     elif SCHEME_ARK == scheme or SCHEME_MINID == scheme:
         resolvers = kwargs.get("resolvers")
         for url in fetch_identifier.resolve(url, resolvers):
-            if fetch_file(url, size, path, auth):
+            if fetch_file(url, size, path, auth, **kwargs):
                 return True
         return False
     elif SCHEME_TAG == scheme:

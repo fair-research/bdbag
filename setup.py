@@ -60,7 +60,7 @@ setup(
                       'tzlocal',
                       'requests>=2.7.0',
                       'certifi',
-                      'bagit==1.6.4'],
+                      'bagit==1.7.0'],
     license='Apache 2.0',
     classifiers=[
         'Intended Audience :: Science/Research',

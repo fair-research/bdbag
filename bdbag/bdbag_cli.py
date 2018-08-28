@@ -3,7 +3,8 @@ import os
 import sys
 import logging
 import bagit
-from bdbag import bdbag_api as bdb, get_typed_exception, DEFAULT_CONFIG_FILE, FILTER_DOCSTRING, VERSION
+from bdbag import bdbag_api as bdb, get_typed_exception, FILTER_DOCSTRING, VERSION
+from bdbag_config import DEFAULT_CONFIG_FILE
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
 BAG_METADATA = dict()

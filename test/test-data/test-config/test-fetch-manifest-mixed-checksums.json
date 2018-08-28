@@ -1,0 +1,16 @@
+[
+  {
+    "url":"ark:/57799/b9dd5t",
+    "length": 223,
+    "filename": "test-fetch-identifier.txt",
+    "sha1":"3880761bc5c5ae84171f286bd1dc8f8677a027cd",
+    "sha256": "59e6e0b91b51d49a5fb0e1068980d2e7d2b2001a6d11c59c64156d32e197a626"
+  },
+  {
+    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt",
+    "length":201,
+    "filename":"test-fetch-http.txt",
+    "md5":"f3ad851f4213d41ce9690542010bffa0",
+    "sha512":"1bdbb4fc33dbea55ee0e5473062cbd003221c571c6110e2b3d2ebe5288a95a74ccd60fbbbcbd42fcfa4cd320b980ca27d537e6d29e60f73822e301a7ba6c1bfa"
+  }
+]

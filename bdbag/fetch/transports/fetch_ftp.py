@@ -33,9 +33,10 @@ def get_credentials(url, auth_config):
     return credentials
 
 
-def get_file(url, output_path, auth_config, credentials=None):
+def get_file(url, output_path, auth_config, **kwargs):
 
     try:
+        credentials = kwargs.get("credentials")
         if not credentials:
             credentials = get_credentials(url, auth_config)
         output_dir = os.path.dirname(os.path.abspath(output_path))
@@ -51,11 +52,11 @@ def get_file(url, output_path, auth_config, credentials=None):
         urlretrieve(full_url, output_path)
         elapsed = datetime.datetime.now() - start
         total = os.path.getsize(output_path)
-        totalSecs = elapsed.total_seconds()
-        totalMBs = float(total) / float((1024 * 1024))
-        throughput = str("%.3f MB/second" % (totalMBs / totalSecs if totalSecs > 0 else 0.001))
+        total_secs = elapsed.total_seconds()
+        total_mbs = float(total) / float((1024 * 1024))
+        throughput = str("%.3f MB/second" % (total_mbs / total_secs if total_secs > 0 else 0.001))
         logger.info('File [%s] transfer successful. %.3f MB transferred at %s. Elapsed time: %s. ' %
-                    (output_path, totalMBs, throughput, elapsed))
+                    (output_path, total_mbs, throughput, elapsed))
         return True
 
     except Exception as e:

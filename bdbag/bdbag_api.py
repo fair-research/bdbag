@@ -12,8 +12,8 @@ import bdbag.bdbag_ro as bdbro
 from datetime import date, datetime
 from tzlocal import get_localzone
 from collections import OrderedDict
-from bdbag import VERSION, BAGIT_VERSION, PROJECT_URL, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, BDBAG_RO_PROFILE_ID, \
-    DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_PATH, DEFAULT_ID_RESOLVERS, ID_RESOLVER_TAG, get_typed_exception
+from bdbag import *
+from bdbag_config import *
 from bdbag.fetch.fetcher import fetch_bag_files
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
@@ -27,36 +27,6 @@ def configure_logging(level=logging.INFO, logpath=None):
         logging.basicConfig(filename=logpath, level=level, format=log_format)
     else:
         logging.basicConfig(level=level, format=log_format)
-
-
-def create_default_config():
-    if not os.path.isdir(DEFAULT_CONFIG_PATH):
-        try:
-            os.makedirs(DEFAULT_CONFIG_PATH)
-        except OSError as error:
-            if error.errno != errno.EEXIST:
-                raise
-    with open(DEFAULT_CONFIG_FILE, 'w') as cf:
-        cf.write(json.dumps(DEFAULT_CONFIG, sort_keys=True, indent=4, separators=(',', ': ')))
-        cf.close()
-
-
-def read_config(config_file, create_default=True):
-    if config_file == DEFAULT_CONFIG_FILE and not os.path.isfile(config_file) and create_default:
-        logger.debug("No default configuration file found, attempting to create one.")
-        try:
-            create_default_config()
-        except Exception as e:
-            logger.debug("Unable to create default configuration file %s. Using internal defaults. %s" %
-                         (DEFAULT_CONFIG_FILE, get_typed_exception(e)))
-    if os.path.isfile(config_file):
-        with open(config_file) as cf:
-            config = cf.read()
-    else:
-        config = json.dumps(DEFAULT_CONFIG)
-        logger.warning("Unable to read configuration file: [%s]. Using internal defaults." % DEFAULT_CONFIG_FILE)
-
-    return json.loads(config, object_pairs_hook=OrderedDict)
 
 
 def read_metadata(metadata_file):
@@ -194,20 +164,20 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
         if not quiet:
             logger.warning(
                 "%s. Resolve this file reference by either 1) adding the missing file to the bag or 2) if the file is "
-                "a payload file, adding a remote file reference in fetch.txt. or 3) re-run in \"update\" mode in order "
-                "to remove this file from the bag manifest." % get_typed_exception(e))
+                "a payload file, adding a remote file reference in fetch.txt. or 3) re-run with the  \"update\" "
+                "argument in order to remove this file from the bag manifest." % get_typed_exception(e))
     for path in only_on_fs:
         e = bdbagit.UnexpectedFile(path)
         if not quiet:
             logger.warning(
-                "%s. Re-run with the \"update\" flag set in order to add this file to the manifest."
+                "%s. Re-run with the \"update\" argument in order to add this file to the manifest."
                 % get_typed_exception(e))
     for path in only_in_fetch:
         e = bdbagit.UnexpectedRemoteFile(path)
         if not quiet:
             logger.warning(
                 "%s. Ensure that any remote file references from fetch.txt are also present in the manifest and "
-                "re-run with the \"update\" flag set in order to apply this change." % get_typed_exception(e))
+                "re-run with the \"update\" argument in order to apply this change." % get_typed_exception(e))
 
     return payload_consistent
 
@@ -251,15 +221,15 @@ def make_bag(bag_path,
         pass
 
     config = read_config(config_file)
-    bag_config = config['bag_config']
-
-    bag_algorithms = algs if algs else bag_config.get('bag_algorithms', ['md5', 'sha256'])
-    bag_processes = bag_config.get('bag_processes', 1)
+    bag_config = config[BAG_CONFIG_TAG]
+    bag_version = bag_config.get(BAG_SPEC_VERSION_TAG, DEFAULT_BAG_SPEC_VERSION)
+    bag_algorithms = algs if algs else bag_config.get(BAG_ALGORITHMS_TAG, ['md5', 'sha256'])
+    bag_processes = bag_config.get(BAG_PROCESSES_TAG, 1)
 
     # bag metadata merge order: config(if new, else if update use existing)->metadata_file->metadata
     if not update or (update and not os.path.isfile(os.path.join(bag_path, "bag-info.txt"))):
         # config metadata
-        bag_metadata = bag_config.get('bag_metadata', {}).copy()
+        bag_metadata = bag_config.get(BAG_METADATA_TAG, {}).copy()
     else:
         bag_metadata = bag.info
 
@@ -312,7 +282,8 @@ def make_bag(bag_path,
                                bag_info=bag_metadata,
                                processes=bag_processes,
                                checksums=bag_algorithms,
-                               remote_entries=remote_files)
+                               remote_entries=remote_files,
+                               spec_version=bag_version)
         logger.info('Created bag: %s' % bag_path)
         if bag_ro_metadata:
             bdbro.serialize_bag_ro_metadata(bag_ro_metadata, bag_path)
@@ -564,13 +535,15 @@ def resolve_fetch(bag_path,
                   callback=None,
                   keychain_file=DEFAULT_KEYCHAIN_FILE,
                   config_file=DEFAULT_CONFIG_FILE,
-                  filter_expr=None):
+                  filter_expr=None,
+                  **kwargs):
     bag = bdbagit.BDBag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=True):
         logger.info("Attempting to resolve remote file references from fetch.txt%s" %
                     ("." if not filter_expr else ", using filter expression [%s]." % filter_expr))
         config = read_config(config_file if config_file else DEFAULT_CONFIG_FILE)
-        return fetch_bag_files(bag, keychain_file,
-                               force=force, callback=callback, config=config, filter_expr=filter_expr)
+
+        return fetch_bag_files(
+            bag, keychain_file, force=force, callback=callback, config=config, filter_expr=filter_expr, **kwargs)
     else:
         return True

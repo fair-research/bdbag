@@ -5,7 +5,7 @@ import json
 import collections
 import stat
 import bdbag
-from bdbag import DEFAULT_CONFIG_PATH as DEFAULT_KEYCHAIN_PATH
+from bdbag.bdbag_config import DEFAULT_CONFIG_PATH as DEFAULT_KEYCHAIN_PATH
 
 logger = logging.getLogger(__name__)
 
