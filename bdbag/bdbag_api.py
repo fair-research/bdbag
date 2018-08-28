@@ -13,7 +13,7 @@ from datetime import date, datetime
 from tzlocal import get_localzone
 from collections import OrderedDict
 from bdbag import *
-from bdbag_config import *
+from bdbag.bdbag_config import *
 from bdbag.fetch.fetcher import fetch_bag_files
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 

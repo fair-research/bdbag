@@ -2,7 +2,7 @@ import json
 import logging
 import requests
 from bdbag import urlsplit, get_typed_exception
-from bdbag_config import DEFAULT_ID_RESOLVERS
+from bdbag.bdbag_config import DEFAULT_ID_RESOLVERS
 from collections import OrderedDict
 
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ import fnmatch
 import logging
 from requests.cookies import RequestsCookieJar
 from bdbag import stob, get_typed_exception
-from bdbag_config import *
+from bdbag.bdbag_config import *
 
 if sys.version_info > (3,):
     from http.cookiejar import MozillaCookieJar
