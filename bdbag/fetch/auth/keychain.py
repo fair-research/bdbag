@@ -34,7 +34,7 @@ DEFAULT_KEYCHAIN = [
     },
     {
         "uri": "globus://<endpoint>/<path>",
-        "auth_type": "token",
+        "auth_type": "globus_transfer",
         "auth_params": {
             "local_endpoint": "",
             "transfer_token": ""

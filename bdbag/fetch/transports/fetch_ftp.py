@@ -2,6 +2,7 @@ import os
 import datetime
 import logging
 from bdbag import urlsplit, urlunsplit, urlretrieve, get_typed_exception
+from bdbag.fetch import get_transfer_summary
 import bdbag.fetch.auth.keychain as keychain
 
 logger = logging.getLogger(__name__)
@@ -52,11 +53,8 @@ def get_file(url, output_path, auth_config, **kwargs):
         urlretrieve(full_url, output_path)
         elapsed = datetime.datetime.now() - start
         total = os.path.getsize(output_path)
-        total_secs = elapsed.total_seconds()
-        total_mbs = float(total) / float((1024 * 1024))
-        throughput = str("%.3f MB/second" % (total_mbs / total_secs if total_secs > 0 else 0.001))
-        logger.info('File [%s] transfer successful. %.3f MB transferred at %s. Elapsed time: %s. ' %
-                    (output_path, total_mbs, throughput, elapsed))
+        summary = get_transfer_summary(total, elapsed)
+        logger.info('File [%s] transfer successful. %s' % (output_path, summary))
         return True
 
     except Exception as e:

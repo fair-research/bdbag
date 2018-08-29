@@ -1,19 +1,17 @@
 import os
 import datetime
 import logging
+import certifi
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-import certifi
 from bdbag import urlsplit, get_typed_exception
+from bdbag.fetch import Kilobyte, get_transfer_summary
 import bdbag.fetch.auth.keychain as keychain
-import bdbag.fetch.auth.cookies as cookies
 
 logger = logging.getLogger(__name__)
 
-Kilobyte = 1024
-Megabyte = 1024 ** 2
-CHUNK_SIZE = 1024 * 10240
+CHUNK_SIZE = Kilobyte * 10240
 SESSIONS = dict()
 HEADERS = {'Connection': 'keep-alive'}
 
@@ -42,7 +40,7 @@ def get_session(url, auth_config):
                 session = SESSIONS[auth.uri]
                 break
             else:
-                session = get_new_session()
+                session = init_new_session()
 
             if auth.auth_type == 'cookie':
                 if auth.auth_params and hasattr(auth.auth_params, 'cookies'):
@@ -53,7 +51,17 @@ def get_session(url, auth_config):
                     SESSIONS[auth.uri] = session
                     break
 
-            # if we get here the assumption is that the auth_type is either http-basic or http-form
+            if auth.auth_type == 'bearer-token':
+                if auth.auth_params and hasattr(auth.auth_params, 'token'):
+                    session.headers.update({"Authorization": "Bearer " + auth.auth_params.token})
+                    SESSIONS[auth.uri] = session
+                    break
+                else:
+                    logging.warning("Missing required parameters [token] for auth_type [%s] for keychain entry [%s]" %
+                                    (auth.auth_type, auth.uri))
+
+            # if we get here the assumption is that the auth_type is either http-basic or http-form and that an
+            # actual session "login" request is necessary
             auth_uri = auth.uri
             if keychain.has_auth_attr(auth, 'auth_uri'):
                 auth_uri = auth.auth_uri
@@ -97,13 +105,13 @@ def get_session(url, auth_config):
         base_url = str("%s://%s" % (url_parts.scheme, url_parts.netloc))
         session = SESSIONS.get(base_url, None)
         if not session:
-            session = get_new_session()
+            session = init_new_session()
             SESSIONS[base_url] = session
 
     return session
 
 
-def get_new_session():
+def init_new_session():
     session = requests.session()
     retries = Retry(connect=5,
                     read=5,
@@ -116,23 +124,32 @@ def get_new_session():
     return session
 
 
-def get_file(url, output_path, auth_config, headers=None, session=None, **kwargs):
+def get_file(url, output_path, auth_config, **kwargs):
 
     try:
-        if not session:
-            session = get_session(url, auth_config)
+        session = get_session(url, auth_config)
         output_dir = os.path.dirname(os.path.abspath(output_path))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
+        headers = kwargs.get("headers")
         if not headers:
             headers = HEADERS
         else:
             headers.update(HEADERS)
         logger.info("Attempting GET from URL: %s" % url)
-        r = session.get(url, headers=headers, stream=True, verify=certifi.where(), cookies=kwargs.get("cookies"))
+        r = session.get(url,
+                        headers=headers,
+                        stream=True,
+                        allow_redirects=kwargs.get("allow_redirects", True),
+                        verify=certifi.where(),
+                        cookies=kwargs.get("cookies"))
         if r.status_code == 401:
             session = get_session(url, auth_config)
-            r = session.get(url, headers=headers, stream=True, verify=certifi.where())
+            r = session.get(url,
+                            headers=headers,
+                            stream=True,
+                            allow_redirects=kwargs.get("allow_redirects", True),
+                            verify=certifi.where())
         if r.status_code != 200:
             logger.error('HTTP GET Failed for URL: %s' % url)
             logger.error("Host %s responded:\n\n%s" % (urlsplit(url).netloc,  r.text))
@@ -146,13 +163,7 @@ def get_file(url, output_path, auth_config, headers=None, session=None, **kwargs
                     data_file.write(chunk)
                     total += len(chunk)
             elapsed_time = datetime.datetime.now() - start
-            total_secs = elapsed_time.total_seconds()
-            transferred = \
-                float(total) / float(Kilobyte) if total < Megabyte else float(total) / float(Megabyte)
-            throughput = str(" at %.2f MB/second" % (transferred / total_secs)) if (total_secs >= 1) else ""
-            elapsed = str("Elapsed time: %s." % elapsed_time) if (total_secs > 0) else ""
-            summary = "%.3f %s transferred%s. %s" % \
-                      (transferred, "KB" if total < Megabyte else "MB", throughput, elapsed)
+            summary = get_transfer_summary(total, elapsed_time)
             logger.info('File [%s] transfer successful. %s' % (output_path, summary))
             return True
 

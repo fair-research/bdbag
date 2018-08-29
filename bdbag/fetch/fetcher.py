@@ -27,7 +27,8 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
     success = True
     auth = read_keychain(keychain_file)
     resolvers = config.get(ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS) if config else DEFAULT_ID_RESOLVERS
-    cookies = load_and_merge_cookie_jars(find_cookie_jars(config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG])))
+    cookies = load_and_merge_cookie_jars(find_cookie_jars(config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG]))) \
+        if kwargs.get("cookie_scan", True) else None
     current = 0
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     start = datetime.datetime.now()

@@ -22,18 +22,19 @@ def validate_auth_config(auth):
     return True
 
 
-def authenticate(url, auth_config):
+def get_credentials(url, auth_config):
 
+    credentials = (None, None)
     for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
-        try:
-            if not validate_auth_config(auth):
-                continue
-            if auth.auth_type == 'token':
-                return auth.auth_params.transfer_token, auth.auth_params.local_endpoint
-        except Exception as e:
-            logger.warn("Unhandled exception getting Globus token: %s" % get_typed_exception(e))
 
-    return None, None
+        if not validate_auth_config(auth):
+            continue
+
+        if auth.auth_type == 'globus_transfer':
+            credentials = (auth.auth_params.transfer_token, auth.auth_params.local_endpoint)
+            break
+
+    return credentials
 
 
 def get_file(url, output_path, auth_config, **kwargs):
@@ -57,18 +58,15 @@ def get_file(url, output_path, auth_config, **kwargs):
         else:
             dest_path = os.path.abspath(output_path)
 
-        token = kwargs.get("token")
-        if not token:
-            token, dest_endpoint = authenticate(url, auth_config)
+        token, dest_endpoint = get_credentials(url, auth_config)
         if token is None:
-            logger.warn("A valid Globus access token is required to create transfers. "
-                        "Check keychain.json for valid parameters.")
+            logger.warn("A valid Globus Transfer access token is required to create transfers. "
+                        "Check keychain.json for invalid parameters.")
             return False
 
-        dest_endpoint = kwargs.get("dest_endpoint")
         if dest_endpoint is None:
-            logger.warn("A valid Globus destination endpoint must be specified. "
-                        "Check keychain.json for valid parameters.")
+            logger.warn("A valid Globus Transfer destination endpoint must be specified. "
+                        "Check keychain.json for invalid parameters.")
             return False
 
         # initialize transfer client
@@ -98,11 +96,11 @@ def get_file(url, output_path, auth_config, **kwargs):
         data = client.submit_transfer(tdata)
         task_id = data["task_id"]
 
-        logger.info("Globus transfer started with ID %s" % task_id)
+        logger.info("Globus Transfer started with ID %s" % task_id)
         logger.debug("Transferring file %s to %s" % (url, output_path))
         return True
 
     except Exception as e:
-        logger.error('Globus transfer request exception: %s' % get_typed_exception(e))
+        logger.error('Globus Transfer request exception: %s' % get_typed_exception(e))
 
     return False
