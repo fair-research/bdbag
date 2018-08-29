@@ -15,7 +15,6 @@ if sys.version_info > (3,):
 else:
     from StringIO import StringIO
 
-logging.basicConfig(filename='test_api.log', filemode='w', level=logging.DEBUG)
 logger = logging.getLogger()
 
 

@@ -18,7 +18,6 @@ if sys.version_info > (3,):
 else:
     from StringIO import StringIO
 
-logging.basicConfig(filename='test_remote.log', filemode='w', level=logging.DEBUG)
 logger = logging.getLogger()
 
 PATCHED_REQUESTS_GET = None
@@ -110,7 +109,7 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_http(self):
         logger.info(self.getTestHeader('test resolve fetch http'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir)
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
             output = self.stream.getvalue()
@@ -120,7 +119,7 @@ class TestRemoteAPI(BaseTest):
     def _test_resolve_fetch_http_with_filter(self, expr, files=list(frozenset())):
         logger.info(self.getTestHeader('test resolve fetch http with filter expression "%s"' % expr))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir, filter_expr=expr)
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir, filter_expr=expr, cookie_scan=False)
             for test_file in files:
                 self.assertTrue(ospif(ospj(self.test_bag_fetch_http_dir, test_file)))
         except Exception as e:
@@ -147,7 +146,7 @@ class TestRemoteAPI(BaseTest):
 
             PATCHED_REQUESTS_GET.start()
             bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, 'test-keychain-1.json'))
+                              keychain_file=ospj(self.test_config_dir, 'test-keychain-1.json'), cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
             output = self.stream.getvalue()
@@ -163,7 +162,7 @@ class TestRemoteAPI(BaseTest):
                                                         create=True)
             PATCHED_REQUESTS_POST.start()
             bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, keychain_file))
+                              keychain_file=ospj(self.test_config_dir, keychain_file), cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
             output = self.stream.getvalue()
@@ -182,7 +181,7 @@ class TestRemoteAPI(BaseTest):
         logger.info(self.getTestHeader('test resolve fetch http cookie auth'))
         try:
             bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, 'test-keychain-4.json'))
+                              keychain_file=ospj(self.test_config_dir, 'test-keychain-4.json'), cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
             output = self.stream.getvalue()
@@ -192,7 +191,7 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_ark(self):
         logger.info(self.getTestHeader('test resolve fetch ark'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_ark_dir)
+            bdb.resolve_fetch(self.test_bag_fetch_ark_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=False)
             output = self.stream.getvalue()
@@ -202,7 +201,7 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_minid(self):
         logger.info(self.getTestHeader('test resolve fetch minid'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_minid_dir)
+            bdb.resolve_fetch(self.test_bag_fetch_minid_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_minid_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_minid_dir, fast=False)
             output = self.stream.getvalue()

@@ -21,7 +21,6 @@ from bdbag import bdbagit as bagit
 import mock
 
 
-logging.basicConfig(filename='test_bdbagit.log', filemode='w', level=logging.DEBUG)
 logger = logging.getLogger()
 
 
@@ -62,6 +61,10 @@ class SelfCleaningTestCase(unittest.TestCase):
 
         super(SelfCleaningTestCase, self).tearDown()
 
+    def getTestHeader(self, desc, args=None):
+        return str('\n\n[BDBagit: %s: %s]\n%s') % \
+               (self.__class__.__name__, desc, (' '.join(args) + '\n') if args else "")
+
 
 @mock.patch('bagit.VERSION', new='1.5.4')  # This avoids needing to change expected hashes on each release
 class TestSingleProcessValidation(SelfCleaningTestCase):
@@ -70,6 +73,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         return bag.validate(*args, **kwargs)
 
     def test_make_bag_sha1_sha256_manifest(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['sha1', 'sha256'])
         # check that relevant manifests are created
         self.assertTrue(os.path.isfile(j(self.tmpdir, 'manifest-sha1.txt')))
@@ -78,6 +82,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertTrue(self.validate(bag, fast=True))
 
     def test_make_bag_md5_sha256_manifest(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['md5', 'sha256'])
         # check that relevant manifests are created
         self.assertTrue(os.path.isfile(j(self.tmpdir, 'manifest-md5.txt')))
@@ -86,6 +91,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertTrue(self.validate(bag, fast=True))
 
     def test_make_bag_md5_sha1_sha256_manifest(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['md5', 'sha1', 'sha256'])
         # check that relevant manifests are created
         self.assertTrue(os.path.isfile(j(self.tmpdir, 'manifest-md5.txt')))
@@ -95,6 +101,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertTrue(self.validate(bag, fast=True))
 
     def test_validate_flipped_bit(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         readme = j(self.tmpdir, "data", "README")
         txt = slurp_text_file(readme)
@@ -108,6 +115,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertTrue(self.validate(bag, completeness_only=True))
 
     def test_validate_fast(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         self.assertEqual(self.validate(bag, fast=True), True)
         os.remove(j(self.tmpdir, "data", "loc",
@@ -115,6 +123,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertRaises(bagit.BagValidationError, self.validate, bag, fast=True)
 
     def test_validate_completeness(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         old_path = j(self.tmpdir, "data", "README")
         new_path = j(self.tmpdir, "data", "extra_file")
@@ -127,12 +136,14 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
             self.assertEqual(m.call_count, 0)
 
     def test_validate_fast_without_oxum(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         os.remove(j(self.tmpdir, "bag-info.txt"))
         bag = bagit.BDBag(self.tmpdir)
         self.assertRaises(bagit.BagValidationError, self.validate, bag, fast=True)
 
     def test_validate_slow_without_oxum_extra_file(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         os.remove(j(self.tmpdir, "bag-info.txt"))
         with open(j(self.tmpdir, "data", "extra_file"), "w") as ef:
@@ -141,6 +152,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertRaises(bagit.BagValidationError, self.validate, bag, fast=False)
 
     def test_validate_missing_directory(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir)
 
         tmp_data_dir = os.path.join(self.tmpdir, 'data')
@@ -154,6 +166,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
                          str(error_catcher.exception))
 
     def test_validation_error_details(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['md5'], bag_info={'Bagging-Date': '1970-01-01'})
         readme = j(self.tmpdir, "data", "README")
         txt = slurp_text_file(readme)
@@ -188,6 +201,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
             self.fail("didn't get BagValidationError")
 
     def test_validation_completeness_error_details(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['md5'], bag_info={'Bagging-Date': '1970-01-01'})
 
         old_path = j(self.tmpdir, "data", "README")
@@ -242,6 +256,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
     def test_bom_in_bagit_txt(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         BOM = codecs.BOM_UTF8
         if sys.version_info[0] >= 3:
@@ -254,17 +269,20 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertRaises(bagit.BagValidationError, self.validate, bag)
 
     def test_missing_file(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         os.remove(j(self.tmpdir, 'data', 'loc', '3314493806_6f1db86d66_o_d.jpg'))
         self.assertRaises(bagit.BagValidationError, self.validate, bag)
 
     def test_handle_directory_end_slash_gracefully(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir + '/')
         self.assertTrue(self.validate(bag))
         bag2 = bagit.BDBag(self.tmpdir + '/')
         self.assertTrue(self.validate(bag2))
 
     def test_allow_extraneous_files_in_base(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         self.assertTrue(self.validate(bag))
         f = j(self.tmpdir, "IGNOREFILE")
@@ -272,6 +290,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
             self.assertTrue(self.validate(bag))
 
     def test_allow_extraneous_dirs_in_base(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         self.assertTrue(self.validate(bag))
         d = j(self.tmpdir, "IGNOREDIR")
@@ -279,18 +298,21 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertTrue(self.validate(bag))
 
     def test_missing_tagfile_raises_error(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         self.assertTrue(self.validate(bag))
         os.remove(j(self.tmpdir, "bagit.txt"))
         self.assertRaises(bagit.BagValidationError, self.validate, bag)
 
     def test_missing_manifest_raises_error(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['sha512'])
         self.assertTrue(self.validate(bag))
         os.remove(j(self.tmpdir, "manifest-sha512.txt"))
         self.assertRaises(bagit.BagValidationError, self.validate, bag)
 
     def test_mixed_case_checksums(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['md5'])
         hashstr = {}
         # Extract entries only for the payload and ignore
@@ -322,6 +344,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertTrue(self.validate(bag))
 
     def test_unsafe_directory_entries_raise_error(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bad_paths = None
         # This could be more granular, but ought to be
         # adequate.
@@ -352,6 +375,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
             self.assertRaises(bagit.BagError, bagit.BDBag, self.tmpdir)
 
     def test_multiple_oxum_values(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         with open(j(self.tmpdir, "bag-info.txt"), "a") as baginfo:
             baginfo.write('Payload-Oxum: 7.7\n')
@@ -359,6 +383,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertTrue(self.validate(bag, fast=True))
 
     def test_validate_optional_tagfile(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['md5'])
         tagdir = tempfile.mkdtemp(dir=self.tmpdir)
         with open(j(tagdir, "tagfile"), "w") as tagfile:
@@ -385,6 +410,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertRaises(bagit.BagValidationError, self.validate, bag)
 
     def test_validate_optional_tagfile_in_directory(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['md5'])
         tagdir = tempfile.mkdtemp(dir=self.tmpdir)
 
@@ -416,6 +442,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
         self.assertRaises(bagit.BagValidationError, self.validate, bag)
 
     def test_sha1_tagfile(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         info = {'Bagging-Date': '1970-01-01', 'Contact-Email': 'ehs@pobox.com',
                 'Bag-Software-Agent': 'bagit.py v1.5.4 <https://github.com/LibraryOfCongress/bagit-python>'}
         bag = bagit.make_bag(self.tmpdir, checksums=['sha1'], bag_info=info)
@@ -425,6 +452,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
     def test_validate_unreadable_file(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=["md5"])
         os.chmod(j(self.tmpdir, "data/loc/2478433644_2839c5e8b8_o_d.jpg"), 0)
         self.assertRaises(bagit.BagValidationError, self.validate, bag, fast=False)
@@ -434,6 +462,7 @@ class TestSingleProcessValidation(SelfCleaningTestCase):
 class TestBag(SelfCleaningTestCase):
 
     def test_make_bag(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         info = {'Bagging-Date': '1970-01-01', 'Contact-Email': 'ehs@pobox.com',
                 'Bag-Software-Agent': 'bagit.py v1.5.4 <https://github.com/LibraryOfCongress/bagit-python>'}
         bagit.make_bag(self.tmpdir, bag_info=info, checksums=['md5'])
@@ -474,6 +503,7 @@ class TestBag(SelfCleaningTestCase):
         self.assertIn('0a6ffcffe67e9a34e44220f7ebcb4baa bag-info.txt', tagmanifest_txt)
 
     def test_make_bag_sha1_manifest(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir, checksums=['sha1'])
         # check manifest
         self.assertTrue(os.path.isfile(j(self.tmpdir, 'manifest-sha1.txt')))
@@ -489,6 +519,7 @@ class TestBag(SelfCleaningTestCase):
                       manifest_txt)
 
     def test_make_bag_sha256_manifest(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir, checksums=['sha256'])
         # check manifest
         self.assertTrue(os.path.isfile(j(self.tmpdir, 'manifest-sha256.txt')))
@@ -503,6 +534,7 @@ class TestBag(SelfCleaningTestCase):
             '45d257c93e59ec35187c6a34c8e62e72c3e9cfbb548984d6f6e8deb84bac41f4  data/si/4011399822_65987a4806_b_d.jpg', manifest_txt)
 
     def test_make_bag_sha512_manifest(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir, checksums=['sha512'])
         # check manifest
         self.assertTrue(os.path.isfile(j(self.tmpdir, 'manifest-sha512.txt')))
@@ -513,9 +545,11 @@ class TestBag(SelfCleaningTestCase):
         self.assertIn('af1c03483cd1999098cce5f9e7689eea1f81899587508f59ba3c582d376f8bad34e75fed55fd1b1c26bd0c7a06671b85e90af99abac8753ad3d76d8d6bb31ebd  data/si/4011399822_65987a4806_b_d.jpg', manifest_txt)
 
     def test_make_bag_unknown_algorithm(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         self.assertRaises(ValueError, bagit.make_bag, self.tmpdir, checksums=['not-really-a-name'])
 
     def test_make_bag_with_empty_directory(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         tmpdir = tempfile.mkdtemp()
         try:
             bagit.make_bag(tmpdir)
@@ -523,6 +557,7 @@ class TestBag(SelfCleaningTestCase):
             shutil.rmtree(tmpdir)
 
     def test_make_bag_with_empty_directory_tree(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         tmpdir = tempfile.mkdtemp()
         path = j(tmpdir, "test1", "test2")
         try:
@@ -532,6 +567,7 @@ class TestBag(SelfCleaningTestCase):
             shutil.rmtree(tmpdir)
 
     def test_make_bag_with_bogus_directory(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bogus_directory = os.path.realpath('this-directory-does-not-exist')
 
         with self.assertRaises(RuntimeError) as error_catcher:
@@ -542,6 +578,7 @@ class TestBag(SelfCleaningTestCase):
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
     def test_make_bag_with_unreadable_source(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         os.chmod(self.tmpdir, 0)
 
         with self.assertRaises(bagit.BagError) as error_catcher:
@@ -552,6 +589,7 @@ class TestBag(SelfCleaningTestCase):
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
     def test_make_bag_with_unreadable_subdirectory(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         # We'll set this write-only to exercise the second permission check in make_bag:
         os.chmod(j(self.tmpdir, 'loc'), 0o200)
 
@@ -563,6 +601,7 @@ class TestBag(SelfCleaningTestCase):
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
     def test_make_bag_with_unwritable_source(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         path_suffixes = ('', 'loc')
 
         for path_suffix in reversed(path_suffixes):
@@ -576,6 +615,7 @@ class TestBag(SelfCleaningTestCase):
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
     def test_make_bag_with_unreadable_file(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         os.chmod(j(self.tmpdir, 'loc', '2478433644_2839c5e8b8_o_d.jpg'), 0)
 
         with self.assertRaises(bagit.BagError) as error_catcher:
@@ -585,6 +625,7 @@ class TestBag(SelfCleaningTestCase):
                          str(error_catcher.exception))
 
     def test_make_bag_with_data_dir_present(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         os.mkdir(j(self.tmpdir, 'data'))
         bagit.make_bag(self.tmpdir)
 
@@ -592,6 +633,7 @@ class TestBag(SelfCleaningTestCase):
         self.assertTrue(os.path.isdir(j(self.tmpdir, 'data', 'data')))
 
     def test_bag_class(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         info = {'Contact-Email': 'ehs@pobox.com'}
         bag = bagit.make_bag(self.tmpdir, bag_info=info, checksums=['sha384'])
         self.assertIsInstance(bag, bagit.BDBag)
@@ -605,20 +647,24 @@ class TestBag(SelfCleaningTestCase):
                          [j(self.tmpdir, 'manifest-sha384.txt')])
 
     def test_bag_string_representation(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         self.assertEqual(self.tmpdir, str(bag))
 
     def test_has_oxum(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         self.assertTrue(bag.has_oxum())
 
     def test_bag_constructor(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         bag = bagit.BDBag(self.tmpdir)
         self.assertEqual(type(bag), bagit.BDBag)
         self.assertEqual(len(list(bag.payload_files())), 5)
 
     def test_is_valid(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         bag = bagit.BDBag(self.tmpdir)
         self.assertTrue(bag.is_valid())
@@ -627,6 +673,7 @@ class TestBag(SelfCleaningTestCase):
         self.assertFalse(bag.is_valid())
 
     def test_garbage_in_bagit_txt(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir)
         bagfile = """BagIt-Version: 0.97
 Tag-File-Character-Encoding: UTF-8
@@ -639,10 +686,12 @@ Tag-File-Character-Encoding: UTF-8
     @unittest.skipIf((sys.version_info < (2, 7) or (platform.system() == "Windows")),
                      'multiprocessing is unstable on Python 2.6, or on Windows')
     def test_make_bag_multiprocessing(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir, processes=2)
         self.assertTrue(os.path.isdir(j(self.tmpdir, 'data')))
 
     def test_multiple_meta_values(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         baginfo = {"Multival-Meta": [7, 4, 8, 6, 8]}
         bag = bagit.make_bag(self.tmpdir, baginfo)
         meta = bag.info.get("Multival-Meta")
@@ -650,6 +699,7 @@ Tag-File-Character-Encoding: UTF-8
         self.assertEqual(len(meta), len(baginfo["Multival-Meta"]))
 
     def test_unicode_bag_info(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         info = {
             'Test-BMP': u'This element contains a \N{LATIN SMALL LETTER U WITH DIAERESIS}',
             'Test-SMP': u'This element contains a \N{LINEAR B SYMBOL B049}',
@@ -662,6 +712,7 @@ Tag-File-Character-Encoding: UTF-8
             self.assertIn(v, bag_info_txt)
 
     def test_unusual_bag_info_separators(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
 
         with open(j(self.tmpdir, 'bag-info.txt'), 'a') as f:
@@ -679,6 +730,7 @@ Tag-File-Character-Encoding: UTF-8
         self.assertEqual(bag.info['Test-Tag'], list(map(str, range(1, 7))))
 
     def test_default_bagging_date(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         info = {'Contact-Email': 'ehs@pobox.com'}
         bagit.make_bag(self.tmpdir, bag_info=info)
         bag_info_txt = slurp_text_file(j(self.tmpdir, 'bag-info.txt'))
@@ -687,6 +739,7 @@ Tag-File-Character-Encoding: UTF-8
         self.assertTrue('Bagging-Date: %s' % today in bag_info_txt)
 
     def test_missing_tagmanifest_valid(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         info = {'Contact-Email': 'ehs@pobox.com'}
         bag = bagit.make_bag(self.tmpdir, bag_info=info, checksums=['md5'])
         self.assertTrue(bag.is_valid())
@@ -694,6 +747,7 @@ Tag-File-Character-Encoding: UTF-8
         self.assertTrue(bag.is_valid())
 
     def test_carriage_return_manifest(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         with open(j(self.tmpdir, "newline"), 'w') as whatever:
             whatever.write("ugh\r")
         bag = bagit.make_bag(self.tmpdir)
@@ -701,6 +755,7 @@ Tag-File-Character-Encoding: UTF-8
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
     def test_payload_permissions(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         perms = os.stat(self.tmpdir).st_mode
 
         # our tmpdir should not be writeable by group
@@ -717,6 +772,7 @@ Tag-File-Character-Encoding: UTF-8
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
     def test_save_bag_to_unwritable_directory(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['sha256'])
 
         os.chmod(self.tmpdir, 0)
@@ -729,6 +785,7 @@ Tag-File-Character-Encoding: UTF-8
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
     def test_save_bag_with_unwritable_file(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=['sha256'])
 
         os.chmod(os.path.join(self.tmpdir, 'bag-info.txt'), 0)
@@ -740,6 +797,7 @@ Tag-File-Character-Encoding: UTF-8
                          str(error_catcher.exception))
 
     def test_save_manifests(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         self.assertTrue(bag.is_valid())
         bag.save(manifests=True)
@@ -751,6 +809,7 @@ Tag-File-Character-Encoding: UTF-8
         self.assertTrue(bag.is_valid())
 
     def test_save_manifests_deleted_files(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         self.assertTrue(bag.is_valid())
         bag.save(manifests=True)
@@ -761,6 +820,7 @@ Tag-File-Character-Encoding: UTF-8
         self.assertTrue(bag.is_valid())
 
     def test_save_baginfo(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
 
         bag.info["foo"] = "bar"
@@ -776,6 +836,7 @@ Tag-File-Character-Encoding: UTF-8
         self.assertTrue(bag.is_valid())
 
     def test_save_baginfo_with_sha1(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, checksums=["sha1", "md5"])
         self.assertTrue(bag.is_valid())
         bag.save()
@@ -787,6 +848,7 @@ Tag-File-Character-Encoding: UTF-8
         self.assertTrue(bag.is_valid())
 
     def test_save_only_baginfo(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir)
         with open(j(self.tmpdir, 'data', 'newfile'), 'w') as nf:
             nf.write('newfile')
@@ -798,10 +860,12 @@ Tag-File-Character-Encoding: UTF-8
         self.assertFalse(bag.is_valid())
 
     def test_make_bag_with_newline(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, {"test": "foo\nbar"})
         self.assertEqual(bag.info["test"], "foobar")
 
     def test_unicode_in_tags(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bag = bagit.make_bag(self.tmpdir, {"test": '♡'})
         bag = bagit.BDBag(self.tmpdir)
         self.assertEqual(bag.info['test'], '♡')
@@ -809,6 +873,7 @@ Tag-File-Character-Encoding: UTF-8
     @unittest.skipIf((sys.version_info < (3, 0) or (platform.system() == "Windows")),
                      'Unit test compatibility issue on Windows')
     def test_filename_unicode_normalization(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         # We need to handle cases where the Unicode normalization form of a
         # filename has changed in-transit. This is hard to do portably in both
         # directions because OS X normalizes *all* filenames to an NFD variant
@@ -846,6 +911,7 @@ Tag-File-Character-Encoding: UTF-8
         self.assertTrue(bag.is_valid())
 
     def test_open_bag_with_missing_bagit_txt(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir)
 
         os.unlink(j(self.tmpdir, 'bagit.txt'))
@@ -859,6 +925,7 @@ Tag-File-Character-Encoding: UTF-8
     @unittest.skipIf((sys.version_info < (3, ) and (platform.system() == "Windows")),
                      'Unit test compatibility issue on Windows')
     def test_open_bag_with_malformed_bagit_txt(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir)
 
         with open(j(self.tmpdir, 'bagit.txt'), 'w') as f:
@@ -871,6 +938,7 @@ Tag-File-Character-Encoding: UTF-8
                          str(error_catcher.exception))
 
     def test_open_bag_with_invalid_versions(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir)
 
         for v in ('a.b', '2.', '0.1.2', '1.2.3'):
@@ -884,6 +952,7 @@ Tag-File-Character-Encoding: UTF-8
                              str(error_catcher.exception))
 
     def test_open_bag_with_unsupported_version(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir)
 
         with open(j(self.tmpdir, 'bagit.txt'), 'w') as f:
@@ -896,6 +965,7 @@ Tag-File-Character-Encoding: UTF-8
                          str(error_catcher.exception))
 
     def test_open_bag_with_unknown_encoding(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         bagit.make_bag(self.tmpdir)
 
         with open(j(self.tmpdir, 'bagit.txt'), 'w') as f:
@@ -917,6 +987,7 @@ class TestFetch(SelfCleaningTestCase):
         self.bag = bagit.make_bag(self.tmpdir)
 
     def test_fetch_loader(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         with open(j(self.tmpdir, 'fetch.txt'), 'w') as fetch_txt:
             print('https://photojournal.jpl.nasa.gov/jpeg/PIA21390.jpg 143435 data/loc/3314493806_6f1db86d66_o_d.jpg',
                   file=fetch_txt)
@@ -937,6 +1008,7 @@ class TestFetch(SelfCleaningTestCase):
                              list(self.bag.compare_fetch_with_fs()))
 
     def test_fetch_validation(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         with open(j(self.tmpdir, 'fetch.txt'), 'w') as fetch_txt:
             print('tag:photojournal.jpl.nasa.gov,2017:PIA21390.jpg 143435 data/loc/3314493806_6f1db86d66_o_d.jpg',
                   file=fetch_txt)
@@ -949,6 +1021,7 @@ class TestFetch(SelfCleaningTestCase):
             self.assertTrue(mock_vf.called, msg='Bag.validate() should call Bag.validate_fetch()')
 
     def test_fetch_unsafe_payloads(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         with open(j(self.tmpdir, 'fetch.txt'), 'w') as fetch_txt:
             print('https://photojournal.jpl.nasa.gov/jpeg/PIA21390.jpg 143435 /etc/passwd',
                   file=fetch_txt)

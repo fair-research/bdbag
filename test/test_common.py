@@ -4,7 +4,10 @@ import sys
 import shutil
 import tempfile
 import unittest
+import logging
 import bagit
+
+logging.basicConfig(filename='test.log', filemode='w', level=logging.DEBUG)
 
 
 class BaseTest(unittest.TestCase):
