@@ -29,12 +29,18 @@ def resolve(identifier, resolvers=DEFAULT_ID_RESOLVERS):
             except Exception as e:
                 logger.warning("Unable to parse identifier resolution result, a MINID or other supported JSON metadata "
                                "structure was not found. Exception: %s" % get_typed_exception(e))
-            # need a better way to validate minid response structure
-            locations = info.get('locations', list())
-            for location in locations:
-                uri = location.get('uri', None)
-                if uri:
-                    urls.append(uri)
+            # need a better way to validate response structures -- TODO: overhaul/refactor
+            locations = info.get('locations')
+            if locations:
+                for location in locations:
+                    uri = location.get('uri', None)
+                    if uri:
+                        urls.append(uri)
+            else:  # newer response format
+                locations = info.get('location')
+                if locations:
+                    for location in locations:
+                        urls.append(location)
 
         if urls:
             logger.info("The identifier %s resolved into the following locations: [%s]" % (identifier, ', '.join(urls)))

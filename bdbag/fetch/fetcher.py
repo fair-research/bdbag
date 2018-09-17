@@ -12,12 +12,19 @@ UNIMPLEMENTED = "Transfer protocol \"%s\" is not supported by this implementatio
 
 SCHEME_HTTP = 'http'
 SCHEME_HTTPS = 'https'
+SCHEME_S3 = 's3'
+SCHEME_GS = 'gs'
 SCHEME_GLOBUS = 'globus'
 SCHEME_FTP = 'ftp'
 SCHEME_SFTP = 'sftp'
 SCHEME_ARK = 'ark'
+SCHEME_DOI = 'doi'
+SCHEME_DATAGUID = 'ga4ghdos'
 SCHEME_MINID = 'minid'
 SCHEME_TAG = 'tag'
+
+SUPPORTED_PROTOCOLS = (SCHEME_HTTP, SCHEME_HTTPS, SCHEME_FTP, SCHEME_S3, SCHEME_GS, SCHEME_GLOBUS)
+SUPPORTED_IDENTIFIERS = (SCHEME_ARK, SCHEME_DOI, SCHEME_MINID, SCHEME_DATAGUID)
 
 FetchEntry = namedtuple("FetchEntry", ["url", "length", "filename"])
 
@@ -77,22 +84,24 @@ def fetch_file(url, size, path, auth, **kwargs):
         return fetch_http.get_file(url, path, auth, **kwargs)
     if SCHEME_FTP == scheme:
         return fetch_ftp.get_file(url, path, auth, **kwargs)
-    elif SCHEME_GLOBUS == scheme:
+    if SCHEME_S3 == scheme or SCHEME_GS == scheme:
+        return fetch_boto3.get_file(url, path, auth, **kwargs)
+    if SCHEME_GLOBUS == scheme:
         return fetch_globus.get_file(url, path, auth, **kwargs)
-    elif SCHEME_ARK == scheme or SCHEME_MINID == scheme:
+    if SCHEME_TAG == scheme:
+        logger.info("The fetch entry for file %s specifies the tag URI %s. Tag URIs may represent objects that "
+                    "cannot be directly resolved as network resources and therefore cannot be automatically fetched. "
+                    "Such files must be acquired outside of the context of this software." % (path, url))
+        return True
+    if scheme in SUPPORTED_IDENTIFIERS:
         resolvers = kwargs.get("resolvers")
         for url in fetch_identifier.resolve(url, resolvers):
             if fetch_file(url, size, path, auth, **kwargs):
                 return True
         return False
-    elif SCHEME_TAG == scheme:
-        logger.info("The fetch entry for file %s specifies the tag URI %s. Tag URIs may represent objects that "
-                    "cannot be directly resolvable as network resources and therefore cannot be automatically "
-                    "fetched. Such files must be acquired outside of the context of this software." % (path, url))
-        return True
-    else:
-        logger.warning(UNIMPLEMENTED % scheme)
-        return False
+
+    logger.warning(UNIMPLEMENTED % scheme)
+    return False
 
 
 def cleanup_transports():

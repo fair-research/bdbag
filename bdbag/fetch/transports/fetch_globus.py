@@ -1,6 +1,7 @@
 import os
-import platform
+import importlib
 import logging
+import platform
 from bdbag import urlsplit, get_typed_exception
 import bdbag.fetch.auth.keychain as keychain
 
@@ -43,7 +44,7 @@ def get_file(url, output_path, auth_config, **kwargs):
     global globus_sdk
     if globus_sdk is None:
         try:
-            globus_sdk = __import__(globus_sdk_name)
+            globus_sdk = importlib.import_module(globus_sdk_name)
         except ImportError:
             pass
     if globus_sdk is None:

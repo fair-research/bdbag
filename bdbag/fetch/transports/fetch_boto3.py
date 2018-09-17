@@ -1,0 +1,100 @@
+import os
+import datetime
+import logging
+from importlib import import_module
+from bdbag import urlsplit, urlunsplit, stob, get_typed_exception
+from bdbag.fetch import Kilobyte, get_transfer_summary
+from bdbag.fetch.auth import keychain
+
+logger = logging.getLogger(__name__)
+
+BOTO3 = None
+BOTOCORE = None
+CHUNK_SIZE = Kilobyte * 10240
+
+
+def import_boto3():
+    # locate library
+    global BOTO3, BOTOCORE
+    if BOTO3 is None and BOTOCORE is None:
+        try:
+            BOTO3 = import_module("boto3")
+            BOTOCORE = import_module("botocore")
+        except ImportError as e:
+            raise RuntimeError(
+                "Unable to find required module. Ensure that the Python package \"boto3\" is installed.", e)
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        BOTO3.set_stream_logger('')
+
+
+def validate_auth_config(auth):
+    if not keychain.has_auth_attr(auth, 'auth_type'):
+        return False
+
+    return True
+
+
+def get_credentials(url, auth_config):
+
+    credentials = None
+    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
+
+        if not validate_auth_config(auth):
+            continue
+
+        if auth.auth_type == 'aws_credentials':
+            if keychain.has_auth_attr(auth, "auth_params"):
+                credentials = auth.auth_params
+                break
+
+    return credentials
+
+
+def get_file(url, output_path, auth_config, **kwargs):
+    import_boto3()
+
+    key = auth_config.key if keychain.has_auth_attr(auth_config, "key", quiet=True) else None
+    secret = auth_config.key if keychain.has_auth_attr(auth_config, "secret", quiet=True) else None
+    profile_name = auth_config.key if keychain.has_auth_attr(auth_config, "profile", quiet=True) else None
+
+    try:
+        session = BOTO3.session.Session(aws_access_key_id=key,
+                                        aws_secret_access_key=secret,
+                                        profile_name=profile_name)
+    except Exception as e:
+        raise RuntimeError("Unable to create Boto3 session: %s" % format_exception(e))
+
+    upr = urlsplit(url, allow_fragments=False)
+    try:
+        kwargs = dict()
+        if upr.scheme == "gs":
+            endpoint_url = "https://storage.googleapis.com"
+            config = BOTO3.session.Config(signature_version="s3v4")
+            kwargs = {"endpoint_url": endpoint_url, "config": config}
+
+        s3_client = session.client("s3", **kwargs)
+    except Exception as e:
+        raise RuntimeError("Unable to create Boto3 storage client: %s" % format_exception(e))
+
+    try:
+        logger.info("Attempting GET from URL: %s" % url)
+        response = s3_client.get_object(Bucket=upr.netloc, Key=upr.path.lstrip("/"))
+        total = 0
+        start = datetime.datetime.now()
+        logger.debug("Transferring file %s to %s" % (url, output_path))
+        with open(output_path, 'wb') as data_file:
+            for chunk in response["Body"].iter_chunks(chunk_size=CHUNK_SIZE):
+                data_file.write(chunk)
+                total += len(chunk)
+        elapsed_time = datetime.datetime.now() - start
+        summary = get_transfer_summary(total, elapsed_time)
+        logger.info('File [%s] transfer successful. %s' % (output_path, summary))
+        return True
+    except BOTOCORE.exceptions.ClientError as e:
+        logger.error('Boto3 Client Error: %s' % (get_typed_exception(e)))
+    except Exception as e:
+        logger.error('Boto3 Request Exception: %s' % (get_typed_exception(e)))
+
+    logger.error('Boto3 GET Failed for URL: %s' % url)
+    logger.warning('File transfer failed: [%s]' % output_path)
+    return False
