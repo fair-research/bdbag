@@ -3,14 +3,14 @@ import datetime
 import logging
 from importlib import import_module
 from bdbag import urlsplit, urlunsplit, stob, get_typed_exception
-from bdbag.fetch import Kilobyte, get_transfer_summary
+from bdbag.fetch import Megabyte, get_transfer_summary
 from bdbag.fetch.auth import keychain
 
 logger = logging.getLogger(__name__)
 
 BOTO3 = None
 BOTOCORE = None
-CHUNK_SIZE = Kilobyte * 10240
+CHUNK_SIZE = 10 * Megabyte
 
 
 def import_boto3():
@@ -42,7 +42,7 @@ def get_credentials(url, auth_config):
         if not validate_auth_config(auth):
             continue
 
-        if auth.auth_type == 'aws_credentials':
+        if auth.auth_type == 'aws-credentials':
             if keychain.has_auth_attr(auth, "auth_params"):
                 credentials = auth.auth_params
                 break
@@ -53,9 +53,10 @@ def get_credentials(url, auth_config):
 def get_file(url, output_path, auth_config, **kwargs):
     import_boto3()
 
-    key = auth_config.key if keychain.has_auth_attr(auth_config, "key", quiet=True) else None
-    secret = auth_config.key if keychain.has_auth_attr(auth_config, "secret", quiet=True) else None
-    profile_name = auth_config.key if keychain.has_auth_attr(auth_config, "profile", quiet=True) else None
+    credentials = get_credentials(url, auth_config)
+    key = credentials.key if keychain.has_auth_attr(credentials, "key", quiet=True) else None
+    secret = credentials.secret if keychain.has_auth_attr(credentials, "secret", quiet=True) else None
+    profile_name = credentials.profile if keychain.has_auth_attr(credentials, "profile", quiet=True) else None
 
     try:
         session = BOTO3.session.Session(aws_access_key_id=key,

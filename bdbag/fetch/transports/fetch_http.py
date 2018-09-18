@@ -6,12 +6,12 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from bdbag import urlsplit, get_typed_exception
-from bdbag.fetch import Kilobyte, get_transfer_summary
+from bdbag.fetch import Megabyte, get_transfer_summary
 import bdbag.fetch.auth.keychain as keychain
 
 logger = logging.getLogger(__name__)
 
-CHUNK_SIZE = Kilobyte * 10240
+CHUNK_SIZE = 10 * Megabyte
 SESSIONS = dict()
 HEADERS = {'Connection': 'keep-alive'}
 
