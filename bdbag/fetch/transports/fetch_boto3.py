@@ -92,7 +92,7 @@ def get_file(url, output_path, auth_config, **kwargs):
                 kwargs.update({"aws_session_token": token})
         s3_client = session.client("s3", **kwargs)
     except Exception as e:
-        raise RuntimeError("Unable to create Boto3 storage client: %s" % format_exception(e))
+        raise RuntimeError("Unable to create Boto3 storage client: %s" % get_typed_exception(e))
 
     try:
         output_dir = os.path.dirname(os.path.abspath(output_path))
