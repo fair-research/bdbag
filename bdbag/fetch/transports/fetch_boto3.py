@@ -51,50 +51,51 @@ def get_credentials(url, auth_config):
 
 
 def get_file(url, output_path, auth_config, **kwargs):
-    import_boto3()
-
-    credentials = get_credentials(url, auth_config)
-    key = credentials.key if keychain.has_auth_attr(credentials, "key", quiet=True) else None
-    secret = credentials.secret if keychain.has_auth_attr(credentials, "secret", quiet=True) else None
-    token = credentials.token if keychain.has_auth_attr(credentials, "token", quiet=True) else None
-    role_arn = credentials.role_arn if keychain.has_auth_attr(credentials, "role_arn", quiet=True) else None
-    profile_name = credentials.profile if keychain.has_auth_attr(credentials, "profile", quiet=True) else None
-
+    success = False
     try:
-        session = BOTO3.session.Session(profile_name=profile_name)
-    except Exception as e:
-        raise RuntimeError("Unable to create Boto3 session: %s" % get_typed_exception(e))
+        import_boto3()
 
-    if role_arn:
+        credentials = get_credentials(url, auth_config)
+        key = credentials.key if keychain.has_auth_attr(credentials, "key", quiet=True) else None
+        secret = credentials.secret if keychain.has_auth_attr(credentials, "secret", quiet=True) else None
+        token = credentials.token if keychain.has_auth_attr(credentials, "token", quiet=True) else None
+        role_arn = credentials.role_arn if keychain.has_auth_attr(credentials, "role_arn", quiet=True) else None
+        profile_name = credentials.profile if keychain.has_auth_attr(credentials, "profile", quiet=True) else None
+
         try:
-            sts = session.client('sts')
-            response = sts.assume_role(RoleArn=role_arn, RoleSessionName='BDBag-Fetch', DurationSeconds=3600)
-            temp_credentials = response['Credentials']
-            key = temp_credentials['AccessKeyId']
-            secret = temp_credentials['SecretAccessKey']
-            token = temp_credentials['SessionToken']
+            session = BOTO3.session.Session(profile_name=profile_name)
         except Exception as e:
-            raise RuntimeError("Unable to get temporary credentials using arn [%s]. %s" %
-                               (role_arn, get_typed_exception(e)))
+            raise RuntimeError("Unable to create Boto3 session: %s" % get_typed_exception(e))
 
-    upr = urlsplit(url, allow_fragments=False)
-    try:
-        if upr.scheme == "gs":
-            endpoint_url = "https://storage.googleapis.com"
-            config = BOTO3.session.Config(signature_version="s3v4")
-            kwargs = {"aws_access_key_id": key,
-                      "aws_secret_access_key": secret,
-                      "endpoint_url": endpoint_url,
-                      "config": config}
-        else:
-            kwargs = {"aws_access_key_id": key, "aws_secret_access_key": secret}
-            if token:
-                kwargs.update({"aws_session_token": token})
-        s3_client = session.client("s3", **kwargs)
-    except Exception as e:
-        raise RuntimeError("Unable to create Boto3 storage client: %s" % get_typed_exception(e))
+        if role_arn:
+            try:
+                sts = session.client('sts')
+                response = sts.assume_role(RoleArn=role_arn, RoleSessionName='BDBag-Fetch', DurationSeconds=3600)
+                temp_credentials = response['Credentials']
+                key = temp_credentials['AccessKeyId']
+                secret = temp_credentials['SecretAccessKey']
+                token = temp_credentials['SessionToken']
+            except Exception as e:
+                raise RuntimeError(
+                    "Unable to get temporary credentials using arn [%s]. %s" % (role_arn, get_typed_exception(e)))
 
-    try:
+        upr = urlsplit(url, allow_fragments=False)
+        try:
+            if upr.scheme == "gs":
+                endpoint_url = "https://storage.googleapis.com"
+                config = BOTO3.session.Config(signature_version="s3v4")
+                kwargs = {"aws_access_key_id": key,
+                          "aws_secret_access_key": secret,
+                          "endpoint_url": endpoint_url,
+                          "config": config}
+            else:
+                kwargs = {"aws_access_key_id": key, "aws_secret_access_key": secret}
+                if token:
+                    kwargs.update({"aws_session_token": token})
+            s3_client = session.client("s3", **kwargs)
+        except Exception as e:
+            raise RuntimeError("Unable to create Boto3 storage client: %s" % get_typed_exception(e))
+
         output_dir = os.path.dirname(os.path.abspath(output_path))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
@@ -113,13 +114,16 @@ def get_file(url, output_path, auth_config, **kwargs):
         elapsed_time = datetime.datetime.now() - start
         summary = get_transfer_summary(total, elapsed_time)
         logger.info('File [%s] transfer successful. %s' % (output_path, summary))
-        return True
+        success = True
     except BOTOCORE.exceptions.ClientError as e:
-        logger.error('Boto3 Client Error: %s' % (get_typed_exception(e)))
+        logger.error('Boto3 Client Error: %s' % get_typed_exception(e))
+    except BOTOCORE.exceptions.BotoCoreError as e:
+        logger.error('Boto3 Error: %s' % get_typed_exception(e))
     except Exception as e:
-        logger.error('Boto3 Request Exception: %s' % (get_typed_exception(e)))
+        logger.error(get_typed_exception(e))
+    finally:
+        if not success:
+            logger.error('Boto3 GET Failed for URL: %s' % url)
+            logger.warning('File transfer failed: [%s]' % output_path)
 
-    logger.error('Boto3 GET Failed for URL: %s' % url)
-    logger.warning('File transfer failed: [%s]' % output_path)
-
-    return False
+    return success
