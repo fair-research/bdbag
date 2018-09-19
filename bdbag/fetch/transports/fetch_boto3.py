@@ -95,6 +95,10 @@ def get_file(url, output_path, auth_config, **kwargs):
         raise RuntimeError("Unable to create Boto3 storage client: %s" % format_exception(e))
 
     try:
+        output_dir = os.path.dirname(os.path.abspath(output_path))
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
         logger.info("Attempting GET from URL: %s" % url)
         response = s3_client.get_object(Bucket=upr.netloc, Key=upr.path.lstrip("/"))
         total = 0
