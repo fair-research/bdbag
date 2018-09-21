@@ -107,7 +107,8 @@ def get_file(url, output_path, auth_config, **kwargs):
         logger.debug("Transferring file %s to %s" % (url, output_path))
         with open(output_path, 'wb') as data_file:
             stream = response["Body"]
-            for chunk in stream.iter_chunks(chunk_size=CHUNK_SIZE):
+            stream.set_socket_timeout(kwargs.get("read_timeout", 180))
+            for chunk in stream.iter_chunks(chunk_size=CHUNK_SIZE, ):
                 data_file.write(chunk)
                 total += len(chunk)
             stream.close()
