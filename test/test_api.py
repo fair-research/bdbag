@@ -3,11 +3,14 @@ import sys
 import json
 import shutil
 import logging
+import mock
 import unittest
 from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
-from bdbag import bdbag_api as bdb, bdbag_ro as bdbro, bdbagit as bdbagit, filter_dict, get_typed_exception
+from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg, bdbag_ro as bdbro, bdbagit as bdbagit, filter_dict, \
+    get_typed_exception
+from bdbag.fetch.auth.keychain import create_default_keychain, read_keychain
 from test.test_common import BaseTest
 
 if sys.version_info > (3,):
@@ -30,6 +33,54 @@ class TestAPI(BaseTest):
         self.stream.close()
         logger.removeHandler(self.handler)
         super(TestAPI, self).tearDown()
+
+    def test_create_default_config(self):
+        logger.info(self.getTestHeader('create default config'))
+        try:
+            default_config_path = ospj(self.test_config_dir, ".bdbag")
+            default_config_file = ospj(default_config_path, 'bdbag.json')
+            patched_default_config = mock.patch.multiple(
+                "bdbag.bdbag_config",
+                DEFAULT_CONFIG_PATH=default_config_path,
+                DEFAULT_CONFIG_FILE=default_config_file)
+
+            patched_default_config.start()
+            bdbcfg.create_default_config()
+            patched_default_config.stop()
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_create_default_keychain(self):
+        logger.info(self.getTestHeader('create default keychain'))
+        try:
+            default_keychain_path = ospj(self.test_config_dir, ".bdbag")
+            default_keychain_file = ospj(default_keychain_path, 'keychain.json')
+            patched_default_config = mock.patch.multiple(
+                "bdbag.fetch.auth.keychain",
+                DEFAULT_KEYCHAIN_PATH=default_keychain_path,
+                DEFAULT_KEYCHAIN_FILE=default_keychain_file)
+
+            patched_default_config.start()
+            create_default_keychain()
+            patched_default_config.stop()
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_create_default_keychain(self):
+        logger.info(self.getTestHeader('create default keychain'))
+        try:
+            default_keychain_path = ospj(self.test_config_dir, ".bdbag")
+            default_keychain_file = ospj(default_keychain_path, 'keychain.json')
+            patched_default_config = mock.patch.multiple(
+                "bdbag.fetch.auth.keychain",
+                DEFAULT_KEYCHAIN_PATH=default_keychain_path,
+                DEFAULT_KEYCHAIN_FILE=default_keychain_file)
+
+            patched_default_config.start()
+            read_keychain(default_keychain_file)
+            patched_default_config.stop()
+        except Exception as e:
+            self.fail(get_typed_exception(e))
 
     def test_create_bag(self):
         logger.info(self.getTestHeader('create bag'))

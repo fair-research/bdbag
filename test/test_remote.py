@@ -20,21 +20,6 @@ else:
 
 logger = logging.getLogger()
 
-PATCHED_REQUESTS_GET = None
-PATCH_REQUESTS_POST = None
-
-
-def mocked_request_auth_get_success(*args, **kwargs):
-    args[0].auth = None
-    PATCHED_REQUESTS_GET.stop()
-    return BaseTest.MockResponse({}, 200)
-
-
-def mocked_request_auth_post_success(*args, **kwargs):
-    args[0].auth = None
-    PATCHED_REQUESTS_POST.stop()
-    return BaseTest.MockResponse({}, 201)
-
 
 class TestRemoteAPI(BaseTest):
 
@@ -116,7 +101,7 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    def _test_resolve_fetch_http_with_filter(self, expr, files=list(frozenset())):
+    def _test_resolve_fetch_http_with_filter(self, expr, files):
         logger.info(self.getTestHeader('test resolve fetch http with filter expression "%s"' % expr))
         try:
             bdb.resolve_fetch(self.test_bag_fetch_http_dir, filter_expr=expr, cookie_scan=False)
@@ -138,13 +123,19 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_http_basic_auth_get(self):
         logger.info(self.getTestHeader('test resolve fetch http basic auth GET'))
         try:
-            global PATCHED_REQUESTS_GET
-            PATCHED_REQUESTS_GET = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+            patched_requests_get = None
+
+            def mocked_request_auth_get_success(*args, **kwargs):
+                args[0].auth = None
+                patched_requests_get.stop()
+                return BaseTest.MockResponse({}, 200)
+
+            patched_requests_get = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
                                                        get=mocked_request_auth_get_success,
                                                        auth=None,
                                                        create=True)
 
-            PATCHED_REQUESTS_GET.start()
+            patched_requests_get.start()
             bdb.resolve_fetch(self.test_bag_fetch_http_dir,
                               keychain_file=ospj(self.test_config_dir, 'test-keychain-1.json'), cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
@@ -155,12 +146,16 @@ class TestRemoteAPI(BaseTest):
 
     def _test_resolve_fetch_http_auth_post(self, keychain_file):
         try:
-            global PATCHED_REQUESTS_POST
-            PATCHED_REQUESTS_POST = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+            def mocked_request_auth_post_success(*args, **kwargs):
+                args[0].auth = None
+                patched_requests_post.stop()
+                return BaseTest.MockResponse({}, 201)
+
+            patched_requests_post = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
                                                         post=mocked_request_auth_post_success,
                                                         auth=None,
                                                         create=True)
-            PATCHED_REQUESTS_POST.start()
+            patched_requests_post.start()
             bdb.resolve_fetch(self.test_bag_fetch_http_dir,
                               keychain_file=ospj(self.test_config_dir, keychain_file), cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
@@ -194,6 +189,167 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_fetch_ark_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_ark2(self):
+        logger.info(self.getTestHeader('test resolve fetch ark2'))
+        try:
+            mock_response = {
+                "admins": [
+                    "urn:globus:auth:identity:7b315147-d8f6-4a80-853d-78b65826d734",
+                    "urn:globus:groups:id:23acce4c-733f-11e8-a40d-0e847f194132",
+                    "urn:globus:auth:identity:b2541312-d274-11e5-9131-bbb9500ff459",
+                    "urn:globus:auth:identity:88204dba-e812-432a-abcd-ec631583a98c",
+                    "urn:globus:auth:identity:58b31676-ef95-11e5-8ff7-5783aaa8fce7"
+                ],
+                "checksums": [
+                    {
+                        "function": "sha256",
+                        "value": "59e6e0b91b51d49a5fb0e1068980d2e7d2b2001a6d11c59c64156d32e197a626"
+                    }
+                ],
+                "identifier": "ark:/57799/b91FmdtR3Pf4Ct7",
+                "landing_page": "https://identifiers.globus.org/ark:/57799/b91FmdtR3Pf4Ct7/landingpage",
+                "location": [
+                    "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt"
+                ],
+                "metadata": {
+                    "title": "BDBag identifier unit test file"
+                },
+                "visible_to": [
+                    "public"
+                ]
+            }
+
+            patched_resolve_ark_get = None
+
+            def mocked_request_resolver_ark_get_success(*args, **kwargs):
+                args[0].auth = None
+                patched_resolve_ark_get.stop()
+                return BaseTest.MockResponse(mock_response, 200)
+
+            patched_resolve_ark_get = mock.patch.multiple("bdbag.fetch.resolvers.base_resolver.requests.Session",
+                                                          get=mocked_request_resolver_ark_get_success,
+                                                          auth=None,
+                                                          create=True)
+            patched_resolve_ark_get.start()
+
+            bdb.resolve_fetch(self.test_bag_fetch_ark2_dir, cookie_scan=False)
+            bdb.validate_bag(self.test_bag_fetch_ark2_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_ark2_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_doi(self):
+        logger.info(self.getTestHeader('test resolve fetch doi'))
+        try:
+            mock_response = {
+                "@context": "http://schema.org",
+                "@type": "Dataset",
+                "@id": "https://doi.org/10.23725/9999-9999",  # fake DOI
+                "identifier": [
+                    {
+                        "@type": "PropertyValue",
+                        "propertyID": "doi",
+                        "value": "https://doi.org/10.23725/9999-9999"  # fake DOI
+                    },
+                    {
+                        "@type": "PropertyValue",
+                        "propertyID": "minid",
+                        "value": "ark:/57799/b91FmdtR3Pf4Ct7"
+                    },
+                    {
+                        "@type": "PropertyValue",
+                        "propertyID": "sha256",
+                        "value": "59e6e0b91b51d49a5fb0e1068980d2e7d2b2001a6d11c59c64156d32e197a626"
+                    }
+                ],
+                "url": "https://ors.datacite.org/doi:/10.23725/9999-9999",  # fake DOI
+                "additionalType": "BDBAG Test file",
+                "name": "test-fetch-identifier.txt",
+                "author": {
+                    "name": "BDBag"
+                },
+                "description": "BDBag identifier unit test file",
+                "keywords": "bdbag, unit test",
+                "datePublished": "2018-09-20",
+                "contentUrl": [
+                    "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt"
+                ],
+                "schemaVersion": "http://datacite.org/schema/kernel-4",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "fair-research.org"
+                },
+                "fileFormat": [
+                    "text/plain "
+                ]
+            }
+            patched_resolve_doi_get = None
+
+            def mocked_request_resolver_doi_get_success(*args, **kwargs):
+                args[0].auth = None
+                patched_resolve_doi_get.stop()
+                return BaseTest.MockResponse(mock_response, 200)
+
+            patched_resolve_doi_get = mock.patch.multiple("bdbag.fetch.resolvers.base_resolver.requests.Session",
+                                                          get=mocked_request_resolver_doi_get_success,
+                                                          auth=None,
+                                                          create=True)
+            patched_resolve_doi_get.start()
+
+            bdb.resolve_fetch(self.test_bag_fetch_doi_dir, cookie_scan=False)
+            bdb.validate_bag(self.test_bag_fetch_doi_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_doi_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_dataguid(self):
+        logger.info(self.getTestHeader('test resolve fetch dataguid'))
+        try:
+            mock_response = {
+                "data_object": {
+                    "checksums": [
+                        {
+                            "checksum": "59e6e0b91b51d49a5fb0e1068980d2e7d2b2001a6d11c59c64156d32e197a626",
+                            "type": "sha256"
+                        }
+                    ],
+                    "created": "2018-09-20T17:00:21.428857",
+                    "description": "BDBag identifier unit test file",
+                    "id": "dg.4503/a5d79375-1ba8-418f-9dda-eb981375e599",  # fake DataGUID
+                    "mime_type": "text/plain",
+                    "name": "test-fetch-identifier.txt",
+                    "size": 223,
+                    "updated": "2018-09-20T17:00:21.428866",
+                    "urls": [
+                        {
+                            "url": "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt"
+                        }
+                    ],
+                    "version": "0d318219"
+                }
+            }
+            patched_resolve_dataguid_get = None
+
+            def mocked_request_resolver_dataguid_get_success(*args, **kwargs):
+                args[0].auth = None
+                patched_resolve_dataguid_get.stop()
+                return BaseTest.MockResponse(mock_response, 200)
+
+            patched_resolve_dataguid_get = mock.patch.multiple("bdbag.fetch.resolvers.base_resolver.requests.Session",
+                                                               get=mocked_request_resolver_dataguid_get_success,
+                                                               auth=None,
+                                                               create=True)
+            patched_resolve_dataguid_get.start()
+
+            bdb.resolve_fetch(self.test_bag_fetch_dataguid_dir, cookie_scan=False)
+            bdb.validate_bag(self.test_bag_fetch_dataguid_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_dataguid_dir, fast=False)
             output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))

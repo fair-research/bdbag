@@ -9,5 +9,5 @@ install:
   - pip install --upgrade pip
   - pip install python-coveralls coverage
   - python setup.py install
-script: coverage run --include bdbag/*,bdbag/fetch/* --omit bdbag/bdbag_cli.py,bdbag/bdbag_ro.py,bdbag/bdbagit_profile.py,bdbag/fetch/transports/fetch_globus.py setup.py test
+script: coverage run --include bdbag/*,bdbag/fetch/* --omit bdbag/bdbag_cli.py,bdbag/bdbag_ro.py,bdbag/bdbagit_profile.py,bdbag/fetch/transports/fetch_globus.py,bdbag/fetch/transports/fetch_boto3.py setup.py test
 after_success: coveralls

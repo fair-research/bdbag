@@ -2,24 +2,11 @@ import os
 import errno
 import logging
 import json
-import shutil
 from collections import OrderedDict
 from bdbag import get_typed_exception, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION
-
+from bdbag.fetch import Megabyte
 
 logger = logging.getLogger(__name__)
-
-ID_RESOLVER_TAG = 'identifier_resolvers'
-DEFAULT_ID_RESOLVERS = ['n2t.net', 'identifiers.org']
-
-COOKIE_JAR_TAG = "http_cookies"
-COOKIE_JAR_SEARCH_TAG = "scan_for_cookie_files"
-COOKIE_JAR_FILE_TAG = "file_names"
-COOKIE_JAR_PATHS_TAG = "search_paths"
-COOKIE_JAR_PATH_FILTER_TAG = "search_paths_filter"
-DEFAULT_COOKIE_JAR_FILE_NAMES = ["*cookies.txt"]
-DEFAULT_COOKIE_JAR_SEARCH_PATHS = [os.path.normpath(os.path.join(os.path.expanduser('~')))]
-DEFAULT_COOKIE_JAR_SEARCH_PATH_FILTER = ".bdbag"
 
 BAG_CONFIG_TAG = "bag_config"
 BAG_SPEC_VERSION_TAG = "bagit_spec_version"
@@ -32,26 +19,96 @@ DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser('~'), '.bdbag')
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')
 DEFAULT_BAG_ALGORITHMS = ['md5', 'sha256']
 
+FETCH_CONFIG_TAG = "fetch_config"
+DEFAULT_FETCH_CONFIG = {
+    "http": {
+        "session_config": {
+            "retry_connect": 5,
+            "retry_read": 5,
+            "retry_backoff_factor": 1.0,
+            "retry_status_forcelist": [500, 502, 503, 504]
+        },
+        "allow_redirects": True
+    },
+    "s3": {
+        "read_chunk_size": 10 * Megabyte,
+        "read_timeout_seconds": 120,
+        "max_read_retries": 5
+    }
+}
+COOKIE_JAR_TAG = "http_cookies"
+COOKIE_JAR_SEARCH_TAG = "scan_for_cookie_files"
+COOKIE_JAR_FILE_TAG = "file_names"
+COOKIE_JAR_PATHS_TAG = "search_paths"
+COOKIE_JAR_PATH_FILTER_TAG = "search_paths_filter"
+DEFAULT_COOKIE_JAR_FILE_NAMES = ["*cookies.txt"]
+DEFAULT_COOKIE_JAR_SEARCH_PATHS = [os.path.normpath(os.path.join(os.path.expanduser('~')))]
+DEFAULT_COOKIE_JAR_SEARCH_PATH_FILTER = ".bdbag"
+
+ID_RESOLVER_TAG = "identifier_resolvers"
+DEFAULT_ID_RESOLVERS = ['n2t.net', 'identifiers.org']
+RESOLVER_CONFIG_TAG = "resolver_config"
+DEFAULT_RESOLVER_CONFIG = {
+    "ark": [
+        {
+            "prefix": None,
+            ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
+        },
+        {
+            "prefix": "57799",
+            "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+            ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
+        },
+        {
+            "prefix": "99999/fk4",  # we cannot assume every identifier in this test ARK shoulder references a MINID
+            "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+            ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
+        }
+    ],
+    "minid": [
+        {
+            "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+            ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
+        }
+    ],
+    "doi": [
+        {
+            "prefix": "10.23725/",
+            "handler": "bdbag.fetch.resolvers.doi_resolver.DOIResolverHandler",
+            ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
+        }
+    ],
+    "ga4ghdos": [
+        {
+            "prefix": "dg.4503/",
+            "handler": "bdbag.fetch.resolvers.dataguid_resolver.DataGUIDResolverHandler",
+            ID_RESOLVER_TAG: ["n2t.net"]
+        }
+    ]
+}
+
 DEFAULT_CONFIG = {
     CONFIG_VERSION_TAG: VERSION,
     BAG_CONFIG_TAG:
-    {
-        BAG_SPEC_VERSION_TAG: DEFAULT_BAG_SPEC_VERSION,
-        BAG_ALGORITHMS_TAG: DEFAULT_BAG_ALGORITHMS,
-        BAG_PROCESSES_TAG: 1,
-        BAG_METADATA_TAG:
         {
-            BAG_PROFILE_TAG: BDBAG_PROFILE_ID
-        }
-    },
-    ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS,
+            BAG_SPEC_VERSION_TAG: DEFAULT_BAG_SPEC_VERSION,
+            BAG_ALGORITHMS_TAG: DEFAULT_BAG_ALGORITHMS,
+            BAG_PROCESSES_TAG: 1,
+            BAG_METADATA_TAG:
+                {
+                    BAG_PROFILE_TAG: BDBAG_PROFILE_ID
+                }
+        },
     COOKIE_JAR_TAG:
-    {
-        COOKIE_JAR_SEARCH_TAG: True,
-        COOKIE_JAR_FILE_TAG: DEFAULT_COOKIE_JAR_FILE_NAMES,
-        COOKIE_JAR_PATHS_TAG: DEFAULT_COOKIE_JAR_SEARCH_PATHS,
-        COOKIE_JAR_PATH_FILTER_TAG: DEFAULT_COOKIE_JAR_SEARCH_PATH_FILTER
-    }
+        {
+            COOKIE_JAR_SEARCH_TAG: True,
+            COOKIE_JAR_FILE_TAG: DEFAULT_COOKIE_JAR_FILE_NAMES,
+            COOKIE_JAR_PATHS_TAG: DEFAULT_COOKIE_JAR_SEARCH_PATHS,
+            COOKIE_JAR_PATH_FILTER_TAG: DEFAULT_COOKIE_JAR_SEARCH_PATH_FILTER
+        },
+    FETCH_CONFIG_TAG: DEFAULT_FETCH_CONFIG,
+    ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS,
+    RESOLVER_CONFIG_TAG: DEFAULT_RESOLVER_CONFIG
 }
 
 
@@ -64,7 +121,7 @@ def create_default_config():
                 if error.errno != errno.EEXIST:
                     raise
         with open(DEFAULT_CONFIG_FILE, 'w') as cf:
-            cf.write(json.dumps(DEFAULT_CONFIG, indent=2))
+            cf.write(json.dumps(DEFAULT_CONFIG, indent=4, sort_keys=True))
             cf.close()
             print("Created default configuration file in: %s" % DEFAULT_CONFIG_FILE)
     except Exception as e:
@@ -88,4 +145,3 @@ def read_config(config_file, create_default=True):
 if os.access(
         os.path.expanduser('~'), os.F_OK | os.R_OK | os.W_OK | os.X_OK) and not os.path.isfile(DEFAULT_CONFIG_FILE):
     create_default_config()
-

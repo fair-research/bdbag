@@ -6,6 +6,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from bdbag import urlsplit, get_typed_exception
+from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG
 from bdbag.fetch import Megabyte, get_transfer_summary
 import bdbag.fetch.auth.keychain as keychain
 
@@ -25,7 +26,7 @@ def validate_auth_config(auth):
     return True
 
 
-def get_session(url, auth_config):
+def get_session(url, auth_config, config):
 
     session = None
     response = None
@@ -40,7 +41,7 @@ def get_session(url, auth_config):
                 session = SESSIONS[auth.uri]
                 break
             else:
-                session = init_new_session()
+                session = init_new_session(config["session_config"])
 
             if auth.auth_type == 'cookie':
                 if auth.auth_params and hasattr(auth.auth_params, 'cookies'):
@@ -105,19 +106,18 @@ def get_session(url, auth_config):
         base_url = str("%s://%s" % (url_parts.scheme, url_parts.netloc))
         session = SESSIONS.get(base_url, None)
         if not session:
-            session = init_new_session()
+            session = init_new_session(config["session_config"])
             SESSIONS[base_url] = session
 
     return session
 
 
-def init_new_session():
+def init_new_session(session_config):
     session = requests.session()
-    retries = Retry(connect=5,
-                    read=5,
-                    backoff_factor=1.0,
-                    status_forcelist=[500, 502, 503, 504])
-
+    retries = Retry(connect=session_config['retry_connect'],
+                    read=session_config['retry_read'],
+                    backoff_factor=session_config['retry_backoff_factor'],
+                    status_forcelist=session_config['retry_status_forcelist'])
     session.mount('http://', HTTPAdapter(max_retries=retries))
     session.mount('https://', HTTPAdapter(max_retries=retries))
 
@@ -127,7 +127,11 @@ def init_new_session():
 def get_file(url, output_path, auth_config, **kwargs):
 
     try:
-        session = get_session(url, auth_config)
+        bdbag_config = kwargs.get("config", DEFAULT_CONFIG)
+        fetch_config = bdbag_config.get(FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG)
+        config = fetch_config.get("http", DEFAULT_FETCH_CONFIG["http"])
+
+        session = get_session(url, auth_config, config)
         output_dir = os.path.dirname(os.path.abspath(output_path))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
@@ -140,15 +144,15 @@ def get_file(url, output_path, auth_config, **kwargs):
         r = session.get(url,
                         headers=headers,
                         stream=True,
-                        allow_redirects=kwargs.get("allow_redirects", True),
+                        allow_redirects=config.get("allow_redirects", True),
                         verify=certifi.where(),
                         cookies=kwargs.get("cookies"))
         if r.status_code == 401:
-            session = get_session(url, auth_config)
+            session = get_session(url, auth_config, config)
             r = session.get(url,
                             headers=headers,
                             stream=True,
-                            allow_redirects=kwargs.get("allow_redirects", True),
+                            allow_redirects=config.get("allow_redirects", True),
                             verify=certifi.where())
         if r.status_code != 200:
             logger.error('HTTP GET Failed for URL: %s' % url)

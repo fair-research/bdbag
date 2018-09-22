@@ -5,6 +5,7 @@ from bdbag.bdbag_config import *
 from bdbag.fetch.transports import *
 from bdbag.fetch.auth.keychain import *
 from bdbag.fetch.auth.cookies import *
+from bdbag.fetch.resolvers import resolve
 
 logger = logging.getLogger(__name__)
 
@@ -17,14 +18,7 @@ SCHEME_GS = 'gs'
 SCHEME_GLOBUS = 'globus'
 SCHEME_FTP = 'ftp'
 SCHEME_SFTP = 'sftp'
-SCHEME_ARK = 'ark'
-SCHEME_DOI = 'doi'
-SCHEME_DATAGUID = 'ga4ghdos'
-SCHEME_MINID = 'minid'
 SCHEME_TAG = 'tag'
-
-SUPPORTED_PROTOCOLS = (SCHEME_HTTP, SCHEME_HTTPS, SCHEME_FTP, SCHEME_S3, SCHEME_GS, SCHEME_GLOBUS)
-SUPPORTED_IDENTIFIERS = (SCHEME_ARK, SCHEME_DOI, SCHEME_MINID, SCHEME_DATAGUID)
 
 FetchEntry = namedtuple("FetchEntry", ["url", "length", "filename"])
 
@@ -33,9 +27,9 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
 
     success = True
     auth = read_keychain(keychain_file)
-    resolvers = config.get(ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS) if config else DEFAULT_ID_RESOLVERS
-    cookies = load_and_merge_cookie_jars(find_cookie_jars(config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG]))) \
-        if kwargs.get("cookie_scan", True) else None
+    resolver_config = config.get(RESOLVER_CONFIG_TAG, DEFAULT_RESOLVER_CONFIG) if config else DEFAULT_RESOLVER_CONFIG
+    cookies = load_and_merge_cookie_jars(find_cookie_jars(
+        config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG]))) if kwargs.get("cookie_scan", True) else None
     current = 0
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     start = datetime.datetime.now()
@@ -63,7 +57,8 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
                                  entry.length,
                                  output_path,
                                  auth,
-                                 resolvers=resolvers,
+                                 config = config,
+                                 resolver_config=resolver_config,
                                  cookies=cookies,
                                  **kwargs)
         if callback:
@@ -93,11 +88,16 @@ def fetch_file(url, size, path, auth, **kwargs):
                     "cannot be directly resolved as network resources and therefore cannot be automatically fetched. "
                     "Such files must be acquired outside of the context of this software." % (path, url))
         return True
-    if scheme in SUPPORTED_IDENTIFIERS:
-        resolvers = kwargs.get("resolvers")
-        for url in fetch_identifier.resolve(url, resolvers):
-            if fetch_file(url, size, path, auth, **kwargs):
-                return True
+
+    # if we get here, assume the url is an identifier and try to resolve it
+    resolver_config = kwargs.get("resolver_config", {})
+    supported_resolvers = resolver_config.keys()
+    if scheme in supported_resolvers:
+        for entry in resolve(url, resolver_config):
+            url = entry.get("url")
+            if url:
+                if fetch_file(url, size, path, auth, **kwargs):
+                    return True
         return False
 
     logger.warning(UNIMPLEMENTED % scheme)

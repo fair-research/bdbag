@@ -3,6 +3,7 @@ import datetime
 import logging
 from importlib import import_module
 from bdbag import urlsplit, urlunsplit, stob, get_typed_exception
+from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG
 from bdbag.fetch import Megabyte, get_transfer_summary
 from bdbag.fetch.auth import keychain
 
@@ -55,6 +56,9 @@ def get_file(url, output_path, auth_config, **kwargs):
     try:
         import_boto3()
 
+        bdbag_config = kwargs.get("config", DEFAULT_CONFIG)
+        fetch_config = bdbag_config.get(FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG)
+        config = fetch_config.get("s3", DEFAULT_FETCH_CONFIG["s3"])
         credentials = get_credentials(url, auth_config)
         key = credentials.key if keychain.has_auth_attr(credentials, "key", quiet=True) else None
         secret = credentials.secret if keychain.has_auth_attr(credentials, "secret", quiet=True) else None
@@ -102,13 +106,29 @@ def get_file(url, output_path, auth_config, **kwargs):
 
         logger.info("Attempting GET from URL: %s" % url)
         response = s3_client.get_object(Bucket=upr.netloc, Key=upr.path.lstrip("/"))
+        chunk_size = config.get("read_chunk_size", CHUNK_SIZE)
+        max_retries = config.get("max_read_retries", 5)
+        retry_count = 0
         total = 0
-        start = datetime.datetime.now()
+
         logger.debug("Transferring file %s to %s" % (url, output_path))
+        start = datetime.datetime.now()
         with open(output_path, 'wb') as data_file:
             stream = response["Body"]
-            stream.set_socket_timeout(kwargs.get("read_timeout", 180))
-            for chunk in stream.iter_chunks(chunk_size=CHUNK_SIZE, ):
+            stream.set_socket_timeout(config.get("read_timeout_seconds", 120))
+            chunk = None
+            while True:
+                while retry_count < max_retries:
+                    try:
+                        chunk = stream.read(chunk_size)
+                        break
+                    except BOTOCORE.exceptions.ReadTimeoutError as rt:
+                        retry_count += 1
+                        logging.warning("Boto3 read timeout. Retrying attempt %s of %s" % (retry_count, max_retries))
+                        if retry_count == max_retries:
+                            raise rt
+                if chunk == b"" or chunk is None:
+                    break
                 data_file.write(chunk)
                 total += len(chunk)
             stream.close()
