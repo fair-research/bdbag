@@ -27,7 +27,6 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
 
     success = True
     auth = read_keychain(keychain_file)
-    resolver_config = config.get(RESOLVER_CONFIG_TAG, DEFAULT_RESOLVER_CONFIG) if config else DEFAULT_RESOLVER_CONFIG
     cookies = load_and_merge_cookie_jars(find_cookie_jars(
         config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG]))) if kwargs.get("cookie_scan", True) else None
     current = 0
@@ -57,8 +56,7 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
                                  entry.length,
                                  output_path,
                                  auth,
-                                 config = config,
-                                 resolver_config=resolver_config,
+                                 config=config,
                                  cookies=cookies,
                                  **kwargs)
         if callback:
@@ -90,7 +88,8 @@ def fetch_file(url, size, path, auth, **kwargs):
         return True
 
     # if we get here, assume the url is an identifier and try to resolve it
-    resolver_config = kwargs.get("resolver_config", {})
+    config = kwargs.get("config")
+    resolver_config = config.get(RESOLVER_CONFIG_TAG, DEFAULT_RESOLVER_CONFIG) if config else DEFAULT_RESOLVER_CONFIG
     supported_resolvers = resolver_config.keys()
     if scheme in supported_resolvers:
         for entry in resolve(url, resolver_config):

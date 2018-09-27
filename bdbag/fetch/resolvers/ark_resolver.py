@@ -32,7 +32,8 @@ class MinidResolverHandler(BaseResolverHandler):
                     entry["url"] = uri
                     entries.append(entry)
         else:  # newer response format
-            length = content.get("contentSize")
+            metadata = content.get("metadata", {})
+            length = metadata.get("contentSize")
             if length:
                 entry["length"] = length
             checksums = content.get("checksums", [])

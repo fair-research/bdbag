@@ -5,8 +5,9 @@ import certifi
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-from bdbag import urlsplit, get_typed_exception
-from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG
+from bdbag import urlsplit, stob, get_typed_exception
+from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG, \
+    FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES
 from bdbag.fetch import Megabyte, get_transfer_summary
 import bdbag.fetch.auth.keychain as keychain
 
@@ -24,6 +25,13 @@ def validate_auth_config(auth):
         return False
 
     return True
+
+
+def get_auth(url, auth_config):
+    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
+        if validate_auth_config(auth):
+            return auth
+    return None
 
 
 def get_session(url, auth_config, config):
@@ -127,33 +135,49 @@ def init_new_session(session_config):
 def get_file(url, output_path, auth_config, **kwargs):
 
     try:
+        headers = kwargs.get("headers", HEADERS)
         bdbag_config = kwargs.get("config", DEFAULT_CONFIG)
         fetch_config = bdbag_config.get(FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG)
         config = fetch_config.get("http", DEFAULT_FETCH_CONFIG["http"])
+        redirect_status_codes = config.get(
+            FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES)
 
         session = get_session(url, auth_config, config)
         output_dir = os.path.dirname(os.path.abspath(output_path))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        headers = kwargs.get("headers")
-        if not headers:
-            headers = HEADERS
-        else:
-            headers.update(HEADERS)
-        logger.info("Attempting GET from URL: %s" % url)
-        r = session.get(url,
-                        headers=headers,
-                        stream=True,
-                        allow_redirects=config.get("allow_redirects", True),
-                        verify=certifi.where(),
-                        cookies=kwargs.get("cookies"))
-        if r.status_code == 401:
-            session = get_session(url, auth_config, config)
+
+        allow_redirects = config.get("allow_redirects", False)
+        allow_redirects_with_token = False
+        auth = get_auth(url, auth_config)
+        if auth and auth.auth_type == 'bearer-token':
+            allow_redirects = False
+            if auth.auth_params and hasattr(auth.auth_params, 'allow_redirects_with_token'):
+                allow_redirects_with_token = stob(auth.auth_params.allow_redirects_with_token)
+
+        while True:
+            logger.info("Attempting GET from URL: %s" % url)
             r = session.get(url,
-                            headers=headers,
                             stream=True,
-                            allow_redirects=config.get("allow_redirects", True),
-                            verify=certifi.where())
+                            headers=headers,
+                            allow_redirects=allow_redirects,
+                            verify=certifi.where(),
+                            cookies=kwargs.get("cookies"))
+            if r.status_code in redirect_status_codes:
+                url = r.headers['Location']
+                logger.info("Server responded with redirect to: %s" % url)
+                if auth and auth.auth_type == 'bearer-token':
+                    if allow_redirects_with_token:
+                        headers.update({"Authorization": session.headers.get("Authorization", {})})
+                    else:
+                        logger.warning("Authorization bearer token propagation on redirect is disabled for security "
+                                       "purposes. Enable token propagation for this URL in keychain.json")
+                        if session.headers.get("Authorization"):
+                            del session.headers["Authorization"]
+                continue
+            else:
+                break
+
         if r.status_code != 200:
             logger.error('HTTP GET Failed for URL: %s' % url)
             logger.error("Host %s responded:\n\n%s" % (urlsplit(url).netloc,  r.text))

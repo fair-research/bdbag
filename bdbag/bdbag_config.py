@@ -20,6 +20,8 @@ DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')
 DEFAULT_BAG_ALGORITHMS = ['md5', 'sha256']
 
 FETCH_CONFIG_TAG = "fetch_config"
+FETCH_HTTP_REDIRECT_STATUS_CODES_TAG = "redirect_status_codes"
+DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES = [301, 302, 303, 307, 308]
 DEFAULT_FETCH_CONFIG = {
     "http": {
         "session_config": {
@@ -28,7 +30,8 @@ DEFAULT_FETCH_CONFIG = {
             "retry_backoff_factor": 1.0,
             "retry_status_forcelist": [500, 502, 503, 504]
         },
-        "allow_redirects": True
+        "allow_redirects": True,
+        "redirect_status_codes": DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES
     },
     "s3": {
         "read_chunk_size": 10 * Megabyte,

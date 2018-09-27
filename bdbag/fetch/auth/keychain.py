@@ -33,6 +33,13 @@ DEFAULT_KEYCHAIN = [
         }
     },
     {
+        "uri": "https://<hostname>/<path>",
+        "auth_type": "bearer-token",
+        "auth_params": {
+            "token": "<token>"
+        }
+    },
+    {
         "uri": "globus://<endpoint>/<path>",
         "auth_type": "globus_transfer",
         "auth_params": {

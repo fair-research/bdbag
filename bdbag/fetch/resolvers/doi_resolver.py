@@ -35,9 +35,13 @@ class DOIResolverHandler(BaseResolverHandler):
                     name = name.replace('-', '')
                     if name.lower() in CHECKSUM_ALGOS:
                         entry[name] = value
-            for location in locations:
-                entry["url"] = location
+            if isinstance(locations, str):
+                entry["url"] = locations
                 entries.append(entry)
+            else:
+                for location in locations:
+                    entry["url"] = location
+                    entries.append(entry)
 
         return entries
 
