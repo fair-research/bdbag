@@ -152,6 +152,9 @@ def get_file(url, output_path, auth_config, **kwargs):
         auth = get_auth(url, auth_config)
         if auth and auth.auth_type == 'bearer-token':
             allow_redirects = False
+            # Force setting the "X-Requested-With": "XMLHttpRequest" header is a workaround for some OIDC servers that
+            # on an unauthenticated request redirect to a login flow instead of responding with a 401 Unauthorized.
+            headers.update({"X-Requested-With": "XMLHttpRequest"})
             if auth.auth_params and hasattr(auth.auth_params, 'allow_redirects_with_token'):
                 allow_redirects_with_token = stob(auth.auth_params.allow_redirects_with_token)
 
