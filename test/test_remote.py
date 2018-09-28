@@ -183,6 +183,31 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_resolve_fetch_http_auth_token_get(self):
+        logger.info(self.getTestHeader('test resolve fetch http token auth'))
+        try:
+            patched_requests_get_auth = None
+
+            def mocked_request_auth_token_get_success(*args, **kwargs):
+                args[0].auth = None
+                args[0].headers = {}
+                patched_requests_get_auth.stop()
+                return args[0].get(args[1], **kwargs)
+
+            patched_requests_get_auth = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+                                                            get=mocked_request_auth_token_get_success,
+                                                            auth=None,
+                                                            create=True)
+
+            patched_requests_get_auth.start()
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                              keychain_file=ospj(self.test_config_dir, 'test-keychain-6.json'), cookie_scan=False)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def test_resolve_fetch_ark(self):
         logger.info(self.getTestHeader('test resolve fetch ark'))
         try:
@@ -370,6 +395,18 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_fetch_ftp_dir)
             bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    @unittest.skipIf((2, 7, 10) < sys.version_info[:3] <= (2, 7, 13), "https://bugs.python.org/issue27973")
+    def test_resolve_fetch_ftp_auth(self):
+        logger.info(self.getTestHeader('test resolve fetch ftp with auth'))
+        try:
+            bdb.resolve_fetch(self.test_bag_fetch_auth_dir,
+                              keychain_file=ospj(self.test_config_dir, 'test-keychain-5.json'))
+            bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=False)
             output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))

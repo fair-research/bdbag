@@ -1,0 +1,1 @@
+ftp://speedtest.tele2.net/1KB.zip	1024	data/1KB.zip

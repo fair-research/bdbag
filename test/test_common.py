@@ -47,6 +47,8 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_bag_fetch_minid_dir))
         self.test_bag_fetch_ftp_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ftp')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ftp_dir))
+        self.test_bag_fetch_auth_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ftp-auth')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_auth_dir))
         self.test_bag_invalid_structure_manifest_dir = os.path.join(
             self.tmpdir, 'test-data', 'test-bag-invalid-structure-manifest')
         self.assertTrue(os.path.isdir(self.test_bag_invalid_structure_manifest_dir))

@@ -78,14 +78,14 @@ def read_keychain(keychain_file, create_default=True):
         with open(keychain_file) as kf:
             keychain = kf.read()
 
-    return json.loads(keychain, object_hook=lambda d: collections.namedtuple('Auth', d.keys())(*d.values()))
+    return json.loads(keychain, object_hook=collections.OrderedDict)
 
 
 def has_auth_attr(auth, attr, quiet=False):
-    if getattr(auth, attr, None) is None:
+    if auth.get(attr) is None:
         if not quiet:
             logger.warning("Unable to locate attribute [%s] in keychain entry for uri: %s" %
-                           (attr, getattr(auth, 'uri', '')))
+                           (attr, auth.get("uri", "")))
         return False
     return True
 

@@ -26,13 +26,17 @@ def validate_auth_config(auth):
 def get_credentials(url, auth_config):
 
     credentials = (None, None)
-    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
+    for auth in list((entry for entry in auth_config if (entry.get("uri", "").lower() in url.lower()))):
 
         if not validate_auth_config(auth):
             continue
 
-        if auth.auth_type == 'globus_transfer':
-            credentials = (auth.auth_params.transfer_token, auth.auth_params.local_endpoint)
+        auth_type = auth.get("auth_type")
+        auth_params = auth.get("auth_params", {})
+        if auth_type == 'globus_transfer':
+            transfer_token = auth_params.get("transfer_token")
+            local_endpoint = auth_params.get("local_endpoint")
+            credentials = (transfer_token, local_endpoint)
             break
 
     return credentials

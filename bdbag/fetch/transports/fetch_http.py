@@ -28,7 +28,7 @@ def validate_auth_config(auth):
 
 
 def get_auth(url, auth_config):
-    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
+    for auth in list((entry for entry in auth_config if (entry.get("uri", "").lower() in url.lower()))):
         if validate_auth_config(auth):
             return auth
     return None
@@ -39,71 +39,78 @@ def get_session(url, auth_config, config):
     session = None
     response = None
 
-    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
-
+    for auth in list((entry for entry in auth_config if (entry.get("uri", "").lower() in url.lower()))):
         try:
             if not validate_auth_config(auth):
                 continue
 
-            if auth.uri in SESSIONS:
-                session = SESSIONS[auth.uri]
+            uri = auth.get("uri")
+            if uri in SESSIONS:
+                session = SESSIONS[uri]
                 break
             else:
                 session = init_new_session(config["session_config"])
 
-            if auth.auth_type == 'cookie':
-                if auth.auth_params and hasattr(auth.auth_params, 'cookies'):
-                    cookies = auth.auth_params.cookies
-                    for cookie in cookies:
-                        name, value = cookie.split('=', 1)
-                        session.cookies.set(name, value, domain=urlsplit(auth.uri).hostname, path='/')
-                    SESSIONS[auth.uri] = session
+            auth_type = auth.get("auth_type")
+            auth_params = auth.get("auth_params", {})
+
+            if auth_type == 'cookie':
+                if auth_params:
+                    cookies = auth_params.get("cookies", [])
+                    if cookies:
+                        for cookie in cookies:
+                            name, value = cookie.split('=', 1)
+                            session.cookies.set(name, value, domain=urlsplit(uri).hostname, path='/')
+                    session.headers.update(auth_params.get("additional_request_headers", {}))
+                    SESSIONS[uri] = session
                     break
 
-            if auth.auth_type == 'bearer-token':
-                if auth.auth_params and hasattr(auth.auth_params, 'token'):
-                    session.headers.update({"Authorization": "Bearer " + auth.auth_params.token})
-                    SESSIONS[auth.uri] = session
+            if auth_type == 'bearer-token':
+                token = auth_params.get("token")
+                if token:
+                    session.headers.update({"Authorization": "Bearer " + token})
+                    session.headers.update(auth_params.get("additional_request_headers", {}))
+                    SESSIONS[uri] = session
                     break
                 else:
                     logging.warning("Missing required parameters [token] for auth_type [%s] for keychain entry [%s]" %
-                                    (auth.auth_type, auth.uri))
+                                    (auth_type, uri))
 
             # if we get here the assumption is that the auth_type is either http-basic or http-form and that an
             # actual session "login" request is necessary
-            auth_uri = auth.uri
-            if keychain.has_auth_attr(auth, 'auth_uri'):
-                auth_uri = auth.auth_uri
-
-            if not (keychain.has_auth_attr(auth.auth_params, 'username') and
-                    keychain.has_auth_attr(auth.auth_params, 'password')):
+            auth_uri = auth.get("auth_uri", uri)
+            username = auth_params.get("username")
+            password = auth_params.get("password")
+            if not username and password:
                 logging.warning(
                     "Missing required parameters [username, password] for auth_type [%s] for keychain entry [%s]" %
-                    (auth.auth_type, auth.uri))
+                    (auth_type, uri))
                 continue
 
-            if auth.auth_type == 'http-basic':
-                session.auth = (auth.auth_params.username, auth.auth_params.password)
-                auth_method = "post"
-                if keychain.has_auth_attr(auth.auth_params, 'auth_method'):
-                    auth_method = auth.auth_params.auth_method.lower()
+            session.headers.update(auth_params.get("additional_request_headers", {}))
+
+            auth_method = auth_params.get("auth_method", "post")
+            if auth_type == 'http-basic':
+                session.auth = (username, password)
+                if auth_method:
+                    auth_method = auth_method.lower()
                 if auth_method == 'post':
                     response = session.post(auth_uri, auth=session.auth)
                 elif auth_method == 'get':
                     response = session.get(auth_uri, auth=session.auth)
                 else:
                     logging.warning("Unsupported auth_method [%s] for auth_type [%s] for keychain entry [%s]" %
-                                    (auth_method, auth.auth_type, auth.uri))
-            elif auth.auth_type == 'http-form':
-                response = session.post(auth_uri,
-                                        {auth.auth_params.username_field or "username": auth.auth_params.username,
-                                         auth.auth_params.password_field or "password": auth.auth_params.password})
+                                    (auth_method, auth_type, uri))
+            elif auth_type == 'http-form':
+                username_field = auth_params.get("username_field", "username")
+                password_field = auth_params.get("password_field", "password")
+                response = session.post(auth_uri, {username_field: username, password_field: password})
             if response.status_code > 203:
                 logger.warning(
                     'Authentication failed with Status Code: %s %s\n' % (response.status_code, response.text))
             else:
-                logger.info("Session established: %s", auth.uri)
-                SESSIONS[auth.uri] = session
+                logger.info("Session established: %s", uri)
+                SESSIONS[uri] = session
                 break
 
         except Exception as e:
@@ -149,14 +156,16 @@ def get_file(url, output_path, auth_config, **kwargs):
 
         allow_redirects = config.get("allow_redirects", False)
         allow_redirects_with_token = False
-        auth = get_auth(url, auth_config)
-        if auth and auth.auth_type == 'bearer-token':
+        auth = get_auth(url, auth_config) or {}
+        auth_type = auth.get("auth_type")
+        auth_params = auth.get("auth_params")
+        if auth_type == 'bearer-token':
             allow_redirects = False
             # Force setting the "X-Requested-With": "XMLHttpRequest" header is a workaround for some OIDC servers that
             # on an unauthenticated request redirect to a login flow instead of responding with a 401 Unauthorized.
             headers.update({"X-Requested-With": "XMLHttpRequest"})
-            if auth.auth_params and hasattr(auth.auth_params, 'allow_redirects_with_token'):
-                allow_redirects_with_token = stob(auth.auth_params.allow_redirects_with_token)
+            if auth_params:
+                allow_redirects_with_token = stob(auth_params.get("allow_redirects_with_token", False))
 
         while True:
             logger.info("Attempting GET from URL: %s" % url)
@@ -169,7 +178,7 @@ def get_file(url, output_path, auth_config, **kwargs):
             if r.status_code in redirect_status_codes:
                 url = r.headers['Location']
                 logger.info("Server responded with redirect to: %s" % url)
-                if auth and auth.auth_type == 'bearer-token':
+                if auth_type == 'bearer-token':
                     if allow_redirects_with_token:
                         headers.update({"Authorization": session.headers.get("Authorization", {})})
                     else:

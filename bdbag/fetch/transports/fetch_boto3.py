@@ -38,15 +38,16 @@ def validate_auth_config(auth):
 def get_credentials(url, auth_config):
 
     credentials = None
-    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
+    for auth in list((entry for entry in auth_config if (entry.get("uri", "").lower() in url.lower()))):
 
         if not validate_auth_config(auth):
             continue
 
-        if auth.auth_type == 'aws-credentials':
-            if keychain.has_auth_attr(auth, "auth_params"):
-                credentials = auth.auth_params
-                break
+        auth_type = auth.get("auth_type")
+        auth_params = auth.get("auth_params")
+        if auth_type == 'aws-credentials':
+            credentials = auth_params
+            break
 
     return credentials
 
@@ -60,11 +61,11 @@ def get_file(url, output_path, auth_config, **kwargs):
         fetch_config = bdbag_config.get(FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG)
         config = fetch_config.get("s3", DEFAULT_FETCH_CONFIG["s3"])
         credentials = get_credentials(url, auth_config)
-        key = credentials.key if keychain.has_auth_attr(credentials, "key", quiet=True) else None
-        secret = credentials.secret if keychain.has_auth_attr(credentials, "secret", quiet=True) else None
-        token = credentials.token if keychain.has_auth_attr(credentials, "token", quiet=True) else None
-        role_arn = credentials.role_arn if keychain.has_auth_attr(credentials, "role_arn", quiet=True) else None
-        profile_name = credentials.profile if keychain.has_auth_attr(credentials, "profile", quiet=True) else None
+        key = credentials.get("key")
+        secret = credentials.get("secret")
+        token = credentials.get("token")
+        role_arn = credentials.get("role_arn")
+        profile_name = credentials.get("profile")
 
         try:
             session = BOTO3.session.Session(profile_name=profile_name)

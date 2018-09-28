@@ -22,13 +22,17 @@ def validate_auth_config(auth):
 def get_credentials(url, auth_config):
 
     credentials = (None, None)
-    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
+    for auth in list((entry for entry in auth_config if (entry.get("uri", "").lower() in url.lower()))):
 
         if not validate_auth_config(auth):
             continue
 
-        if auth.auth_type == 'ftp-basic':
-            credentials = (auth.auth_params.username, auth.auth_params.password)
+        auth_type = auth.get("auth_type")
+        auth_params = auth.get("auth_params", {})
+        username = auth_params.get("username")
+        password = auth_params.get("password")
+        if auth_type == 'ftp-basic':
+            credentials = (username, password)
             break
 
     return credentials
