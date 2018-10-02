@@ -53,9 +53,9 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
             pass
         else:
             success = fetch_file(entry.url,
-                                 entry.length,
                                  output_path,
                                  auth,
+                                 size=entry.length,
                                  config=config,
                                  cookies=cookies,
                                  **kwargs)
@@ -70,7 +70,7 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
     return success
 
 
-def fetch_file(url, size, path, auth, **kwargs):
+def fetch_file(url, path, auth, **kwargs):
 
     scheme = urlsplit(url, allow_fragments=True).scheme.lower()
     if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
@@ -95,12 +95,34 @@ def fetch_file(url, size, path, auth, **kwargs):
         for entry in resolve(url, resolver_config):
             url = entry.get("url")
             if url:
-                if fetch_file(url, size, path, auth, **kwargs):
+                if fetch_file(url, path, auth, **kwargs):
                     return True
         return False
 
     logger.warning(UNIMPLEMENTED % scheme)
     return False
+
+
+def fetch_single_file(url,
+                      output_path=None,
+                      config_file=DEFAULT_CONFIG_FILE,
+                      keychain_file=DEFAULT_KEYCHAIN_FILE,
+                      cookie_scan=True,
+                      **kwargs):
+
+    config = read_config(config_file)
+    auth = read_keychain(keychain_file)
+    cookies = load_and_merge_cookie_jars(find_cookie_jars(
+        config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG]))) if cookie_scan else None
+
+    success = fetch_file(url,
+                         output_path,
+                         auth,
+                         config=config,
+                         cookies=cookies,
+                         **kwargs)
+    cleanup_transports()
+    return success
 
 
 def cleanup_transports():

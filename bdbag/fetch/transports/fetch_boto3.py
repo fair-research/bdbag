@@ -4,7 +4,7 @@ import logging
 from importlib import import_module
 from bdbag import urlsplit, urlunsplit, stob, get_typed_exception
 from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG
-from bdbag.fetch import Megabyte, get_transfer_summary
+from bdbag.fetch import Megabyte, get_transfer_summary, ensure_valid_output_path
 from bdbag.fetch.auth import keychain
 
 logger = logging.getLogger(__name__)
@@ -54,13 +54,15 @@ def get_credentials(url, auth_config):
 
 def get_file(url, output_path, auth_config, **kwargs):
     success = False
+    output_path = ensure_valid_output_path(url, output_path)
+
     try:
         import_boto3()
 
         bdbag_config = kwargs.get("config", DEFAULT_CONFIG)
         fetch_config = bdbag_config.get(FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG)
         config = fetch_config.get("s3", DEFAULT_FETCH_CONFIG["s3"])
-        credentials = get_credentials(url, auth_config)
+        credentials = get_credentials(url, auth_config) or {}
         key = credentials.get("key")
         secret = credentials.get("secret")
         token = credentials.get("token")
@@ -100,10 +102,6 @@ def get_file(url, output_path, auth_config, **kwargs):
             s3_client = session.client("s3", **kwargs)
         except Exception as e:
             raise RuntimeError("Unable to create Boto3 storage client: %s" % get_typed_exception(e))
-
-        output_dir = os.path.dirname(os.path.abspath(output_path))
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
 
         logger.info("Attempting GET from URL: %s" % url)
         response = s3_client.get_object(Bucket=upr.netloc, Key=upr.path.lstrip("/"))

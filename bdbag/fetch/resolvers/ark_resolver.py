@@ -20,29 +20,30 @@ class MinidResolverHandler(BaseResolverHandler):
                 "structure was not found. Exception: %s" % get_typed_exception(e))
             return entries
 
-        entry = dict()
+        base_entry = dict()
         locations = content.get('locations')
         if locations:
             checksum_function = content.get("checksum_function", "sha256")
             checksum = content.get("checksum")
-            entry[checksum_function] = checksum
+            base_entry[checksum_function] = checksum
             for location in locations:
                 uri = location.get('uri', None)
                 if uri:
+                    entry = dict(base_entry)
                     entry["url"] = uri
                     entries.append(entry)
         else:  # newer response format
             metadata = content.get("metadata", {})
             length = metadata.get("contentSize")
             if length:
-                entry["length"] = length
+                base_entry["length"] = length
             checksums = content.get("checksums", [])
             for checksum in checksums:
-                entry[checksum["function"]] = checksum["value"]
-            locations = content.get('location')
-            if locations:
-                for location in locations:
-                    entry["url"] = location
-                    entries.append(entry)
+                base_entry[checksum["function"]] = checksum["value"]
+            locations = content.get('location', [])
+            for location in locations:
+                entry = dict(base_entry)
+                entry["url"] = location
+                entries.append(entry)
 
         return entries

@@ -23,20 +23,20 @@ class DataGUIDResolverHandler(BaseResolverHandler):
                 "structure was not found. Exception: %s" % get_typed_exception(e))
             return entries
 
-        entry = dict()
+        base_entry = dict()
         data_object = content.get("data_object", {})
-        locations = data_object.get('urls')
-        if locations:
-            length = data_object.get("size")
-            if length:
-                entry["length"] = length
-            checksums = data_object.get("checksums", [])
-            for checksum in checksums:
-                entry[checksum["type"]] = checksum["checksum"]
-            for location in locations:
-                url = location.get("url")
-                if url:
-                    entry["url"] = url
-                    entries.append(entry)
+        length = data_object.get("size")
+        if length:
+            base_entry["length"] = length
+        checksums = data_object.get("checksums", [])
+        for checksum in checksums:
+            base_entry[checksum["type"]] = checksum["checksum"]
+        locations = data_object.get('urls', [])
+        for location in locations:
+            url = location.get("url")
+            if url:
+                entry = dict(base_entry)
+                entry["url"] = url
+                entries.append(entry)
 
         return entries

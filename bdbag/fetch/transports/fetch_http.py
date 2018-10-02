@@ -8,7 +8,7 @@ from requests.packages.urllib3.util.retry import Retry
 from bdbag import urlsplit, stob, get_typed_exception
 from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG, \
     FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES
-from bdbag.fetch import Megabyte, get_transfer_summary
+from bdbag.fetch import Megabyte, get_transfer_summary, ensure_valid_output_path
 import bdbag.fetch.auth.keychain as keychain
 
 logger = logging.getLogger(__name__)
@@ -150,9 +150,7 @@ def get_file(url, output_path, auth_config, **kwargs):
             FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES)
 
         session = get_session(url, auth_config, config)
-        output_dir = os.path.dirname(os.path.abspath(output_path))
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        output_path = ensure_valid_output_path(url, output_path)
 
         allow_redirects = config.get("allow_redirects", False)
         allow_redirects_with_token = False

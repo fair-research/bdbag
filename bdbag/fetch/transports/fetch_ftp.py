@@ -2,7 +2,7 @@ import os
 import datetime
 import logging
 from bdbag import urlsplit, urlunsplit, urlretrieve, get_typed_exception
-from bdbag.fetch import get_transfer_summary
+from bdbag.fetch import get_transfer_summary, ensure_valid_output_path
 import bdbag.fetch.auth.keychain as keychain
 
 logger = logging.getLogger(__name__)
@@ -44,9 +44,7 @@ def get_file(url, output_path, auth_config, **kwargs):
         credentials = kwargs.get("credentials")
         if not credentials:
             credentials = get_credentials(url, auth_config)
-        output_dir = os.path.dirname(os.path.abspath(output_path))
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        output_path = ensure_valid_output_path(url, output_path)
         logger.info("Attempting FTP retrieve from URL: %s" % url)
         creds = "%s:%s@" % (credentials[0] or "anonymous", credentials[1] or "bdbag@users.noreply.github.com")
         url_parts = urlsplit(url)

@@ -3,8 +3,9 @@ import os
 import sys
 import logging
 import bagit
-from bdbag import bdbag_api as bdb, get_typed_exception, FILTER_DOCSTRING, VERSION
+from bdbag import bdbag_api as bdb, urlsplit, get_typed_exception, FILTER_DOCSTRING, VERSION
 from bdbag.bdbag_config import DEFAULT_CONFIG_FILE
+from bdbag.fetch import fetcher
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
 BAG_METADATA = dict()
@@ -157,11 +158,20 @@ def parse_cli():
     bdb.configure_logging(level=logging.ERROR if args.quiet else (logging.DEBUG if args.debug else logging.INFO))
 
     path = os.path.abspath(args.path)
-    if not os.path.exists(path):
-        sys.stderr.write("Error: file or directory not found: %s\n\n" % path)
-        sys.exit(2)
+    exists = os.path.exists(path)
+    is_uri = is_file = False
+    if not exists:
+        upr = urlsplit(args.path)
+        drive, tail = os.path.splitdrive(args.path)
+        if upr.scheme and upr.scheme.lower() != drive.rstrip(":").lower():
+            is_uri = True
+            path = args.path
+    if not is_uri:
+        if not exists:
+            sys.stderr.write("Error: file or directory not found: %s\n\n" % path)
+            sys.exit(2)
+        is_file = os.path.isfile(path)
 
-    is_file = os.path.isfile(path)
     if args.archiver and is_file:
         sys.stderr.write("Error: A bag archive cannot be created from an existing bag archive.\n\n")
         sys.exit(2)
@@ -247,13 +257,12 @@ def parse_cli():
                          (revert_arg, update_arg))
         sys.exit(2)
 
-    return args, is_bag, is_file
+    return args, path, is_bag, is_file, is_uri
 
 
 def main():
 
-    args, is_bag, is_file = parse_cli()
-    path = os.path.abspath(args.path)
+    args, path, is_bag, is_file, is_uri = parse_cli()
 
     archive = None
     temp_path = None
@@ -261,9 +270,18 @@ def main():
     result = 0
 
     if not args.quiet:
-        sys.stderr.write('\n')
+        sys.stdout.write('\n')
 
     try:
+        if is_uri:
+            # Try to resolve/download the bag
+            fetcher.fetch_single_file(path,
+                                      config_file=args.config_file,
+                                      keychain_file=args.keychain_file)
+            if not args.quiet:
+                sys.stdout.write('\n')
+            return result
+
         if not is_file:
             # do not try to create or update the bag if the user just wants to validate or complete an existing bag
             if not ((args.validate or args.validate_profile or args.resolve_fetch) and
@@ -286,7 +304,7 @@ def main():
         elif not (args.validate or args.validate_profile or args.resolve_fetch):
             bdb.extract_bag(path)
             if not args.quiet:
-                sys.stderr.write('\n')
+                sys.stdout.write('\n')
             return result
 
         if args.ro_manifest_generate:
@@ -336,10 +354,10 @@ def main():
         if temp_path:
             bdb.cleanup_bag(os.path.dirname(temp_path))
         if result != 0:
-            sys.stderr.write("\n%s" % error)
+            sys.stdout.write("\n%s" % error)
 
     if not args.quiet:
-        sys.stderr.write('\n')
+        sys.stdout.write('\n')
 
     return result
 

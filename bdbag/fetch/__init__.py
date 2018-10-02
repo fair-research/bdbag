@@ -1,3 +1,5 @@
+import os
+from bdbag import urlsplit
 
 Kilobyte = 1024
 Megabyte = Kilobyte ** 2
@@ -12,3 +14,15 @@ def get_transfer_summary(total_bytes, elapsed_time):
     summary = "%.3f %s transferred%s. %s" % \
               (transferred, "KB" if total_bytes < Megabyte else "MB", throughput, elapsed)
     return summary
+
+
+def ensure_valid_output_path(url, output_path=None):
+    if not output_path:
+        upr = urlsplit(url, allow_fragments=False)
+        output_path = os.path.join(os.curdir, os.path.basename(upr.path))
+    output_path = os.path.abspath(output_path)
+    output_dir = os.path.dirname(output_path)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    return output_path

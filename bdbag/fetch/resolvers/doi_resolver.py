@@ -21,12 +21,12 @@ class DOIResolverHandler(BaseResolverHandler):
                 "structure was not found. Exception: %s" % get_typed_exception(e))
             return entries
 
-        entry = dict()
+        base_entry = dict()
         locations = content.get('contentUrl')
         if locations:
             length = content.get("contentSize")
             if length:
-                entry["length"] = length
+                base_entry["length"] = length
             identifier_props = content.get("identifier", [])
             for prop in identifier_props:
                 name = prop.get("propertyID")
@@ -34,12 +34,14 @@ class DOIResolverHandler(BaseResolverHandler):
                 if name and value:
                     name = name.replace('-', '')
                     if name.lower() in CHECKSUM_ALGOS:
-                        entry[name] = value
+                        base_entry[name] = value
             if isinstance(locations, str):
+                entry = dict(base_entry)
                 entry["url"] = locations
                 entries.append(entry)
             else:
                 for location in locations:
+                    entry = dict(base_entry)
                     entry["url"] = location
                     entries.append(entry)
 

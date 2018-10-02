@@ -58,6 +58,7 @@ def get_file(url, output_path, auth_config, **kwargs):
     try:
         src_endpoint = urlsplit(url).hostname
         src_path = urlsplit(url).path
+        output_path = ensure_valid_output_path(url, output_path)
         if platform.system() == "Windows":
             dest_path = ''.join(('/', output_path.replace('\\', '/').replace(':', '')))
         else:

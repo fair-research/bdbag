@@ -11,6 +11,7 @@ from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb
+from bdbag.fetch import fetcher
 from test.test_common import BaseTest
 
 if sys.version_info > (3,):
@@ -238,7 +239,8 @@ class TestRemoteAPI(BaseTest):
                 "identifier": "ark:/57799/b91FmdtR3Pf4Ct7",
                 "landing_page": "https://identifiers.globus.org/ark:/57799/b91FmdtR3Pf4Ct7/landingpage",
                 "location": [
-                    "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt"
+                    "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt",
+                    "http://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt"
                 ],
                 "metadata": {
                     "title": "BDBag identifier unit test file"
@@ -302,7 +304,8 @@ class TestRemoteAPI(BaseTest):
                 "keywords": "bdbag, unit test",
                 "datePublished": "2018-09-20",
                 "contentUrl": [
-                    "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt"
+                    "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt",
+                    "http://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt"
                 ],
                 "schemaVersion": "http://datacite.org/schema/kernel-4",
                 "publisher": {
@@ -354,6 +357,9 @@ class TestRemoteAPI(BaseTest):
                     "urls": [
                         {
                             "url": "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt"
+                        },
+                        {
+                            "url": "http://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt"
                         }
                     ],
                     "version": "0d318219"
@@ -389,7 +395,8 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    def test_resolve_fetch_ftp(self):
+    @unittest.skipIf(sys.version_info[:3] > (2, 7, 10), "Reason: https://bugs.python.org/issue27973")
+    def test_resolve_fetch_ftp_no_auth(self):
         logger.info(self.getTestHeader('test resolve fetch ftp'))
         try:
             bdb.resolve_fetch(self.test_bag_fetch_ftp_dir)
@@ -399,7 +406,6 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    @unittest.skipIf(sys.version_info[:3] > (2, 7, 10), "https://bugs.python.org/issue27973")
     def test_resolve_fetch_ftp_auth(self):
         logger.info(self.getTestHeader('test resolve fetch ftp with auth'))
         try:
@@ -407,6 +413,18 @@ class TestRemoteAPI(BaseTest):
                               keychain_file=ospj(self.test_config_dir, 'test-keychain-5.json'))
             bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_fetch_single(self):
+        logger.info(self.getTestHeader('test fetch single file'))
+        try:
+            output_path = ospj(self.test_bag_fetch_http_dir, "test-fetch-http.txt")
+            fetcher.fetch_single_file(
+                "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt",
+                output_path)
+            self.assertTrue(os.path.exists(output_path))
             output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
