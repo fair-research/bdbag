@@ -405,7 +405,8 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    @unittest.skipIf(sys.version_info[:3] > (2, 7, 10), "Reason: https://bugs.python.org/issue27973")
+    @unittest.skip
+    #@unittest.skipIf(sys.version_info[:3] > (2, 7, 10), "Reason: https://bugs.python.org/issue27973")
     def test_resolve_fetch_ftp_auth(self):
         logger.info(self.getTestHeader('test resolve fetch ftp with auth'))
         try:
