@@ -395,6 +395,7 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    @unittest.skip("Reason: Temporarily disabled due to TravisCI security issues with target server")
     def test_resolve_fetch_ftp_no_auth(self):
         logger.info(self.getTestHeader('test resolve fetch ftp'))
         try:
