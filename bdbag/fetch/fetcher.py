@@ -27,8 +27,9 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
 
     success = True
     auth = read_keychain(keychain_file)
-    cookies = load_and_merge_cookie_jars(find_cookie_jars(
-        config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG]))) if kwargs.get("cookie_scan", True) else None
+    cookie_jar_config = config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG])
+    cookies = load_and_merge_cookie_jars(find_cookie_jars(cookie_jar_config)) if \
+        cookie_jar_config.get(COOKIE_JAR_SEARCH_TAG, True) and kwargs.get("cookie_scan", True) else None
     current = 0
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     start = datetime.datetime.now()
@@ -107,13 +108,13 @@ def fetch_single_file(url,
                       output_path=None,
                       config_file=DEFAULT_CONFIG_FILE,
                       keychain_file=DEFAULT_KEYCHAIN_FILE,
-                      cookie_scan=True,
                       **kwargs):
 
     config = read_config(config_file)
     auth = read_keychain(keychain_file)
-    cookies = load_and_merge_cookie_jars(find_cookie_jars(
-        config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG]))) if cookie_scan else None
+    cookie_jar_config = config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG])
+    cookies = load_and_merge_cookie_jars(find_cookie_jars(cookie_jar_config)) if \
+        cookie_jar_config.get(COOKIE_JAR_SEARCH_TAG, True) and kwargs.get("cookie_scan", True) else None
 
     success = fetch_file(url,
                          output_path,

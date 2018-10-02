@@ -395,24 +395,40 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    @unittest.skip("Reason: Temporarily disabled due to TravisCI security issues with target server")
     def test_resolve_fetch_ftp_no_auth(self):
         logger.info(self.getTestHeader('test resolve fetch ftp'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_ftp_dir)
+            patched_urlretrieve = None
+
+            def mocked_urlretrieve_success(*args, **kwargs):
+                patched_urlretrieve.stop()
+                return
+
+            patched_urlretrieve = mock.patch.multiple("bdbag.fetch.transports.fetch_ftp",
+                                                      urlretrieve=mocked_urlretrieve_success)
+            patched_urlretrieve.start()
+
+            bdb.resolve_fetch(self.test_bag_fetch_ftp_dir, force=True)
             bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=False)
             output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-
-    #@unittest.skipIf(sys.version_info[:3] > (2, 7, 10), "Reason: https://bugs.python.org/issue27973")
-    @unittest.skip("Reason: https://bugs.python.org/issue27973")
     def test_resolve_fetch_ftp_auth(self):
         logger.info(self.getTestHeader('test resolve fetch ftp with auth'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_auth_dir,
+            patched_urlretrieve = None
+
+            def mocked_urlretrieve_success(*args, **kwargs):
+                patched_urlretrieve.stop()
+                return
+
+            patched_urlretrieve = mock.patch.multiple("bdbag.fetch.transports.fetch_ftp",
+                                                      urlretrieve=mocked_urlretrieve_success)
+            patched_urlretrieve.start()
+
+            bdb.resolve_fetch(self.test_bag_fetch_auth_dir, force=True,
                               keychain_file=ospj(self.test_config_dir, 'test-keychain-5.json'))
             bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=False)

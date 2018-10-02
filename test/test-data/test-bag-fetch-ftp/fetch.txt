@@ -1,1 +1,1 @@
-ftp://speedtest.tele2.net/1MB.zip	1048576	data/1MB.zip
+ftp://speedtest.tele2.net/1KB.zip	1024	data/1KB.zip
