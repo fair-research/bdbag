@@ -68,12 +68,12 @@ def get_file(url, output_path, auth_config, **kwargs):
         if token is None:
             logger.warn("A valid Globus Transfer access token is required to create transfers. "
                         "Check keychain.json for invalid parameters.")
-            return False
+            return None
 
         if dest_endpoint is None:
             logger.warn("A valid Globus Transfer destination endpoint must be specified. "
                         "Check keychain.json for invalid parameters.")
-            return False
+            return None
 
         # initialize transfer client
         authorizer = globus_sdk.AccessTokenAuthorizer(token)
@@ -104,9 +104,9 @@ def get_file(url, output_path, auth_config, **kwargs):
 
         logger.info("Globus Transfer started with ID %s" % task_id)
         logger.debug("Transferring file %s to %s" % (url, output_path))
-        return True
+        return output_path
 
     except Exception as e:
         logger.error('Globus Transfer request exception: %s' % get_typed_exception(e))
 
-    return False
+    return None

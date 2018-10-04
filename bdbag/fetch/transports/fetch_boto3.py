@@ -146,4 +146,4 @@ def get_file(url, output_path, auth_config, **kwargs):
             logger.error('Boto3 GET Failed for URL: %s' % url)
             logger.warning('File transfer failed: [%s]' % output_path)
 
-    return success
+    return output_path if success else None

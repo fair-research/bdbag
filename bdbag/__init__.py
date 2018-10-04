@@ -76,7 +76,7 @@ def guess_mime_type(file_path):
     return content_type
 
 
-def parse_content_disposition(value):
+def parse_content_disposition(value):  # pragma: no cover
     m = CONTENT_DISP_REGEX.match(value)
     if not m:
         raise ValueError('Cannot parse content-disposition "%s".' % value)
@@ -97,7 +97,7 @@ def parse_content_disposition(value):
     return n
 
 
-def escape_uri(uri, illegal_only=True, safe="/"):
+def escape_uri(uri, illegal_only=True, safe="/"):  # pragma: no cover
     if not uri:
         return uri
 
@@ -174,3 +174,19 @@ def filter_dict(expr, entry):
             (json.dumps(entry), expr))
 
     return result
+
+
+def inspect_path(path):
+    abs_path = os.path.abspath(path)
+    exists = os.path.exists(abs_path)
+    is_uri = is_file = is_dir = False
+    if not exists:
+        upr = urlsplit(path)
+        drive, tail = os.path.splitdrive(path)
+        if upr.scheme and upr.scheme.lower() != drive.rstrip(":").lower():
+            is_uri = True
+    if not is_uri:
+        is_file = os.path.isfile(abs_path)
+        is_dir = os.path.isdir(abs_path)
+
+    return is_file, is_dir, is_uri

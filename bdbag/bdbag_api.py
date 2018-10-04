@@ -14,7 +14,7 @@ from tzlocal import get_localzone
 from collections import OrderedDict
 from bdbag import *
 from bdbag.bdbag_config import *
-from bdbag.fetch.fetcher import fetch_bag_files
+from bdbag.fetch.fetcher import fetch_bag_files, fetch_single_file
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
 logger = logging.getLogger(__name__)
@@ -547,3 +547,43 @@ def resolve_fetch(bag_path,
             bag, keychain_file, force=force, callback=callback, config=config, filter_expr=filter_expr, **kwargs)
     else:
         return True
+
+
+def materialize(input_path,
+                output_path=None,
+                fetch_callback=None,
+                validation_callback=None,
+                keychain_file=DEFAULT_KEYCHAIN_FILE,
+                config_file=DEFAULT_CONFIG_FILE,
+                filter_expr=None,
+                **kwargs):
+
+    bag_file = bag_path = None
+    is_file, is_dir, is_uri = inspect_path(input_path)
+    if is_file:
+        bag_file = input_path
+    elif is_dir:
+        bag_path = input_path
+    elif is_uri:
+        bag_file = fetch_single_file(input_path,
+                                     output_path,
+                                     config_file=config_file,
+                                     keychain_file=keychain_file,
+                                     **kwargs)
+        if not bag_file:
+            raise RuntimeError("Unable to retrieve bag from: %s" % input_path)
+
+    if bag_file:
+        bag_path = extract_bag(bag_file)
+
+    if bag_path:
+        if not resolve_fetch(bag_path,
+                             force=False,
+                             callback=fetch_callback,
+                             keychain_file=keychain_file,
+                             config_file=config_file,
+                             filter_expr=filter_expr,
+                             **kwargs):
+            logging.warning("One or more bag files were not fetched successfully.")
+
+        validate_bag(bag_path, fast=False, callback=validation_callback, config_file=config_file)

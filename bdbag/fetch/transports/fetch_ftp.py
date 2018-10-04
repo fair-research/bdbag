@@ -57,11 +57,11 @@ def get_file(url, output_path, auth_config, **kwargs):
         total = os.path.getsize(output_path)
         summary = get_transfer_summary(total, elapsed)
         logger.info('File [%s] transfer successful. %s' % (output_path, summary))
-        return True
+        return output_path
 
     except Exception as e:
         logger.error('FTP Request Exception: %s' % (get_typed_exception(e)))
         logger.warning('File transfer failed: [%s]' % output_path)
 
-    return False
+    return None
 

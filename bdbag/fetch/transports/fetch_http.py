@@ -203,12 +203,12 @@ def get_file(url, output_path, auth_config, **kwargs):
             elapsed_time = datetime.datetime.now() - start
             summary = get_transfer_summary(total, elapsed_time)
             logger.info('File [%s] transfer successful. %s' % (output_path, summary))
-            return True
+            return output_path
 
     except requests.exceptions.RequestException as e:
         logger.error('HTTP Request Exception: %s' % (get_typed_exception(e)))
 
-    return False
+    return None
 
 
 def cleanup():

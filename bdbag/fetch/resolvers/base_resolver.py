@@ -21,7 +21,7 @@ class BaseResolverHandler(object):
     def handle_response(cls, response):
         raise NotImplementedError("Must be implemented by subclass")
 
-    def resolve(self, identifier):
+    def resolve(self, identifier, headers=None):
         if identifier is None:
             return []
 
@@ -32,7 +32,8 @@ class BaseResolverHandler(object):
             return urls
 
         session = requests.session()
-        session.headers = {'Accept': 'application/json', 'Connection': 'close'}
+        if headers:
+            session.headers = headers
         for resolver in self.identifier_resolvers:
             resolver_url = self.get_resolver_url(identifier, resolver)
             logger.info("Attempting to resolve %s into a valid set of URLs." % identifier)

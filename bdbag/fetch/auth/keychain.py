@@ -54,7 +54,7 @@ def create_default_keychain():
     if not os.path.isdir(DEFAULT_KEYCHAIN_PATH):
         try:
             os.makedirs(DEFAULT_KEYCHAIN_PATH)
-        except OSError as error:
+        except OSError as error:  # pragma: no cover
             if error.errno != errno.EEXIST:
                 raise
     with open(DEFAULT_KEYCHAIN_FILE, 'w') as kf:
@@ -83,7 +83,7 @@ def read_keychain(keychain_file, create_default=True):
 
 def has_auth_attr(auth, attr, quiet=False):
     if auth.get(attr) is None:
-        if not quiet:
+        if not quiet: # pragma: no cover
             logger.warning("Unable to locate attribute [%s] in keychain entry for uri: %s" %
                            (attr, auth.get("uri", "")))
         return False

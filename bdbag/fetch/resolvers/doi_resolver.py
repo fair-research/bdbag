@@ -11,6 +11,11 @@ class DOIResolverHandler(BaseResolverHandler):
     def __init__(self, identifier_resolvers, args):
         super(DOIResolverHandler, self).__init__(identifier_resolvers, args)
 
+    def resolve(self, identifier, headers=None):
+        if not headers:
+            headers = {'Accept': 'application/json', 'Connection': 'close'}
+        return super(DOIResolverHandler, self).resolve(identifier, headers)
+
     def handle_response(self, response):
         entries = list()
         try:

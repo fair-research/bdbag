@@ -160,21 +160,21 @@ class TestCliArgParsing(BaseTest):
                        '--archive', 'tgz']
         logfile.writelines(self.getTestHeader('create bag from existing archive', args))
         self._test_bad_argument_error_handling(
-            args, ["Error: A bag archive cannot be created from an existing bag archive"])
+            args, ["Error: A bag archive can only be created on directories."])
 
     def test_set_checksum_on_existing_archive(self):
         args = ARGS + [ospj(self.test_archive_dir, 'test-bag.zip'),
                        '--checksum', 'md5']
         logfile.writelines(self.getTestHeader('--checksum on existing archive', args))
         self._test_bad_argument_error_handling(
-            args, ["Error: A checksum manifest cannot be added to an existing bag archive"])
+            args, ["Error: A checksum manifest can only be added to a bag directory."])
 
     def test_update_existing_archive(self):
         args = ARGS + [ospj(self.test_archive_dir, 'test-bag.zip'),
                        '--update']
         logfile.writelines(self.getTestHeader('--update an existing archive file', args))
         self._test_bad_argument_error_handling(
-            args, ["Error: An existing bag archive cannot be updated in-place"])
+            args, ["Error: Only existing bag directories can be updated."])
 
     def test_update_with_resolve_fetch(self):
         args = ARGS + [ospj(self.test_bag_dir),

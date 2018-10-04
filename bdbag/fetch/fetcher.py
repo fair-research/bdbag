@@ -53,13 +53,16 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
                 logger.debug("Not fetching already present file: %s" % output_path)
             pass
         else:
-            success = fetch_file(entry.url,
-                                 output_path,
-                                 auth,
-                                 size=entry.length,
-                                 config=config,
-                                 cookies=cookies,
-                                 **kwargs)
+            result_path = fetch_file(entry.url,
+                                     output_path,
+                                     auth,
+                                     size=entry.length,
+                                     config=config,
+                                     cookies=cookies,
+                                     **kwargs)
+            if not result_path:
+                success = False
+
         if callback:
             current += 1
             if not callback(current, total):
@@ -86,7 +89,7 @@ def fetch_file(url, path, auth, **kwargs):
         logger.info("The fetch entry for file %s specifies the tag URI %s. Tag URIs may represent objects that "
                     "cannot be directly resolved as network resources and therefore cannot be automatically fetched. "
                     "Such files must be acquired outside of the context of this software." % (path, url))
-        return True
+        return path
 
     # if we get here, assume the url is an identifier and try to resolve it
     config = kwargs.get("config")
@@ -96,12 +99,13 @@ def fetch_file(url, path, auth, **kwargs):
         for entry in resolve(url, resolver_config):
             url = entry.get("url")
             if url:
-                if fetch_file(url, path, auth, **kwargs):
-                    return True
-        return False
+                output_path = fetch_file(url, path, auth, **kwargs)
+                if output_path:
+                    return output_path
+        return None
 
     logger.warning(UNIMPLEMENTED % scheme)
-    return False
+    return None
 
 
 def fetch_single_file(url,
@@ -116,14 +120,10 @@ def fetch_single_file(url,
     cookies = load_and_merge_cookie_jars(find_cookie_jars(cookie_jar_config)) if \
         cookie_jar_config.get(COOKIE_JAR_SEARCH_TAG, True) and kwargs.get("cookie_scan", True) else None
 
-    success = fetch_file(url,
-                         output_path,
-                         auth,
-                         config=config,
-                         cookies=cookies,
-                         **kwargs)
+    result_path = fetch_file(url, output_path, auth, config=config, cookies=cookies, **kwargs)
     cleanup_transports()
-    return success
+
+    return result_path
 
 
 def cleanup_transports():

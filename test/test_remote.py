@@ -4,6 +4,7 @@ import logging
 import mock
 import unittest
 import requests
+import tempfile
 import bdbag
 import bdbag.bdbagit as bdbagit
 import bdbag.bdbagit_profile as bdbagit_profile
@@ -441,16 +442,70 @@ class TestRemoteAPI(BaseTest):
         try:
             output_path = ospj(self.test_bag_fetch_http_dir, "test-fetch-http.txt")
             fetcher.fetch_single_file(
-                "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt",
+                "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/"
+                "test-fetch-http.txt",
                 output_path)
             self.assertTrue(os.path.exists(output_path))
             output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-#    def test_resolve_fetch_globus(self):
-#        # TODO
-#        pass
+    def test_materialize_from_dir(self):
+        logger.info(self.getTestHeader('test materialize from dir'))
+        curdir = os.getcwd()
+        os.chdir(self.tmpdir)
+        try:
+            bdb.materialize(self.test_bag_fetch_http_dir)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+        finally:
+            os.chdir(curdir)
+
+    def test_materialize_from_file(self):
+        logger.info(self.getTestHeader('test materialize from file'))
+        curdir = os.getcwd()
+        os.chdir(self.tmpdir)
+        try:
+            bdb.materialize(ospj(self.test_archive_dir, 'test-bag-fetch-http.zip'))
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+        finally:
+            os.chdir(curdir)
+
+    def test_materialize_from_url(self):
+        logger.info(self.getTestHeader('test materialize from URL'))
+        curdir = os.getcwd()
+        os.chdir(self.tmpdir)
+        try:
+            # TODO: change this URL after merging to master
+            bdb.materialize("https://github.com/fair-research/bdbag/raw/dev_branch_1_5/test/test-data/test-archives/"
+                            "test-bag-fetch-http.zip")
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+        finally:
+            os.chdir(curdir)
+
+    @unittest.skip("Not implemented")
+    def test_materialize_from_identifier(self):
+        logger.info(self.getTestHeader('test materialize from identifer'))
+        curdir = os.getcwd()
+        os.chdir(self.tmpdir)
+        try:
+            # TODO: change this to a legitimate identifier after merge
+            bdb.materialize("ark:/57799/foo")
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+        finally:
+            os.chdir(curdir)
+
+    @unittest.skip("Not implemented")
+    def test_resolve_fetch_globus(self):
+        # TODO
+        pass
 
 
 if __name__ == '__main__':

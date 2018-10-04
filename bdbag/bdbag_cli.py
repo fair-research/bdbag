@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 import bagit
-from bdbag import bdbag_api as bdb, urlsplit, get_typed_exception, FILTER_DOCSTRING, VERSION
+from bdbag import bdbag_api as bdb, inspect_path, get_typed_exception, FILTER_DOCSTRING, VERSION
 from bdbag.bdbag_config import DEFAULT_CONFIG_FILE
 from bdbag.fetch import fetcher
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
@@ -75,6 +75,18 @@ def parse_cli():
         prune_manifests_arg, action='store_true',
         help="If specified, any existing checksum manifests not explicitly configured via either"
              " the \"checksum\" argument(s) or configuration file will be deleted from the bag during an update.")
+
+    materialize_arg = "--materialize"
+    standard_args.add_argument(
+        materialize_arg, action="store_true",
+        help="Attempt to fully materialize a bag by performing multiple actions depending on the context of the input "
+             "<path>. If <path> is a URL or a URI of a resolvable identifier scheme, the file referenced by this value "
+             "will first be downloaded to the current directory. Next, if the <path> value (or previously downloaded "
+             "file) is a local path to a supported archive format, the archive will be extracted to the current "
+             "directory. Then, if the <path> value (or previously extracted file) is a valid bag directory, any remote "
+             "file references contained within the bag's \"fetch.txt\" file will attempt to be resolved. Finally, "
+             "full validation will be run on the materialized bag. If any one of these steps fail, a non-zero error is "
+             "returned.")
 
     fetch_arg = "--resolve-fetch"
     standard_args.add_argument(
@@ -157,38 +169,29 @@ def parse_cli():
 
     bdb.configure_logging(level=logging.ERROR if args.quiet else (logging.DEBUG if args.debug else logging.INFO))
 
-    path = os.path.abspath(args.path)
-    exists = os.path.exists(path)
-    is_uri = is_file = False
-    if not exists:
-        upr = urlsplit(args.path)
-        drive, tail = os.path.splitdrive(args.path)
-        if upr.scheme and upr.scheme.lower() != drive.rstrip(":").lower():
-            is_uri = True
-            path = args.path
-    if not is_uri:
-        if not exists:
-            sys.stderr.write("Error: file or directory not found: %s\n\n" % path)
-            sys.exit(2)
-        is_file = os.path.isfile(path)
+    is_file, is_dir, is_uri = inspect_path(args.path)
+    if not is_file and not is_dir and not is_uri:
+        sys.stderr.write("Error: file or directory not found: %s\n\n" % args.path)
+        sys.exit(2)
+    elif is_uri:
+        path = args.path
+    else:
+        path = os.path.abspath(args.path)
 
-    if args.archiver and is_file:
-        sys.stderr.write("Error: A bag archive cannot be created from an existing bag archive.\n\n")
+    if args.archiver and not is_dir:
+        sys.stderr.write("Error: A bag archive can only be created on directories.\n\n")
         sys.exit(2)
 
-    if args.checksum and is_file:
-        sys.stderr.write("Error: A checksum manifest cannot be added to an existing bag archive. "
-                         "The bag must be extracted, updated, and re-archived.\n\n")
+    if args.checksum and not is_dir:
+        sys.stderr.write("Error: A checksum manifest can only be added to a bag directory.\n\n")
         sys.exit(2)
 
-    if args.update and is_file:
-        sys.stderr.write("Error: An existing bag archive cannot be updated in-place. "
-                         "The bag must first be extracted and then updated.\n\n")
+    if args.update and not is_dir:
+        sys.stderr.write("Error: Only existing bag directories can be updated.\n\n")
         sys.exit(2)
 
-    if args.revert and is_file:
-        sys.stderr.write("Error: An existing bag archive cannot be reverted in-place. "
-                         "The bag must first be extracted and then reverted.\n\n")
+    if args.revert and not is_dir:
+        sys.stderr.write("Error: Only existing bag directories can be reverted.\n\n")
         sys.exit(2)
 
     if args.fetch_filter and not args.resolve_fetch:
@@ -196,9 +199,8 @@ def parse_cli():
                          (fetch_filter_arg, fetch_arg))
         sys.exit(2)
 
-    if args.resolve_fetch and is_file:
-        sys.stderr.write("Error: It is not possible to resolve remote files directly into a bag archive. "
-                         "The bag must first be extracted before the %s argument can be specified.\n\n" %
+    if args.resolve_fetch and not is_dir:
+        sys.stderr.write("Error: Resolving remote files using %s can only target bag directories.\n\n" %
                          fetch_arg)
         sys.exit(2)
 
@@ -273,6 +275,16 @@ def main():
         sys.stdout.write('\n')
 
     try:
+        if args.materialize:
+            bdb.materialize(path,
+                            output_path=None,
+                            fetch_callback=None,
+                            validation_callback=None,
+                            keychain_file=args.keychain_file,
+                            config_file=args.config_file,
+                            filter_expr=args.fetch_filter)
+            return result
+
         if is_uri:
             # Try to resolve/download the bag
             fetcher.fetch_single_file(path,
