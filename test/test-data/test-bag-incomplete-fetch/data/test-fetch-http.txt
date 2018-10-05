@@ -1,0 +1,2 @@
+This is a simple file to be used in HTTP-based fetch tests. It should NOT be edited or changed, as that will cause the
+checksum to be changed and thus tests which are expecting the checksum will fail

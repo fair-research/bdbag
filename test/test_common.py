@@ -6,8 +6,9 @@ import tempfile
 import unittest
 import logging
 import bagit
+from bdbag.bdbag_api import configure_logging
 
-logging.basicConfig(filename='test.log', filemode='w', level=logging.DEBUG)
+configure_logging(logpath='test.log', filemode='w', level=logging.DEBUG)
 
 
 class BaseTest(unittest.TestCase):
@@ -33,6 +34,8 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_bag_dir))
         self.test_bag_incomplete_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-incomplete')
         self.assertTrue(os.path.isdir(self.test_bag_incomplete_dir))
+        self.test_bag_incomplete_fetch_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-incomplete-fetch')
+        self.assertTrue(os.path.isdir(self.test_bag_incomplete_fetch_dir))
         self.test_bag_fetch_http_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-http')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_http_dir))
         self.test_bag_fetch_ark_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ark')

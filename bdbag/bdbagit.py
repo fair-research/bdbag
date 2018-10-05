@@ -238,16 +238,6 @@ def make_remote_file_entry(remote_entries, filename, url, length, alg, digest):
     remote_entries[filename][alg] = digest
 
 
-def get_remote_algs(remote_entries):
-    algs = set()
-    if remote_entries:
-        for v in remote_entries.values():
-            for alg in CHECKSUM_ALGOS:
-                if alg in v:
-                    algs.add(alg)
-    return algs
-
-
 def _denormalize_filename(filename):
     if os.path.sep != '/':
         parts = filename.split(os.path.sep)

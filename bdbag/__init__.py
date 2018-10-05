@@ -42,6 +42,8 @@ FILTER_DOCSTRING = "\"==\" (equal), " \
                    "\"$*\" (wildcard ends with), " \
                    "or \">\", \">=\", \"<\", \"<=\""
 
+DEFAULT_LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+
 if not mimetypes.inited:
     mimetypes.init()
 

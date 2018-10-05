@@ -23,13 +23,21 @@ SCHEME_TAG = 'tag'
 FetchEntry = namedtuple("FetchEntry", ["url", "length", "filename"])
 
 
-def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAULT_CONFIG, filter_expr=None, **kwargs):
+def fetch_bag_files(bag,
+                    keychain_file=DEFAULT_KEYCHAIN_FILE,
+                    config_file=DEFAULT_CONFIG_FILE,
+                    force=False,
+                    callback=None,
+                    filter_expr=None,
+                    **kwargs):
 
-    success = True
     auth = read_keychain(keychain_file)
+    config = read_config(config_file)
     cookie_jar_config = config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG])
     cookies = load_and_merge_cookie_jars(find_cookie_jars(cookie_jar_config)) if \
         cookie_jar_config.get(COOKIE_JAR_SEARCH_TAG, True) and kwargs.get("cookie_scan", True) else None
+
+    success = True
     current = 0
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     start = datetime.datetime.now()
@@ -76,7 +84,7 @@ def fetch_bag_files(bag, keychain_file, force=False, callback=None, config=DEFAU
 
 def fetch_file(url, path, auth, **kwargs):
 
-    scheme = urlsplit(url, allow_fragments=True).scheme.lower()
+    scheme = urlsplit(url).scheme.lower()
     if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
         return fetch_http.get_file(url, path, auth, **kwargs)
     if SCHEME_FTP == scheme:
@@ -85,7 +93,7 @@ def fetch_file(url, path, auth, **kwargs):
         return fetch_boto3.get_file(url, path, auth, **kwargs)
     if SCHEME_GLOBUS == scheme:
         return fetch_globus.get_file(url, path, auth, **kwargs)
-    if SCHEME_TAG == scheme:
+    if SCHEME_TAG == scheme:  # pragma: no cover
         logger.info("The fetch entry for file %s specifies the tag URI %s. Tag URIs may represent objects that "
                     "cannot be directly resolved as network resources and therefore cannot be automatically fetched. "
                     "Such files must be acquired outside of the context of this software." % (path, url))

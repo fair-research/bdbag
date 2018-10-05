@@ -20,11 +20,10 @@ from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 logger = logging.getLogger(__name__)
 
 
-def configure_logging(level=logging.INFO, logpath=None):
+def configure_logging(level=logging.INFO, logpath=None, filemode='a', log_format=DEFAULT_LOG_FORMAT):
     logging.captureWarnings(True)
-    log_format = "%(asctime)s - %(levelname)s - %(message)s"
     if logpath:
-        logging.basicConfig(filename=logpath, level=level, format=log_format)
+        logging.basicConfig(filename=logpath, filemode=filemode, level=level, format=log_format)
     else:
         logging.basicConfig(level=level, format=log_format)
 
@@ -538,13 +537,17 @@ def resolve_fetch(bag_path,
                   filter_expr=None,
                   **kwargs):
     bag = bdbagit.BDBag(bag_path)
-    if force or not check_payload_consistency(bag, skip_remote=False, quiet=True):
+    if force or not check_payload_consistency(bag, skip_remote=False, quiet=kwargs.get("quiet", True)):
         logger.info("Attempting to resolve remote file references from fetch.txt%s" %
                     ("." if not filter_expr else ", using filter expression [%s]." % filter_expr))
-        config = read_config(config_file if config_file else DEFAULT_CONFIG_FILE)
 
-        return fetch_bag_files(
-            bag, keychain_file, force=force, callback=callback, config=config, filter_expr=filter_expr, **kwargs)
+        return fetch_bag_files(bag,
+                               force=force,
+                               keychain_file=keychain_file,
+                               config_file=config_file,
+                               callback=callback,
+                               filter_expr=filter_expr,
+                               **kwargs)
     else:
         return True
 
@@ -558,6 +561,7 @@ def materialize(input_path,
                 filter_expr=None,
                 **kwargs):
 
+    configure_logging()
     bag_file = bag_path = None
     is_file, is_dir, is_uri = inspect_path(input_path)
     if is_file:

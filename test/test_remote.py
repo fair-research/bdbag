@@ -103,6 +103,16 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_resolve_fetch_incomplete(self):
+        logger.info(self.getTestHeader('test resolve fetch incomplete'))
+        try:
+            bdb.resolve_fetch(self.test_bag_incomplete_fetch_dir, force=False, cookie_scan=False, quiet=False)
+            bdb.validate_bag(self.test_bag_incomplete_fetch_dir, fast=True)
+            bdb.validate_bag(self.test_bag_incomplete_fetch_dir, fast=False)
+            output = self.stream.getvalue()
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def _test_resolve_fetch_http_with_filter(self, expr, files):
         logger.info(self.getTestHeader('test resolve fetch http with filter expression "%s"' % expr))
         try:
