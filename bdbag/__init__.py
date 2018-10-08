@@ -10,22 +10,22 @@ from pkg_resources import get_distribution, DistributionNotFound
 
 __version__ = "1.5.0"
 
-if sys.version_info > (3,):
+if sys.version_info > (3,):  # pragma: no cover
     from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
     from urllib.request import urlretrieve, urlopen
-else:
+else:  # pragma: no cover
     from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen
     from urlparse import urlsplit, urlunsplit
 
 try:
     VERSION = get_distribution("bdbag").version
-except DistributionNotFound:
+except DistributionNotFound:  # pragma: no cover
     VERSION = __version__ + '-dev'
 PROJECT_URL = 'https://github.com/fair-research/bdbag'
 
 try:
     BAGIT_VERSION = get_distribution("bagit").version
-except DistributionNotFound:
+except DistributionNotFound:  # pragma: no cover
     BAGIT_VERSION = 'unknown'
 
 BAG_PROFILE_TAG = 'BagIt-Profile-Identifier'

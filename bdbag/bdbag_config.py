@@ -120,7 +120,7 @@ def create_default_config():
         if not os.path.isdir(DEFAULT_CONFIG_PATH):
             try:
                 os.makedirs(DEFAULT_CONFIG_PATH, mode=0o750)
-            except OSError as error:
+            except OSError as error:  # pragma: no cover
                 if error.errno != errno.EEXIST:
                     raise
         with open(DEFAULT_CONFIG_FILE, 'w') as cf:

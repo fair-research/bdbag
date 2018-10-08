@@ -26,7 +26,7 @@ def validate_auth_config(auth):
 def get_credentials(url, auth_config):
 
     credentials = (None, None)
-    for auth in list((entry for entry in auth_config if (entry.get("uri", "").lower() in url.lower()))):
+    for auth in keychain.get_auth_entries(url, auth_config):
 
         if not validate_auth_config(auth):
             continue

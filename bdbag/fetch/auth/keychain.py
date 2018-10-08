@@ -83,9 +83,20 @@ def read_keychain(keychain_file, create_default=True):
 
 def has_auth_attr(auth, attr, quiet=False):
     if auth.get(attr) is None:
-        if not quiet: # pragma: no cover
+        if not quiet:  # pragma: no cover
             logger.warning("Unable to locate attribute [%s] in keychain entry for uri: %s" %
                            (attr, auth.get("uri", "")))
         return False
     return True
+
+
+def get_auth_entries(url, auth):
+    entries = list()
+    for entry in auth:
+        uri = entry.get("uri", "").lower().strip()
+        if uri in url.lower():
+            entries.append(entry)
+    return entries
+
+
 

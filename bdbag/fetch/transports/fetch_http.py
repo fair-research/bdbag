@@ -28,7 +28,7 @@ def validate_auth_config(auth):
 
 
 def get_auth(url, auth_config):
-    for auth in list((entry for entry in auth_config if (entry.get("uri", "").lower() in url.lower()))):
+    for auth in keychain.get_auth_entries(url, auth_config):
         if validate_auth_config(auth):
             return auth
     return None
@@ -39,7 +39,7 @@ def get_session(url, auth_config, config):
     session = None
     response = None
 
-    for auth in list((entry for entry in auth_config if (entry.get("uri", "").lower() in url.lower()))):
+    for auth in keychain.get_auth_entries(url, auth_config):
         try:
             if not validate_auth_config(auth):
                 continue
