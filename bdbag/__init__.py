@@ -12,9 +12,9 @@ __version__ = "1.5.0"
 
 if sys.version_info > (3,):  # pragma: no cover
     from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
-    from urllib.request import urlretrieve, urlopen
+    from urllib.request import urlretrieve, urlopen, urlcleanup
 else:  # pragma: no cover
-    from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen
+    from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen, urlcleanup
     from urlparse import urlsplit, urlunsplit
 
 try:
@@ -43,6 +43,7 @@ FILTER_DOCSTRING = "\"==\" (equal), " \
                    "or \">\", \">=\", \"<\", \"<=\""
 
 DEFAULT_LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser('~'), '.bdbag')
 
 if not mimetypes.inited:
     mimetypes.init()

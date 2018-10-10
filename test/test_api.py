@@ -10,7 +10,7 @@ from os.path import exists as ospe
 from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg, bdbag_ro as bdbro, bdbagit as bdbagit, filter_dict, \
     get_typed_exception
-from bdbag.fetch.auth.keychain import create_default_keychain, read_keychain
+from bdbag.fetch.auth import keychain
 from test.test_common import BaseTest
 
 if sys.version_info > (3,):
@@ -34,51 +34,76 @@ class TestAPI(BaseTest):
         logger.removeHandler(self.handler)
         super(TestAPI, self).tearDown()
 
-    def test_create_default_config(self):
-        logger.info(self.getTestHeader('create default config'))
+    def test_create_config(self):
+        logger.info(self.getTestHeader('create config'))
         try:
-            default_config_path = ospj(self.test_config_dir, ".bdbag")
-            default_config_file = ospj(default_config_path, 'bdbag.json')
-            patched_default_config = mock.patch.multiple(
-                "bdbag.bdbag_config",
-                DEFAULT_CONFIG_PATH=default_config_path,
-                DEFAULT_CONFIG_FILE=default_config_file)
-
-            patched_default_config.start()
-            bdbcfg.create_default_config()
-            patched_default_config.stop()
+            config_file = ospj(self.test_config_dir, ".bdbag", 'bdbag.json')
+            bdbcfg.write_config(config_file=config_file)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
-    def test_create_default_keychain(self):
-        logger.info(self.getTestHeader('create default keychain'))
+    def test_read_with_create_default_config(self):
+        logger.info(self.getTestHeader('read config with create default if missing'))
         try:
-            default_keychain_path = ospj(self.test_config_dir, ".bdbag")
-            default_keychain_file = ospj(default_keychain_path, 'keychain.json')
-            patched_default_config = mock.patch.multiple(
-                "bdbag.fetch.auth.keychain",
-                DEFAULT_KEYCHAIN_PATH=default_keychain_path,
-                DEFAULT_KEYCHAIN_FILE=default_keychain_file)
+            config_file = ospj(self.test_config_dir, ".bdbag", 'bdbag.json')
+            bdbcfg.read_config(config_file=config_file)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
 
-            patched_default_config.start()
-            create_default_keychain()
-            patched_default_config.stop()
+    def test_read_with_update_base_config(self):
+        logger.info(self.getTestHeader('read config with auto-upgrade version'))
+        try:
+            config_file = ospj(self.test_config_dir, 'base-config.json')
+            bdbcfg.read_config(config_file=config_file, auto_upgrade=True)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_create_keychain(self):
+        logger.info(self.getTestHeader('create keychain'))
+        try:
+            keychain_file = ospj(self.test_config_dir, ".bdbag", 'keychain.json')
+            keychain.write_keychain(keychain_file=keychain_file)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
     def test_read_with_create_default_keychain(self):
-        logger.info(self.getTestHeader('create default keychain'))
+        logger.info(self.getTestHeader('read keychain with create default if missing'))
+        try:
+            keychain_file = ospj(self.test_config_dir, ".bdbag", 'keychain.json')
+            keychain.read_keychain(keychain_file=keychain_file)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_create_default_keychain_location(self):
+        logger.info(self.getTestHeader('test read keychain with create default location'))
         try:
             default_keychain_path = ospj(self.test_config_dir, ".bdbag")
             default_keychain_file = ospj(default_keychain_path, 'keychain.json')
             patched_default_config = mock.patch.multiple(
                 "bdbag.fetch.auth.keychain",
-                DEFAULT_KEYCHAIN_PATH=default_keychain_path,
                 DEFAULT_KEYCHAIN_FILE=default_keychain_file)
 
             patched_default_config.start()
-            read_keychain(default_keychain_file)
+            keychain.read_keychain(keychain_file=default_keychain_file)
             patched_default_config.stop()
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_bootstrap_config(self):
+        logger.info(self.getTestHeader('test bootstrap config'))
+        try:
+            config_file = ospj(self.test_config_dir, ".bdbag", 'bdbag.json')
+            keychain_file = ospj(self.test_config_dir, ".bdbag", 'keychain.json')
+            bdbcfg.bootstrap_config(config_file=config_file, keychain_file=keychain_file, base_dir=self.test_config_dir)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_bootstrap_config_with_upgrade(self):
+        logger.info(self.getTestHeader('test bootstrap config with upgrade'))
+        try:
+            config_file = ospj(self.test_config_dir, 'base-config.json')
+            keychain_file = ospj(self.test_config_dir, ".bdbag", 'keychain.json')
+            bdbcfg.bootstrap_config(config_file=config_file, keychain_file=keychain_file, base_dir=self.test_config_dir)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -418,6 +443,21 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_extract_bag_archive_zip_with_relocate_existing(self):
+        logger.info(self.getTestHeader('extract bag zip format, relocate existing'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'), temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'), temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["moving existing directory"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_extract_bag_archive_tgz(self):
         logger.info(self.getTestHeader('extract bag tgz format'))
         try:
@@ -442,6 +482,23 @@ class TestAPI(BaseTest):
         logger.info(self.getTestHeader('test full validation complete bag'))
         try:
             bdb.validate_bag(self.test_bag_dir, fast=False)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_validate_complete_bag_full_with_callback_and_cancel(self):
+        logger.info(self.getTestHeader('test full validation complete bag with callback and cancel'))
+        try:
+            def callback(current, total):
+                if current < total - 1:
+                    return True
+                else:
+                    return False
+
+            self.assertRaises(bdbagit.BaggingInterruptedError,
+                              bdb.validate_bag,
+                              self.test_bag_dir,
+                              fast=False,
+                              callback=callback)
         except Exception as e:
             self.fail(get_typed_exception(e))
 

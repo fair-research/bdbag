@@ -3,8 +3,8 @@ import os
 import sys
 import logging
 import bagit
-from bdbag import bdbag_api as bdb, inspect_path, get_typed_exception, FILTER_DOCSTRING, VERSION
-from bdbag.bdbag_config import DEFAULT_CONFIG_FILE
+from bdbag import bdbag_api as bdb, inspect_path, get_typed_exception, FILTER_DOCSTRING, VERSION, BAGIT_VERSION
+from bdbag.bdbag_config import bootstrap_config, DEFAULT_CONFIG_FILE
 from bdbag.fetch import fetcher
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
@@ -16,6 +16,26 @@ ASYNC_TRANSFER_VALIDATION_WARNING = \
     "as checksums may be recalculated on files that are currently being written to. " \
     "If the fetch resolution for this bag does not initiate any asynchronous transfers, " \
     "you can safely ignore this warning.\n\n"
+
+
+class VersionAction(argparse.Action):
+
+    def __init__(self,
+                 option_strings,
+                 dest=argparse.SUPPRESS,
+                 default=argparse.SUPPRESS,
+                 help="show program's version number and exit"):
+        super(VersionAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print("BDBag %s (Bagit %s)" % (VERSION, BAGIT_VERSION))
+        bootstrap_config()
+        parser.exit()
 
 
 class AddMetadataAction(argparse.Action):
@@ -37,7 +57,7 @@ def parse_cli():
     parser = argparse.ArgumentParser(
         description=description, epilog="For more information see: http://github.com/fair-research/bdbag")
 
-    parser.add_argument('--version', action='version', version=VERSION)
+    parser.add_argument('--version', action=VersionAction)
 
     standard_args = parser.add_argument_group('Bag arguments')
 

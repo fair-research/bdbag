@@ -1,7 +1,7 @@
 import os
 import datetime
 import logging
-from bdbag import urlsplit, urlunsplit, urlretrieve, get_typed_exception
+from bdbag import urlsplit, urlunsplit, urlretrieve, urlcleanup, get_typed_exception
 from bdbag.fetch import get_transfer_summary, ensure_valid_output_path
 import bdbag.fetch.auth.keychain as keychain
 
@@ -65,3 +65,6 @@ def get_file(url, output_path, auth_config, **kwargs):
 
     return None
 
+
+def cleanup():
+    urlcleanup()

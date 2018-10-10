@@ -11,8 +11,9 @@ import bdbag.bdbagit_profile as bdbagit_profile
 from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
-from bdbag import bdbag_api as bdb
+from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg
 from bdbag.fetch import fetcher
+from bdbag.fetch.auth import cookies
 from test.test_common import BaseTest
 
 if sys.version_info > (3,):
@@ -99,7 +100,34 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_fetch_http_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_with_callback_cancel(self):
+        logger.info(self.getTestHeader('test resolve fetch http'))
+        try:
+            def callback(current, total):
+                if current < total - 1:
+                    return True
+                else:
+                    return False
+
+            self.assertFalse(bdb.resolve_fetch(self.test_bag_fetch_http_dir, callback=callback, cookie_scan=False))
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_bad_request(self):
+        logger.info(self.getTestHeader('test resolve fetch http bad url path'))
+        try:
+            self.assertFalse(bdb.resolve_fetch(self.test_bag_fetch_http_bad_dir,
+                                               config_file=ospj(self.test_config_dir, 'test-config-3.json'),
+                                               cookie_scan=False))
             output = self.stream.getvalue()
+            self.assertExpectedMessages(["HTTP GET Failed for URL",
+                                         "HTTP Request Exception",
+                                         "Transfer protocol",
+                                         "is not supported by this implementation"],
+                                        output)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -109,7 +137,6 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_incomplete_fetch_dir, force=False, cookie_scan=False, quiet=False)
             bdb.validate_bag(self.test_bag_incomplete_fetch_dir, fast=True)
             bdb.validate_bag(self.test_bag_incomplete_fetch_dir, fast=False)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -152,7 +179,16 @@ class TestRemoteAPI(BaseTest):
                               keychain_file=ospj(self.test_config_dir, 'test-keychain-1.json'), cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_basic_auth_get_bad_key(self):
+        logger.info(self.getTestHeader('test resolve fetch http basic auth GET with bad key'))
+        try:
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                              keychain_file=ospj(self.test_config_dir, 'test-keychain-bad-1.json'), cookie_scan=False)
             output = self.stream.getvalue()
+            self.assertExpectedMessages(["Missing required parameters [username, password]"], output)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -172,7 +208,6 @@ class TestRemoteAPI(BaseTest):
                               keychain_file=ospj(self.test_config_dir, keychain_file), cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -191,7 +226,6 @@ class TestRemoteAPI(BaseTest):
                               keychain_file=ospj(self.test_config_dir, 'test-keychain-4.json'), cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -216,7 +250,62 @@ class TestRemoteAPI(BaseTest):
                               keychain_file=ospj(self.test_config_dir, 'test-keychain-6.json'), cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_auth_token_get_with_allowed_redirects(self):
+        logger.info(self.getTestHeader('test resolve fetch http token auth with allowed redirect'))
+        try:
+            patched_requests_get_auth = None
+
+            def mocked_request_auth_token_get_success(*args, **kwargs):
+                headers = args[0].headers or {}
+                headers.update({"Location": args[1]})
+                args[0].auth = None
+                args[0].headers = {}
+                patched_requests_get_auth.stop()
+                return BaseTest.MockResponse({}, 302, headers=headers)
+                #return args[0].get(args[1], **kwargs)
+
+            patched_requests_get_auth = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+                                                            get=mocked_request_auth_token_get_success,
+                                                            auth=None,
+                                                            create=True)
+
+            patched_requests_get_auth.start()
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                              keychain_file=ospj(self.test_config_dir, 'test-keychain-6.json'), cookie_scan=False)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_auth_token_get_with_disallowed_redirects(self):
+        logger.info(self.getTestHeader('test resolve fetch http token auth with allowed redirect'))
+        try:
+            patched_requests_get_auth = None
+
+            def mocked_request_auth_token_get_success(*args, **kwargs):
+                headers = args[0].headers or {}
+                headers.update({"Location": args[1]})
+                args[0].auth = None
+                args[0].headers = {}
+                patched_requests_get_auth.stop()
+                return BaseTest.MockResponse({}, 302, headers=headers)
+                #return args[0].get(args[1], **kwargs)
+
+            patched_requests_get_auth = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+                                                            get=mocked_request_auth_token_get_success,
+                                                            auth=None,
+                                                            create=True)
+
+            patched_requests_get_auth.start()
+            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                              keychain_file=ospj(self.test_config_dir, 'test-keychain-7.json'), cookie_scan=False)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
             output = self.stream.getvalue()
+            self.assertExpectedMessages(["Authorization bearer token propagation on redirect is disabled"], output)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -226,7 +315,6 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_fetch_ark_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=False)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -277,7 +365,6 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_fetch_ark2_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_ark2_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ark2_dir, fast=False)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -343,7 +430,6 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_fetch_doi_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_doi_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_doi_dir, fast=False)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -392,7 +478,6 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_fetch_dataguid_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_dataguid_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_dataguid_dir, fast=False)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -402,7 +487,6 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_fetch_minid_dir, cookie_scan=False)
             bdb.validate_bag(self.test_bag_fetch_minid_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_minid_dir, fast=False)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -422,7 +506,6 @@ class TestRemoteAPI(BaseTest):
             bdb.resolve_fetch(self.test_bag_fetch_ftp_dir, force=True)
             bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=False)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -443,7 +526,25 @@ class TestRemoteAPI(BaseTest):
                               keychain_file=ospj(self.test_config_dir, 'test-keychain-5.json'))
             bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_ftp_bad_request(self):
+        logger.info(self.getTestHeader('test resolve fetch ftp bad requests'))
+        try:
+            patched_urlretrieve = None
+
+            def mocked_urlretrieve_success(*args, **kwargs):
+                patched_urlretrieve.stop()
+                raise Exception("Mocked FTP urlretrieve error")
+
+            patched_urlretrieve = mock.patch.multiple("bdbag.fetch.transports.fetch_ftp",
+                                                      urlretrieve=mocked_urlretrieve_success)
+            patched_urlretrieve.start()
+
+            bdb.resolve_fetch(self.test_bag_fetch_ftp_dir, force=True)
             output = self.stream.getvalue()
+            self.assertExpectedMessages(["FTP Request Exception"], output)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -456,7 +557,6 @@ class TestRemoteAPI(BaseTest):
                 "test-fetch-http.txt",
                 output_path)
             self.assertTrue(os.path.exists(output_path))
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -466,7 +566,6 @@ class TestRemoteAPI(BaseTest):
         os.chdir(self.tmpdir)
         try:
             bdb.materialize(self.test_bag_fetch_http_dir)
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:
@@ -478,7 +577,6 @@ class TestRemoteAPI(BaseTest):
         os.chdir(self.tmpdir)
         try:
             bdb.materialize(ospj(self.test_archive_dir, 'test-bag-fetch-http.zip'))
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:
@@ -492,11 +590,30 @@ class TestRemoteAPI(BaseTest):
             # TODO: change this URL after merging to master
             bdb.materialize("https://github.com/fair-research/bdbag/raw/dev_branch_1_5/test/test-data/test-archives/"
                             "test-bag-fetch-http.zip")
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:
             os.chdir(curdir)
+
+    def test_cookie_load_and_merge(self):
+        logger.info(self.getTestHeader('test cookie load and merge'))
+        try:
+            cookie_jar_paths = [ospj(self.test_config_dir, "test-cookies-1.txt"),
+                                ospj(self.test_config_dir, "test-cookies-2.txt")]
+            cookies.load_and_merge_cookie_jars(cookie_jar_paths)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_cookie_load_and_merge_failure(self):
+        logger.info(self.getTestHeader('test cookie load and merge'))
+        try:
+            cookie_jar_paths = [ospj(self.test_config_dir, "test-cookies-bad.txt"),
+                                ospj(self.test_config_dir, "test-cookies-2.txt")]
+            cookies.load_and_merge_cookie_jars(cookie_jar_paths)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Unable to load cookie file"], output)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
 
     @unittest.skip("Not implemented")
     def test_materialize_from_identifier(self):
@@ -506,7 +623,6 @@ class TestRemoteAPI(BaseTest):
         try:
             # TODO: change this to a legitimate identifier after merge
             bdb.materialize("ark:/57799/foo")
-            output = self.stream.getvalue()
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:

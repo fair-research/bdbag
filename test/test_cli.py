@@ -32,6 +32,11 @@ class TestCli(BaseTest):
             if unexpected:
                 self.assertUnexpectedMessages(unexpected, output)
 
+    def test_version(self):
+        args = ARGS + ["--version"]
+        logfile.writelines(self.getTestHeader('check version', args))
+        self._test_successful_invocation(args)
+
     def test_create(self):
         args = ARGS + [self.test_data_dir]
         logfile.writelines(self.getTestHeader('create bag', args))

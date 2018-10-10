@@ -5,11 +5,11 @@ import json
 import collections
 import stat
 import bdbag
-from bdbag.bdbag_config import DEFAULT_CONFIG_PATH as DEFAULT_KEYCHAIN_PATH
+from bdbag import DEFAULT_CONFIG_PATH
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_KEYCHAIN_FILE = os.path.join(DEFAULT_KEYCHAIN_PATH, 'keychain.json')
+DEFAULT_KEYCHAIN_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'keychain.json')
 DEFAULT_KEYCHAIN = [
     {
         "uri": "https://<hostname>/<path>",
@@ -36,7 +36,16 @@ DEFAULT_KEYCHAIN = [
         "uri": "https://<hostname>/<path>",
         "auth_type": "bearer-token",
         "auth_params": {
-            "token": "<token>"
+            "token": "<token>",
+            "allow_redirects_with_token": "True"
+        }
+    },
+    {
+        "uri": "s3://<bucket_name>",
+        "auth_type": "aws-credentials",
+        "auth_params": {
+            "key": "foo",
+            "secret": "bar"
         }
     },
     {
@@ -50,30 +59,32 @@ DEFAULT_KEYCHAIN = [
 ]
 
 
-def create_default_keychain():
-    if not os.path.isdir(DEFAULT_KEYCHAIN_PATH):
+def write_keychain(keychain=DEFAULT_KEYCHAIN, keychain_file=DEFAULT_KEYCHAIN_FILE):
+    keychain_path = os.path.dirname(keychain_file)
+    if not os.path.isdir(keychain_path):
         try:
-            os.makedirs(DEFAULT_KEYCHAIN_PATH)
+            os.makedirs(keychain_path)
         except OSError as error:  # pragma: no cover
             if error.errno != errno.EEXIST:
                 raise
-    with open(DEFAULT_KEYCHAIN_FILE, 'w') as kf:
-        kf.write(json.dumps(DEFAULT_KEYCHAIN, sort_keys=True, indent=4, separators=(',', ': ')))
-    os.chmod(DEFAULT_KEYCHAIN_FILE, stat.S_IRUSR | stat.S_IWUSR)
+    with open(keychain_file, 'w') as kf:
+        kf.write(json.dumps(keychain if keychain is not None else list(),
+                            sort_keys=True, indent=4, separators=(',', ': ')))
+    os.chmod(keychain_file, stat.S_IRUSR | stat.S_IWUSR)
 
 
-def read_keychain(keychain_file, create_default=True):
+def read_keychain(keychain_file=DEFAULT_KEYCHAIN_FILE, create_default=True):
     keychain = json.dumps(DEFAULT_KEYCHAIN)
     if keychain_file == DEFAULT_KEYCHAIN_FILE and not os.path.isfile(keychain_file) and create_default:
         logger.debug("No keychain file specified and no default keychain file found, attempting to create one.")
         try:
-            create_default_keychain()
+            write_keychain(keychain_file=keychain_file)
         except Exception as e:
             logger.warning(
                 "Unable to create default keychain file. A keychain file is required for authentication when "
                 "retrieving files from protected remote resources. Either ensure that the default keychain "
                 "file %s can be created or provide a different path to a valid keychain file. Error: %s" %
-                (DEFAULT_KEYCHAIN_FILE, bdbag.get_typed_exception(e)))
+                (keychain_file, bdbag.get_typed_exception(e)))
     if os.path.isfile(keychain_file):
         with open(keychain_file) as kf:
             keychain = kf.read()

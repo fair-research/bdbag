@@ -75,6 +75,7 @@ def fetch_bag_files(bag,
             current += 1
             if not callback(current, total):
                 logger.warning("Fetch cancelled by user...")
+                success = False
                 break
     elapsed = datetime.datetime.now() - start
     logger.info("Fetch complete. Elapsed time: %s" % elapsed)
@@ -136,3 +137,4 @@ def fetch_single_file(url,
 
 def cleanup_transports():
     fetch_http.cleanup()
+    fetch_ftp.cleanup()

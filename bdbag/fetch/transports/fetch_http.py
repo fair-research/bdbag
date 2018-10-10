@@ -81,7 +81,7 @@ def get_session(url, auth_config, config):
             auth_uri = auth.get("auth_uri", uri)
             username = auth_params.get("username")
             password = auth_params.get("password")
-            if not username and password:
+            if not (username and password):
                 logging.warning(
                     "Missing required parameters [username, password] for auth_type [%s] for keychain entry [%s]" %
                     (auth_type, uri))
@@ -178,7 +178,12 @@ def get_file(url, output_path, auth_config, **kwargs):
                 logger.info("Server responded with redirect to: %s" % url)
                 if auth_type == 'bearer-token':
                     if allow_redirects_with_token:
-                        headers.update({"Authorization": session.headers.get("Authorization", {})})
+                        authorization = session.headers.get("Authorization")
+                        if authorization:
+                            headers.update({"Authorization": authorization})
+                        else:
+                            logger.warning(
+                                "Unable to locate Authorization header in requests session headers after redirect")
                     else:
                         logger.warning("Authorization bearer token propagation on redirect is disabled for security "
                                        "purposes. Enable token propagation for this URL in keychain.json")

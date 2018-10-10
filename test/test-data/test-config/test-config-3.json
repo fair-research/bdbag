@@ -1,0 +1,93 @@
+{
+    "bag_config": {
+        "bag_algorithms": [
+            "md5",
+            "sha256"
+        ],
+        "bag_metadata": {
+            "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json"
+        },
+        "bag_processes": 1,
+        "bagit_spec_version": "0.97"
+    },
+    "bdbag_config_version": "1.5.0",
+    "fetch_config": {
+        "http": {
+            "session_config": {
+                "retry_backoff_factor": 1.0,
+                "retry_connect": 1,
+                "retry_read": 1,
+                "retry_status_forcelist": [
+                    500,
+                    502,
+                    503,
+                    504
+                ]
+            }
+        },
+        "s3": {
+            "max_read_retries": 5,
+            "read_chunk_size": 10485760,
+            "read_timeout_seconds": 120
+        }
+    },
+    "identifier_resolvers": [
+        "n2t.net",
+        "identifiers.org"
+    ],
+    "resolver_config": {
+        "ark": [
+            {
+                "identifier_resolvers": [
+                    "n2t.net",
+                    "identifiers.org"
+                ],
+                "prefix": null
+            },
+            {
+                "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+                "identifier_resolvers": [
+                    "n2t.net",
+                    "identifiers.org"
+                ],
+                "prefix": "57799"
+            },
+            {
+                "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+                "identifier_resolvers": [
+                    "n2t.net",
+                    "identifiers.org"
+                ],
+                "prefix": "99999/fk4"
+            }
+        ],
+        "doi": [
+            {
+                "handler": "bdbag.fetch.resolvers.doi_resolver.DOIResolverHandler",
+                "identifier_resolvers": [
+                    "n2t.net",
+                    "identifiers.org"
+                ],
+                "prefix": "10.23725/"
+            }
+        ],
+        "ga4ghdos": [
+            {
+                "handler": "bdbag.fetch.resolvers.dataguid_resolver.DataGUIDResolverHandler",
+                "identifier_resolvers": [
+                    "n2t.net"
+                ],
+                "prefix": "dg.4503/"
+            }
+        ],
+        "minid": [
+            {
+                "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+                "identifier_resolvers": [
+                    "n2t.net",
+                    "identifiers.org"
+                ]
+            }
+        ]
+    }
+}

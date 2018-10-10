@@ -1,0 +1,4 @@
+64ed533554cc55b83c211b6c3e885702  data/README.txt
+f3ad851f4213d41ce9690542010bffa0  data/test-fetch-http.tx
+f3ad851f4213d41ce9690542010bffa0  data/test-fetch-http.txt
+abdaf93ac71675a2df628aa220abf487  data/test-fetch-identifier.txt

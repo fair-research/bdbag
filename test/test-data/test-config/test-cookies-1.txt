@@ -1,0 +1,6 @@
+# Netscape HTTP Cookie File
+# http://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file!  Do not edit.
+
+host1.example.com	FALSE	/	TRUE	0	cookie	0rEZ4tRMEraQZ8XXz2b62K5q
+host2.example.com	FALSE	/	TRUE	0	cookie	BqaXP3po2EZJqbmulyixZZP1

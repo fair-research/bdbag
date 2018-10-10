@@ -38,6 +38,8 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_bag_incomplete_fetch_dir))
         self.test_bag_fetch_http_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-http')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_http_dir))
+        self.test_bag_fetch_http_bad_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-http-bad')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_http_bad_dir))
         self.test_bag_fetch_ark_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ark')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ark_dir))
         self.test_bag_fetch_ark2_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ark2')
@@ -96,9 +98,10 @@ class BaseTest(unittest.TestCase):
             return f.read()
 
     class MockResponse:
-        def __init__(self, json_data, status_code):
+        def __init__(self, json_data, status_code, headers={}):
             self.json_data = json_data
             self.status_code = status_code
+            self.headers = headers
 
         def json(self):
             return self.json_data

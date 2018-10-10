@@ -3,8 +3,9 @@ import errno
 import logging
 import json
 from collections import OrderedDict
-from bdbag import get_typed_exception, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION
+from bdbag import get_typed_exception, DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION
 from bdbag.fetch import Megabyte
+from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE, write_keychain
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,6 @@ BAG_PROCESSES_TAG = "bag_processes"
 BAG_METADATA_TAG = "bag_metadata"
 CONFIG_VERSION_TAG = "bdbag_config_version"
 DEFAULT_BAG_SPEC_VERSION = "0.97"
-DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser('~'), '.bdbag')
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')
 DEFAULT_BAG_ALGORITHMS = ['md5', 'sha256']
 
@@ -115,26 +115,29 @@ DEFAULT_CONFIG = {
 }
 
 
-def create_default_config():
+def write_config(config=DEFAULT_CONFIG, config_file=DEFAULT_CONFIG_FILE):
     try:
-        if not os.path.isdir(DEFAULT_CONFIG_PATH):
+        config_path = os.path.dirname(config_file)
+        if not os.path.isdir(config_path):
             try:
-                os.makedirs(DEFAULT_CONFIG_PATH, mode=0o750)
+                os.makedirs(config_path, mode=0o750)
             except OSError as error:  # pragma: no cover
                 if error.errno != errno.EEXIST:
                     raise
-        with open(DEFAULT_CONFIG_FILE, 'w') as cf:
-            cf.write(json.dumps(DEFAULT_CONFIG, indent=4, sort_keys=True))
+        with open(config_file, 'w') as cf:
+            cf.write(json.dumps(config if config is not None else DEFAULT_CONFIG, indent=4, sort_keys=True))
             cf.close()
-            print("Created default configuration file in: %s" % DEFAULT_CONFIG_FILE)
     except Exception as e:
-        logger.debug("Unable to create default configuration file %s. %s" %
-                     (DEFAULT_CONFIG_FILE, get_typed_exception(e)))
+        logger.debug("Unable to create configuration file %s. %s" %
+                     (config_file, get_typed_exception(e)))
 
 
-def read_config(config_file, create_default=True):
+def read_config(config_file, create_default=True, auto_upgrade=False):
     if config_file == DEFAULT_CONFIG_FILE and not os.path.isfile(config_file) and create_default:
-        create_default_config()
+        write_config()
+    elif auto_upgrade:
+        upgrade_config(config_file)
+
     if os.path.isfile(config_file):
         with open(config_file) as cf:
             config = cf.read()
@@ -145,6 +148,39 @@ def read_config(config_file, create_default=True):
     return json.loads(config, object_pairs_hook=OrderedDict)
 
 
-if os.access(
-        os.path.expanduser('~'), os.F_OK | os.R_OK | os.W_OK | os.X_OK) and not os.path.isfile(DEFAULT_CONFIG_FILE):
-    create_default_config()
+def upgrade_config(config_file):
+    if config_file and not os.path.isfile(config_file):
+        return
+
+    updated = False
+    with open(config_file) as cf:
+        config = json.loads(cf.read(), object_pairs_hook=OrderedDict)
+
+    new_config = None
+    config_version = config.get(CONFIG_VERSION_TAG)
+    if VERSION != config_version:
+        if not config_version:
+            new_config = DEFAULT_CONFIG.copy()
+            for k, v in config.get(BAG_CONFIG_TAG, {}).items():
+                new_config[BAG_CONFIG_TAG][k] = v
+            if config.get(ID_RESOLVER_TAG):
+                new_config[ID_RESOLVER_TAG] = config[ID_RESOLVER_TAG]
+            updated = True
+
+    if updated and new_config:
+        write_config(new_config, config_file)
+        print("Updated configuration file [%s] to current version format: %s" % (config_file, str(VERSION)))
+
+
+def bootstrap_config(config_file=DEFAULT_CONFIG_FILE, keychain_file=DEFAULT_KEYCHAIN_FILE, base_dir=None):
+    if not base_dir:
+        base_dir = os.path.expanduser('~')
+    if os.path.isdir(base_dir) and os.access(base_dir, os.F_OK | os.R_OK | os.W_OK | os.X_OK):
+        if not os.path.isfile(config_file):
+            write_config(config_file=config_file)
+            print("Created default configuration file: %s" % config_file)
+        else:
+            upgrade_config(config_file)
+        if not os.path.isfile(keychain_file):
+            write_keychain(keychain_file=keychain_file)
+            print("Created default keychain file: %s" % keychain_file)
