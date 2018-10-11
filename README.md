@@ -6,7 +6,7 @@
 [![Python Versions](https://img.shields.io/pypi/pyversions/bdbag.svg)](https://pypi.python.org/pypi/bdbag)
 [![License](https://img.shields.io/pypi/l/bdbag.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-#### Big Data Bag Utilities
+## Big Data Bag Utilities
 
 The *bdbag* utilities are a collection of software programs for working with
 [BagIt](https://datatracker.ietf.org/doc/draft-kunze-bagit/) packages that conform to the Bagit and Bagit/RO profiles.
@@ -91,4 +91,6 @@ See the [API Guide](./doc/api.md) for further details.
 A CLI utility module is provided for various ancillary tasks commonly involved with authoring **bdbags**.
 See the [Utility Guide](./doc/utils.md) for further details.
 
+### Change Log
 
+The change log is located [here](CHANGELOG.md).
