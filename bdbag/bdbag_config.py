@@ -19,6 +19,21 @@ DEFAULT_BAG_SPEC_VERSION = "0.97"
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')
 DEFAULT_BAG_ALGORITHMS = ['md5', 'sha256']
 
+COOKIE_JAR_TAG = "http_cookies"
+COOKIE_JAR_SEARCH_TAG = "scan_for_cookie_files"
+COOKIE_JAR_FILE_TAG = "file_names"
+COOKIE_JAR_PATHS_TAG = "search_paths"
+COOKIE_JAR_PATH_FILTER_TAG = "search_paths_filter"
+DEFAULT_COOKIE_JAR_FILE_NAMES = ["*cookies.txt"]
+DEFAULT_COOKIE_JAR_SEARCH_PATHS = [os.path.normpath(os.path.join(os.path.expanduser('~')))]
+DEFAULT_COOKIE_JAR_SEARCH_PATH_FILTER = ".bdbag"
+DEFAULT_COOKIE_JAR_SEARCH_CONFIG = {
+    COOKIE_JAR_SEARCH_TAG: True,
+    COOKIE_JAR_FILE_TAG: DEFAULT_COOKIE_JAR_FILE_NAMES,
+    COOKIE_JAR_PATHS_TAG: DEFAULT_COOKIE_JAR_SEARCH_PATHS,
+    COOKIE_JAR_PATH_FILTER_TAG: DEFAULT_COOKIE_JAR_SEARCH_PATH_FILTER
+}
+
 FETCH_CONFIG_TAG = "fetch_config"
 FETCH_HTTP_REDIRECT_STATUS_CODES_TAG = "redirect_status_codes"
 DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES = [301, 302, 303, 307, 308]
@@ -31,7 +46,9 @@ DEFAULT_FETCH_CONFIG = {
             "retry_status_forcelist": [500, 502, 503, 504]
         },
         "allow_redirects": True,
-        "redirect_status_codes": DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES
+        "redirect_status_codes": DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES,
+        COOKIE_JAR_TAG: DEFAULT_COOKIE_JAR_SEARCH_CONFIG
+
     },
     "s3": {
         "read_chunk_size": 10 * Megabyte,
@@ -39,14 +56,6 @@ DEFAULT_FETCH_CONFIG = {
         "max_read_retries": 5
     }
 }
-COOKIE_JAR_TAG = "http_cookies"
-COOKIE_JAR_SEARCH_TAG = "scan_for_cookie_files"
-COOKIE_JAR_FILE_TAG = "file_names"
-COOKIE_JAR_PATHS_TAG = "search_paths"
-COOKIE_JAR_PATH_FILTER_TAG = "search_paths_filter"
-DEFAULT_COOKIE_JAR_FILE_NAMES = ["*cookies.txt"]
-DEFAULT_COOKIE_JAR_SEARCH_PATHS = [os.path.normpath(os.path.join(os.path.expanduser('~')))]
-DEFAULT_COOKIE_JAR_SEARCH_PATH_FILTER = ".bdbag"
 
 ID_RESOLVER_TAG = "identifier_resolvers"
 DEFAULT_ID_RESOLVERS = ['n2t.net', 'identifiers.org']
@@ -101,13 +110,6 @@ DEFAULT_CONFIG = {
                 {
                     BAG_PROFILE_TAG: BDBAG_PROFILE_ID
                 }
-        },
-    COOKIE_JAR_TAG:
-        {
-            COOKIE_JAR_SEARCH_TAG: True,
-            COOKIE_JAR_FILE_TAG: DEFAULT_COOKIE_JAR_FILE_NAMES,
-            COOKIE_JAR_PATHS_TAG: DEFAULT_COOKIE_JAR_SEARCH_PATHS,
-            COOKIE_JAR_PATH_FILTER_TAG: DEFAULT_COOKIE_JAR_SEARCH_PATH_FILTER
         },
     FETCH_CONFIG_TAG: DEFAULT_FETCH_CONFIG,
     ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS,

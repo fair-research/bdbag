@@ -33,9 +33,7 @@ def fetch_bag_files(bag,
 
     auth = read_keychain(keychain_file)
     config = read_config(config_file)
-    cookie_jar_config = config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG])
-    cookies = load_and_merge_cookie_jars(find_cookie_jars(cookie_jar_config)) if \
-        cookie_jar_config.get(COOKIE_JAR_SEARCH_TAG, True) and kwargs.get("cookie_scan", True) else None
+    cookies = get_request_cookies(config) if kwargs.get("cookie_scan", True) else None
 
     success = True
     current = 0
@@ -123,16 +121,22 @@ def fetch_single_file(url,
                       keychain_file=DEFAULT_KEYCHAIN_FILE,
                       **kwargs):
 
-    config = read_config(config_file)
     auth = read_keychain(keychain_file)
-    cookie_jar_config = config.get(COOKIE_JAR_TAG, DEFAULT_CONFIG[COOKIE_JAR_TAG])
-    cookies = load_and_merge_cookie_jars(find_cookie_jars(cookie_jar_config)) if \
-        cookie_jar_config.get(COOKIE_JAR_SEARCH_TAG, True) and kwargs.get("cookie_scan", True) else None
-
+    config = read_config(config_file)
+    cookies = get_request_cookies(config) if kwargs.get("cookie_scan", True) else None
     result_path = fetch_file(url, output_path, auth, config=config, cookies=cookies, **kwargs)
     cleanup_transports()
 
     return result_path
+
+
+def get_request_cookies(config):
+    fetch_config = config.get(FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG)
+    http_fetch_config = fetch_config.get("http", dict())
+    cookie_jar_config = http_fetch_config.get(COOKIE_JAR_TAG, DEFAULT_COOKIE_JAR_SEARCH_CONFIG)
+    cookies = load_and_merge_cookie_jars(find_cookie_jars(cookie_jar_config)) if \
+        cookie_jar_config.get(COOKIE_JAR_SEARCH_TAG, True) else None
+    return cookies
 
 
 def cleanup_transports():
