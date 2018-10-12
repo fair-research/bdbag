@@ -28,7 +28,8 @@ compliant "plug-in" resolver class and configuring it via the
 * Bagit specification version compliance is now configurable. The
 default specification version used is `0.97` which permits heterogeneous
 mixing of checksums in bag payload manifests. Addresses
-[#27](https://github.com/fair-research/bdbag/issues/27).
+[#27](https://github.com/fair-research/bdbag/issues/27) and reverts the
+restriction introduced in release `1.3.0`.
 
 * Implement cloud storage fetch transports for access to secured Amazon
 S3 and Google Cloud Store via `boto3` library. GCS bucket and object
