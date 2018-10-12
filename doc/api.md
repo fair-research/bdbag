@@ -8,120 +8,64 @@ The command-line interface is built upon the API in this manner and can be used 
 ## API Documentation
 
 * [bdbag_api.py](#bdbag_api)
-    * [configure_logging(level=logging.INFO, logpath=None)](#configure_logging)
-    * [read_metadata(metadata_file)](#read_metadata)
-    * [is_bag(bag_path)](#is_bag)
-    * [cleanup_bag(bag_path)](#cleanup_bag)
-    * [revert_bag(bag_path)](#revert_bag)
-    * [prune_bag_manifests(bag)](#prune_bag_manifests)
-    * [check_payload_consistency(bag, skip_remote=False, quiet=False)](#check_payload_consistency)
-    * [make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE, ro_metadata=None, ro_metadata_file=None)](#make_bag)
-    * [materialize(input_path, output_path=None, fetch_callback=None, validation_callback=None, keychain_file=DEFAULT_KEYCHAIN_FILE, config_file=DEFAULT_CONFIG_FILE, filter_expr=None, **kwargs)](#materialize)
-    * [resolve_fetch(bag_path, force=False, keychain_file=DEFAULT_KEYCHAIN_FILE)](#resolve_fetch)
-    * [generate_ro_manifest(bag_path, overwrite=False)](#generate_ro_manifest)
-    * [archive_bag(bag_path, bag_archiver)](#archive_bag)
-    * [extract_bag(bag_path, output_path=None, temp=False)](#extract_bag)
-    * [validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE)](#validate_bag)
-    * [validate_bag_profile(bag_path, profile_path=None)](#validate_bag_profile)
-    * [validate_bag_serialization(bag_path, bag_profile)](#validate_bag_serialization)
-    * [validate_bag_structure(bag_path, skip_remote=True)](#validate_bag_structure)
+    * [archive_bag](#archive_bag)
+    * [check_payload_consistency](#check_payload_consistency)
+    * [cleanup_bag](#cleanup_bag)
+    * [configure_logging](#configure_logging)
+    * [extract_bag](#extract_bag)
+    * [generate_ro_manifest](#generate_ro_manifest)
+    * [is_bag](#is_bag)
+    * [make_bag](#make_bag)
+    * [materialize](#materialize)
+    * [prune_bag_manifests](#prune_bag_manifests)
+    * [read_metadata](#read_metadata)
+    * [resolve_fetch](#resolve_fetch)
+    * [revert_bag](#revert_bag)
+    * [validate_bag](#validate_bag)
+    * [validate_bag_profile](#validate_bag_profile)
+    * [validate_bag_serialization](#validate_bag_serialization)
+    * [validate_bag_structure](#validate_bag_structure)
 
 * [bdbag_config.py](bdbag_config)
-    * [write_config()](#write_config)
-    * [read_config(config_file)](#read_config)
-    * [upgrade_config()](#upgrade_config)
-    * [bootstrap_config()](#bootstrap_config)
+    * [bootstrap_config](#bootstrap_config)
+    * [read_config](#read_config)
+    * [upgrade_config](#upgrade_config)
+    * [write_config](#write_config)
 
 * [bdbag](#bdbag_module)
     * [filter_dict](#filter_dict)
-
+    * [inspect_path](#inspect_path)
 <a name="bdbag_api"></a>
 ## bdbag_api.py
 The primary Python file which contains the *bdbag* API functions.  After installing bdbag, append the following to the top of your script.
-
 ```python
 from bdbag import bdbag_api
 ```
 
------
-
-<a name="configure_logging"></a>
-#### configure_logging(level=logging.INFO, logpath=None)
-Set the logging level and optional output path for log statements.
-
-##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|level|[Python logging module level constant](https://docs.python.org/2/library/logging.html#logging-levels)|The logging event filter level.
-|logpath|`string`|A path to a file to redirect logging statements to. Default is **stdout**.
-
------
-
-<a name="read_metadata"></a>
-#### read_metadata(metadata_file) ⇒ `dict`
-Reads the configuration file specified by `metadata_file` into a dictionary object.  The format of `metadata_file` is
-described [here](./config.md#metadata).
-
-##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|metadata_file|`string`|A normalized, absolute path to a metadata file.
-
-**Returns**: `dict` - The metadata.
-
------
-
-<a name="is_bag"></a>
-#### is_bag(bag_path) ⇒ `boolean`
-Checks if the path denoted by `bag_path` is a directory that contains a valid bag structure.
-
-##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to the bag location.
-
-**Returns**: `boolean` - Whether the path specified by `bag_path` contains a valid bag structure.
-
------
-
-<a name="cleanup_bag"></a>
-#### cleanup_bag(bag_path)
-Deletes the directory tree denoted by `bag_path`.
+<a name="archive_bag"></a>
+## archive_bag
+```python
+archive_bag(bag_path, bag_archiver)
+```
+Creates a single, serialized bag archive file from the directory specified by `bag_path` using the format specified by
+`bag_archiver`. The resulting archive file is BagIt spec
+compliant, i.e., complies with the rules of **"Section 4: Serialization"** of the
+[BagIt Specification](https://datatracker.ietf.org/doc/draft-kunze-bagit/).
 
 ##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
+|bag_archiver|`string`|One of the following case-insensitive string values: `zip`, `tar`, or `tgz`.
+
+**Returns**: `string` - The normalized, absolute path of the directory of the created archive file.
 
 -----
-
-<a name="revert_bag"></a>
-#### revert_bag(bag_path)
-Revert an existing bag directory back to a normal directory, deleting all bag metadata files. Payload files in the `data` directory will be moved back to the directory root, and the `data` directory will be deleted.
-
-##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
-
------
-
-<a name="prune_bag_manifests"></a>
-#### prune_bag_manifests(bag) ⇒ `boolean`
-For the given `bag` object, removes any file and tagfile manifests for checksums that are not listed in that object's
-`algs` member variable.
-
-##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag|`bag`|a `bag` object such as that returned by `make_bag`
-
-**Returns**: `boolean` - If any manifests were pruned or not.
-
------
-
 <a name="check_payload_consistency"></a>
-#### check_payload_consistency(bag, skip_remote=False, quiet=False)  ⇒ `boolean`
+## check_payload_consistency
+```python
+check_payload_consistency(bag, skip_remote=False, quiet=False)
+```
 Checks if the payload files in the bag's `data` directory are consistent with the bag's file manifests and the bag's
 `fetch.txt` file, if any.
 
@@ -136,9 +80,113 @@ Checks if the payload files in the bag's `data` directory are consistent with th
 and that there are no additional files present that are not listed in either `fetch.txt` or the bag's file manifests.
 
 -----
+<a name="cleanup_bag"></a>
+## cleanup_bag
+```python
+cleanup_bag(bag_path)
+```
+Deletes the directory tree denoted by `bag_path`.
 
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|bag_path|`string`|A normalized, absolute path to a bag directory.
+
+-----
+<a name="configure_logging"></a>
+## configure_logging
+```python
+configure_logging(level=logging.INFO, logpath=None)
+```
+Set the logging level and optional file output path for log statements.
+
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|level|[Python logging module level constant](https://docs.python.org/2/library/logging.html#logging-levels)|The logging event filter level.
+|logpath|`string`|A path to a file to redirect logging statements to. Default is **stdout**.
+
+-----
+<a name="extract_bag"></a>
+## extract_bag
+```python
+extract_bag(bag_path, output_path=None, temp=False)
+```
+Extracts the bag specified by `bag_path` to the based directory specified by `output_path`, or, if the `temp` parameter is specified, an operating system dependent temporary path.
+
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|bag_path|`string`|A normalized, absolute path to a bag directory.
+|output_path|`string`|A normalized, absolute path to a base directory where the bag should be extracted.
+|temp|`boolean`|A `boolean` value indicating whether to extract this bag to a temporary directory or not. If `True`, overrides the `output_path` variable, if specified.
+
+**Returns**: `string` - The normalized, absolute path of the directory where the bag was extracted.
+
+-----
+<a name="generate_ro_manifest"></a>
+## generate_ro_manifest
+```python
+generate_ro_manifest(bag_path, overwrite=False)
+```
+Automatically create a RO `manifest.json` file in the `metadata` tagfile directory.
+The bag will be introspected and metadata from `bag-info.txt`, along with lists of local payload files and files in `fetch.txt`, will be used to generate the RO manifest.
+
+Note: the contents of the `manifest.json` file output by this method are limited to what can be automatically generated by introspecting the bag structure and it's metadata.
+Currently, this includes only provenance members of the top-level RO object, and the list of aggregated resources (`aggregates`) contained within the bag.
+
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|bag_path|`string`|A normalized, absolute path to a bag directory.
+|overwrite|`boolean`|A `boolean` value indicating whether to overwrite or update to any existing RO `metadata/manifest.json` file.
+
+-----
+<a name="is_bag"></a>
+## is_bag
+```python
+is_bag(bag_path)
+```
+Checks if the path denoted by `bag_path` is a directory that contains a valid bag structure.
+
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|bag_path|`string`|A normalized, absolute path to the bag location.
+
+**Returns**: `boolean` - Whether the path specified by `bag_path` contains a valid bag structure.
+
+-----
+<a name="prune_bag_manifests"></a>
+## prune_bag_manifests
+```python
+prune_bag_manifests(bag)
+```
+For the given `bag` object, removes any file and tagfile manifests for checksums that are not listed in that object's
+`algs` member variable.
+
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|bag|`bag`|a `bag` object such as that returned by `make_bag`
+
+**Returns**: `boolean` - If any manifests were pruned or not.
+
+-----
 <a name="make_bag"></a>
-#### make_bag(bag_path, update=False, algs=None, prune_manifests=False, metadata=None, metadata_file=None, remote_file_manifest=None, config_file=bdbag.DEFAULT_CONFIG_FILE, ro_metadata=None, ro_metadata_file=None)  ⇒ `bag`
+## make_bag
+```python
+make_bag(bag_path,
+         update=False,
+         algs=None,
+         prune_manifests=False,
+         metadata=None,
+         metadata_file=None,
+         remote_file_manifest=None,
+         config_file=bdbag.DEFAULT_CONFIG_FILE,
+         ro_metadata=None,
+         ro_metadata_file=None)
+```
 Creates or updates the bag denoted by the `bag_path` argument.
 
 ##### Parameters
@@ -160,7 +208,7 @@ Creates or updates the bag denoted by the `bag_path` argument.
 
 -----
 <a name="materialize"></a>
-## `materialize`
+## materialize
 ```python
 materialize(input_path,
             output_path=None,
@@ -200,8 +248,33 @@ these steps fail, an error is raised.
 **Raises**: `BagValidationError`, `RuntimeError` if the bag could not be materialized and validated successfully.
 
 -----
+<a name="read_metadata"></a>
+## read_metadata
+```python
+read_metadata(metadata_file)
+```
+Reads the configuration file specified by `metadata_file` into a dictionary object.  The format of `metadata_file` is
+described [here](./config.md#metadata).
+
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|metadata_file|`string`|A normalized, absolute path to a metadata file.
+
+**Returns**: `dict` - The metadata.
+
+-----
 <a name="resolve_fetch"></a>
-#### resolve_fetch(bag_path, force=False, callback=None, keychain_file=DEFAULT_KEYCHAIN_FILE, config_file=DEFAULT_CONFIG_FILE, filter_expr=None, **kwargs) ⇒ `boolean`
+## resolve_fetch
+```python
+resolve_fetch(bag_path,
+              force=False,
+              callback=None,
+              keychain_file=DEFAULT_KEYCHAIN_FILE,
+              config_file=DEFAULT_CONFIG_FILE,
+              filter_expr=None,
+              **kwargs)
+```
 Attempt to download files listed in the bag's `fetch.txt` file.  The method of transfer is dependent on the protocol
 scheme of the URL field in `fetch.txt`.  Note that not all file transfer protocols are supported at this time.
 
@@ -242,56 +315,24 @@ You can also use `length` and the integer relation operators to easily limit the
 **Returns**: `boolean` - If all remote files were resolved successfully or not. Also returns `True` if the function invocation resulted in a NOOP.
 
 -----
-
-<a name="generate_ro_manifest"></a>
-#### generate_ro_manifest(bag_path, overwrite=False)
-Automatically create a RO `manifest.json` file in the `metadata` tagfile directory.
-The bag will be introspected and metadata from `bag-info.txt`, along with lists of local payload files and files in `fetch.txt`, will be used to generate the RO manifest.
-
-Note: the contents of the `manifest.json` file output by this method are limited to what can be automatically generated by introspecting the bag structure and it's metadata.
-Currently, this includes only provenance members of the top-level RO object, and the list of aggregated resources (`aggregates`) contained within the bag.
+<a name="revert_bag"></a>
+## revert_bag
+```python
+revert_bag(bag_path)
+```
+Revert an existing bag directory back to a normal directory, deleting all bag metadata files. Payload files in the `data` directory will be moved back to the directory root, and the `data` directory will be deleted.
 
 ##### Parameters
 | Param | Type | Description |
 | --- | --- | --- |
 |bag_path|`string`|A normalized, absolute path to a bag directory.
-|overwrite|`boolean`|A `boolean` value indicating whether to overwrite or update to any existing RO `metadata/manifest.json` file.
-
------
-
-<a name="archive_bag"></a>
-#### archive_bag(bag_path, bag_archiver) ⇒ `string`
-Creates a single, serialized bag archive file from the directory specified by `bag_path` using the format specified by
-`bag_archiver`. The resulting archive file is BagIt spec
-compliant, i.e., complies with the rules of **"Section 4: Serialization"** of the
-[BagIt Specification](https://datatracker.ietf.org/doc/draft-kunze-bagit/).
-
-##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
-|bag_archiver|`string`|One of the following case-insensitive string values: `zip`, `tar`, or `tgz`.
-
-**Returns**: `string` - The normalized, absolute path of the directory of the created archive file.
-
------
-
-<a name="extract_bag"></a>
-#### extract_bag(bag_path, output_path=None, temp=False) ⇒ `string`
-Extracts the bag specified by `bag_path` to the based directory specified by `output_path`, or, if the `temp` parameter is specified, an operating system dependent temporary path.
-
-##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
-|output_path|`string`|A normalized, absolute path to a base directory where the bag should be extracted.
-|temp|`boolean`|A `boolean` value indicating whether to extract this bag to a temporary directory or not. If `True`, overrides the `output_path` variable, if specified.
-
-**Returns**: `string` - The normalized, absolute path of the directory where the bag was extracted.
 
 -----
 <a name="validate_bag"></a>
-#### validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE)
+## validate_bag
+```python
+validate_bag(bag_path, fast=False, config_file=bdbag.DEFAULT_CONFIG_FILE)
+```
 Validates a bag archive or bag directory.  If a bag archive is specified, it is first extracted to a temporary directory
 before validation and then the temporary directory is deleted after validation completes.
 
@@ -310,7 +351,10 @@ payload directory and compared against the checksum values in the file manifest(
 
 -----
 <a name="validate_bag_profile"></a>
-#### validate_bag_profile(bag_path, profile_path=None) ⇒ `Profile`
+## validate_bag_profile
+```python
+validate_bag_profile(bag_path, profile_path=None)
+```
 Validates a bag archive or bag directory against a bag profile. If a bag archive is specified, it is first extracted to a temporary directory
 before profile validation and then the temporary directory is deleted after profile validation completes.
 
@@ -328,7 +372,10 @@ If a `profile_path` is specified, the bag is validated against that profile. Oth
 
 -----
 <a name="validate_bag_serialization"></a>
-#### validate_bag_serialization(bag_path, bag_profile)
+## validate_bag_serialization
+```python
+validate_bag_serialization(bag_path, bag_profile)
+```
 Validates a bag archive's serialization format against a bag profile's `Serialization` and `Accept-Serialization`
 constraints, if any.
 
@@ -342,7 +389,10 @@ constraints, if any.
 
 -----
 <a name="validate_bag_structure"></a>
-#### validate_bag_structure(bag_path, check_remote=False)
+## validate_bag_structure
+```python
+validate_bag_structure(bag_path, check_remote=False)
+```
 Checks a bag's structural conformance as well as payload consistency between file manifests, the filesystem, and fetch.txt.
 
 ##### Parameters
@@ -358,14 +408,32 @@ Checks a bag's structural conformance as well as payload consistency between fil
 ## bdbag_config.py
 Utility functions for the `bdbag.json` configuration file.
 To make use of these functions, after installing bdbag append the following to the top of your script.
-
 ```python
 from bdbag.bdbag_config import <function name>
 ```
 
+<a name="bootstrap_config"></a>
+## bootstrap_config
+```python
+bootstrap_config(config_file=DEFAULT_CONFIG_FILE, keychain_file=DEFAULT_KEYCHAIN_FILE, base_dir=None)
+```
+Attempts to create the default configuration file at the location specified by `config_file` and the default keychain file at the location specified by `keychain_file`.
+If the `base_dir` argument is specified, it will be checked to ensure the directory exists and the caller has read/write/execute permissions.
+If explicit locations via the declared parameters are not provided, the `base_dir` will be assumed to be the system dependent expansion of `~`,
+and `config_file` will be set to `~/.bdbag/bdbag.json` and `keychain_file` will be set to `~/.bdbag/keychain.json`.
+##### Parameters
+| Param | Type | Description |
+| --- | --- | --- |
+|config_file|`string`|A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.
+|keychain_file|`string`|A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/keychain.json`
+|base_dir|`string`|A directory path, assumed to be the base path where the files will be written. This path will be checked for access before attempting to write the files. If it is not specified, it defaults to the system-dependent expansion of `~`.
+
 -----
 <a name="read_config"></a>
-#### read_config(config_file, create_default=True, auto_upgrade=False) ⇒ `dict`
+## read_config
+```python
+read_config(config_file, create_default=True, auto_upgrade=False)
+```
 Reads the configuration file specified by `config_file` into a dictionary object. If the file path specified is
 the default configuration file location `~/.bdbag/bdbag.json`, and that file does not already exist, it is created unless `create_default=False`.
 If `auto_upgrade=True` and an existing configuration file is found and is of an unknown or lesser version number than the current configuration file format, it will be upgraded to the latest version.
@@ -381,7 +449,10 @@ Any existing settings found that are forward-compatible with the current version
 
 -----
 <a name="write_config"></a>
-#### write_config(config=DEFAULT_CONFIG, config_file=DEFAULT_CONFIG_FILE)
+## write_config
+```python
+write_config(config=DEFAULT_CONFIG, config_file=DEFAULT_CONFIG_FILE)
+```
 Writes the configuration specified by `config` to the location specified by `config_file`.
 Without arguments, creates the default configuration file `bdbag.json` with the default configuration template, if it does not already exist.
 ##### Parameters
@@ -391,7 +462,10 @@ Without arguments, creates the default configuration file `bdbag.json` with the 
 
 -----
 <a name="upgrade_config"></a>
-#### upgrade_config(config_file)
+## upgrade_config
+```python
+upgrade_config(config_file)
+```
 Upgrade an existing configuration file to the current format. If an existing configuration file is found and is of an unknown or lesser version number than the current configuration file format, it will be upgraded to the latest version.
 Any existing settings found that are forward-compatible with the current version will be preserved during the upgrade process.
 ##### Parameters
@@ -400,40 +474,28 @@ Any existing settings found that are forward-compatible with the current version
 |config_file|`string`|A normalized, absolute path to a configuration file.
 
 -----
-<a name="bootstrap_config"></a>
-#### bootstrap_config(config_file=DEFAULT_CONFIG_FILE, keychain_file=DEFAULT_KEYCHAIN_FILE, base_dir=None)
-Attempts to create the default configuration file at the location specified by `config_file` and the default keychain file at the location specified by `keychain_file`.
-If the `base_dir` argument is specified, it will be checked to ensure the directory exists and the caller has read/write/execute permissions.
-If explicit locations via the declared parameters are not provided, the `base_dir` will be assumed to be the system dependent expansion of `~`,
-and `config_file` will be set to `~/.bdbag/bdbag.json` and `keychain_file` will be set to `~/.bdbag/keychain.json`.
-##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|config_file|`string`|A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.
-|keychain_file|`string`|A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/keychain.json`
-|base_dir|`string`|A directory path, assumed to be the base path where the files will be written. This path will be checked for access before attempting to write the files. If it is not specified, it defaults to the system-dependent expansion of `~`.
-
-
------
 <a name="bdbag_module"></a>
 ## bdbag (`__init__.py`)
 Some shared utility functions exist at the `bdbag` module level in `__init__.py`.
 To make use of these functions, after installing bdbag append the following to the top of your script.
-
 ```python
 from bdbag import <function name>
 ```
-
------
 <a name="inspect_path"></a>
-#### inspect_path(path)
+## inspect_path
+```python
+inspect_path(path)
+```
 Attempts to determine if the string specified by `path` is a local file, local directory, or a actionable URL/URI.
 
 **Returns**: `is_file, is_dir, is_uri` - A 3-tuple of boolean values indicating if the path is a file, directory, or URL/URI, respectively.
 
 -----
 <a name="filter_dict"></a>
-#### filter_dict(expr, entry)
+## filter_dict
+```python
+filter_dict(expr, entry)
+```
 Evaluates the dictionary variable `entry` against the filter expression `expr`,
 where `expr` is a string of the form: `<column><operator><value>`.
 The set of operators is syntactically limited. See syntax [below](#filter_dict_syntax).
