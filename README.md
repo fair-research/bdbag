@@ -47,8 +47,25 @@ The latest *bdbag* release is available on PyPi and can be installed using `pip`
 pip install bdbag
 ```
 
+Note that the above command will install `bdbag` with only the minimal dependencies required to run.
+If you wish to install `bdbag` with extra fetch transport handler support provided by `boto` (for AWS S3)
+and `globus` (for Globus Transfer) packages, use the following command:
+```sh
+pip install "bdbag[boto,globus]"
+```
+
 ### Installation from Source
-Download the current [bdbag](https://github.com/fair-research/bdbag/archive/master.zip) source code from GitHub or
+You can use `pip` to install `bdbag` directly from GitHub:
+
+```sh
+sudo pip install git+https://github.com/fair-research/bdbag
+```
+or:
+```sh
+pip install --user git+https://github.com/fair-research/bdbag
+```
+
+You can also download the current [bdbag](https://github.com/fair-research/bdbag/archive/master.zip) source code from GitHub or
 alternatively clone the source from GitHub if you have *git* installed:
 
 ```sh
@@ -56,14 +73,16 @@ git clone https://github.com/fair-research/bdbag
 ```
 From the root of the **bdbag** source code directory execute the following command:
 ```sh
-python setup.py install --user
+sudo pip install .
 ```
-
-Note that if you want to make **bdbag** available to all users on the system, you should run the following command:
+or:
 ```sh
-python setup.py install
+pip install --user .
 ```
-If you are on a Unix-based system (including MacOSX) you should execute the above command as **root** or use **sudo**.
+Note that if you want to install the extra dependencies from a local source directory you would use the following command:
+```sh
+pip install ".[boto,globus]"
+```
 
 ### Testing
 The unit tests can be run by invoking the following command from the root of the **bdbag** source code directory:
