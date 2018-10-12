@@ -58,9 +58,13 @@ setup(
     ],
     install_requires=['pytz',
                       'tzlocal',
-                      'requests>=2.7.0',
                       'certifi',
+                      'requests>=2.7.0',
                       'bagit==1.7.0'],
+    extras_require={
+        'boto': ["boto3>=1.9.5", "botocore", "awscli"],
+        'globus': ["globus_sdk>=1.6.0"],
+    },
     license='Apache 2.0',
     classifiers=[
         'Intended Audience :: Science/Research',
