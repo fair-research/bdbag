@@ -1,9 +1,26 @@
+#
+# Copyright 2016 University of Southern California
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import argparse
 import os
 import sys
 import logging
 import bagit
-from bdbag import bdbag_api as bdb, get_typed_exception, DEFAULT_CONFIG_FILE, FILTER_DOCSTRING, VERSION
+from bdbag import bdbag_api as bdb, inspect_path, get_typed_exception, FILTER_DOCSTRING, VERSION, BAGIT_VERSION
+from bdbag.bdbag_config import bootstrap_config, DEFAULT_CONFIG_FILE
+from bdbag.fetch import fetcher
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
 BAG_METADATA = dict()
@@ -14,6 +31,26 @@ ASYNC_TRANSFER_VALIDATION_WARNING = \
     "as checksums may be recalculated on files that are currently being written to. " \
     "If the fetch resolution for this bag does not initiate any asynchronous transfers, " \
     "you can safely ignore this warning.\n\n"
+
+
+class VersionAction(argparse.Action):
+
+    def __init__(self,
+                 option_strings,
+                 dest=argparse.SUPPRESS,
+                 default=argparse.SUPPRESS,
+                 help="show program's version number and exit"):
+        super(VersionAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print("BDBag %s (Bagit %s)" % (VERSION, BAGIT_VERSION))
+        bootstrap_config()
+        parser.exit()
 
 
 class AddMetadataAction(argparse.Action):
@@ -35,7 +72,7 @@ def parse_cli():
     parser = argparse.ArgumentParser(
         description=description, epilog="For more information see: http://github.com/fair-research/bdbag")
 
-    parser.add_argument('--version', action='version', version=VERSION)
+    parser.add_argument('--version', action=VersionAction)
 
     standard_args = parser.add_argument_group('Bag arguments')
 
@@ -73,6 +110,18 @@ def parse_cli():
         prune_manifests_arg, action='store_true',
         help="If specified, any existing checksum manifests not explicitly configured via either"
              " the \"checksum\" argument(s) or configuration file will be deleted from the bag during an update.")
+
+    materialize_arg = "--materialize"
+    standard_args.add_argument(
+        materialize_arg, action="store_true",
+        help="Attempt to fully materialize a bag by performing multiple actions depending on the context of the input "
+             "<path>. If <path> is a URL or a URI of a resolvable identifier scheme, the file referenced by this value "
+             "will first be downloaded to the current directory. Next, if the <path> value (or previously downloaded "
+             "file) is a local path to a supported archive format, the archive will be extracted to the current "
+             "directory. Then, if the <path> value (or previously extracted file) is a valid bag directory, any remote "
+             "file references contained within the bag's \"fetch.txt\" file will attempt to be resolved. Finally, "
+             "full validation will be run on the materialized bag. If any one of these steps fail, a non-zero error is "
+             "returned.")
 
     fetch_arg = "--resolve-fetch"
     standard_args.add_argument(
@@ -155,29 +204,29 @@ def parse_cli():
 
     bdb.configure_logging(level=logging.ERROR if args.quiet else (logging.DEBUG if args.debug else logging.INFO))
 
-    path = os.path.abspath(args.path)
-    if not os.path.exists(path):
-        sys.stderr.write("Error: file or directory not found: %s\n\n" % path)
+    is_file, is_dir, is_uri = inspect_path(args.path)
+    if not is_file and not is_dir and not is_uri:
+        sys.stderr.write("Error: file or directory not found: %s\n\n" % args.path)
+        sys.exit(2)
+    elif is_uri:
+        path = args.path
+    else:
+        path = os.path.abspath(args.path)
+
+    if args.archiver and not is_dir:
+        sys.stderr.write("Error: A bag archive can only be created on directories.\n\n")
         sys.exit(2)
 
-    is_file = os.path.isfile(path)
-    if args.archiver and is_file:
-        sys.stderr.write("Error: A bag archive cannot be created from an existing bag archive.\n\n")
+    if args.checksum and not is_dir:
+        sys.stderr.write("Error: A checksum manifest can only be added to a bag directory.\n\n")
         sys.exit(2)
 
-    if args.checksum and is_file:
-        sys.stderr.write("Error: A checksum manifest cannot be added to an existing bag archive. "
-                         "The bag must be extracted, updated, and re-archived.\n\n")
+    if args.update and not is_dir:
+        sys.stderr.write("Error: Only existing bag directories can be updated.\n\n")
         sys.exit(2)
 
-    if args.update and is_file:
-        sys.stderr.write("Error: An existing bag archive cannot be updated in-place. "
-                         "The bag must first be extracted and then updated.\n\n")
-        sys.exit(2)
-
-    if args.revert and is_file:
-        sys.stderr.write("Error: An existing bag archive cannot be reverted in-place. "
-                         "The bag must first be extracted and then reverted.\n\n")
+    if args.revert and not is_dir:
+        sys.stderr.write("Error: Only existing bag directories can be reverted.\n\n")
         sys.exit(2)
 
     if args.fetch_filter and not args.resolve_fetch:
@@ -185,9 +234,8 @@ def parse_cli():
                          (fetch_filter_arg, fetch_arg))
         sys.exit(2)
 
-    if args.resolve_fetch and is_file:
-        sys.stderr.write("Error: It is not possible to resolve remote files directly into a bag archive. "
-                         "The bag must first be extracted before the %s argument can be specified.\n\n" %
+    if args.resolve_fetch and not is_dir:
+        sys.stderr.write("Error: Resolving remote files using %s can only target bag directories.\n\n" %
                          fetch_arg)
         sys.exit(2)
 
@@ -246,13 +294,12 @@ def parse_cli():
                          (revert_arg, update_arg))
         sys.exit(2)
 
-    return args, is_bag, is_file
+    return args, path, is_bag, is_file, is_uri
 
 
 def main():
 
-    args, is_bag, is_file = parse_cli()
-    path = os.path.abspath(args.path)
+    args, path, is_bag, is_file, is_uri = parse_cli()
 
     archive = None
     temp_path = None
@@ -260,9 +307,28 @@ def main():
     result = 0
 
     if not args.quiet:
-        sys.stderr.write('\n')
+        sys.stdout.write('\n')
 
     try:
+        if args.materialize:
+            bdb.materialize(path,
+                            output_path=None,
+                            fetch_callback=None,
+                            validation_callback=None,
+                            keychain_file=args.keychain_file,
+                            config_file=args.config_file,
+                            filter_expr=args.fetch_filter)
+            return result
+
+        if is_uri:
+            # Try to resolve/download the bag
+            fetcher.fetch_single_file(path,
+                                      config_file=args.config_file,
+                                      keychain_file=args.keychain_file)
+            if not args.quiet:
+                sys.stdout.write('\n')
+            return result
+
         if not is_file:
             # do not try to create or update the bag if the user just wants to validate or complete an existing bag
             if not ((args.validate or args.validate_profile or args.resolve_fetch) and
@@ -285,7 +351,7 @@ def main():
         elif not (args.validate or args.validate_profile or args.resolve_fetch):
             bdb.extract_bag(path)
             if not args.quiet:
-                sys.stderr.write('\n')
+                sys.stdout.write('\n')
             return result
 
         if args.ro_manifest_generate:
@@ -335,10 +401,10 @@ def main():
         if temp_path:
             bdb.cleanup_bag(os.path.dirname(temp_path))
         if result != 0:
-            sys.stderr.write("\n%s" % error)
+            sys.stdout.write("\n%s" % error)
 
     if not args.quiet:
-        sys.stderr.write('\n')
+        sys.stdout.write('\n')
 
     return result
 

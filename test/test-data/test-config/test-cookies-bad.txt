@@ -1,0 +1,2 @@
+host1.example.com	FALSE	/	TRUE	0
+host2.example.com	cookie	BqaXP3po2EZJqbmulyixZZP1

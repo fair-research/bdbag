@@ -1,13 +1,31 @@
+#
+# Copyright 2016 University of Southern California
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import os
 import sys
 import json
 import shutil
 import logging
+import mock
 import unittest
 from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
-from bdbag import bdbag_api as bdb, bdbag_ro as bdbro, bdbagit as bdbagit, filter_dict, get_typed_exception
+from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg, bdbag_ro as bdbro, bdbagit as bdbagit, filter_dict, \
+    get_typed_exception
+from bdbag.fetch.auth import keychain
 from test.test_common import BaseTest
 
 if sys.version_info > (3,):
@@ -15,7 +33,6 @@ if sys.version_info > (3,):
 else:
     from StringIO import StringIO
 
-logging.basicConfig(filename='test_api.log', filemode='w', level=logging.DEBUG)
 logger = logging.getLogger()
 
 
@@ -31,6 +48,79 @@ class TestAPI(BaseTest):
         self.stream.close()
         logger.removeHandler(self.handler)
         super(TestAPI, self).tearDown()
+
+    def test_create_config(self):
+        logger.info(self.getTestHeader('create config'))
+        try:
+            config_file = ospj(self.test_config_dir, ".bdbag", 'bdbag.json')
+            bdbcfg.write_config(config_file=config_file)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_create_default_config(self):
+        logger.info(self.getTestHeader('read config with create default if missing'))
+        try:
+            config_file = ospj(self.test_config_dir, ".bdbag", 'bdbag.json')
+            bdbcfg.read_config(config_file=config_file)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_update_base_config(self):
+        logger.info(self.getTestHeader('read config with auto-upgrade version'))
+        try:
+            config_file = ospj(self.test_config_dir, 'base-config.json')
+            bdbcfg.read_config(config_file=config_file, auto_upgrade=True)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_create_keychain(self):
+        logger.info(self.getTestHeader('create keychain'))
+        try:
+            keychain_file = ospj(self.test_config_dir, ".bdbag", 'keychain.json')
+            keychain.write_keychain(keychain_file=keychain_file)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_create_default_keychain(self):
+        logger.info(self.getTestHeader('read keychain with create default if missing'))
+        try:
+            keychain_file = ospj(self.test_config_dir, ".bdbag", 'keychain.json')
+            keychain.read_keychain(keychain_file=keychain_file)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_create_default_keychain_location(self):
+        logger.info(self.getTestHeader('test read keychain with create default location'))
+        try:
+            default_keychain_path = ospj(self.test_config_dir, ".bdbag")
+            default_keychain_file = ospj(default_keychain_path, 'keychain.json')
+            patched_default_config = mock.patch.multiple(
+                "bdbag.fetch.auth.keychain",
+                DEFAULT_KEYCHAIN_FILE=default_keychain_file)
+
+            patched_default_config.start()
+            keychain.read_keychain(keychain_file=default_keychain_file)
+            patched_default_config.stop()
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_bootstrap_config(self):
+        logger.info(self.getTestHeader('test bootstrap config'))
+        try:
+            config_file = ospj(self.test_config_dir, ".bdbag", 'bdbag.json')
+            keychain_file = ospj(self.test_config_dir, ".bdbag", 'keychain.json')
+            bdbcfg.bootstrap_config(config_file=config_file, keychain_file=keychain_file, base_dir=self.test_config_dir)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_bootstrap_config_with_upgrade(self):
+        logger.info(self.getTestHeader('test bootstrap config with upgrade'))
+        try:
+            config_file = ospj(self.test_config_dir, 'base-config.json')
+            keychain_file = ospj(self.test_config_dir, ".bdbag", 'keychain.json')
+            bdbcfg.bootstrap_config(config_file=config_file, keychain_file=keychain_file, base_dir=self.test_config_dir)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
 
     def test_create_bag(self):
         logger.info(self.getTestHeader('create bag'))
@@ -311,6 +401,29 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_create_bag_mixed_checksums_allowed(self):
+        logger.info(self.getTestHeader('allow create bag with non-uniform checksum(s) per file'))
+        try:
+            bdb.make_bag(self.test_data_dir,
+                         remote_file_manifest=ospj(self.test_config_dir,
+                                                   'test-fetch-manifest-mixed-checksums.json'))
+            bdb.validate_bag(self.test_bag_dir, fast=True)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_create_bag_mixed_checksums_disallowed(self):
+        logger.info(self.getTestHeader('disallow create bag with non-uniform checksum(s) per file'))
+        try:
+            with self.assertRaises(RuntimeError) as ar:
+                bdb.make_bag(self.test_data_dir,
+                             remote_file_manifest=ospj(self.test_config_dir,
+                                                       'test-fetch-manifest-mixed-checksums.json'),
+                             config_file=(ospj(self.test_config_dir, 'test-config-2.json')))
+            self.assertExpectedMessages([str(ar.exception)], "Expected the same number of files for each checksum")
+            logger.error(get_typed_exception(ar.exception))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_archive_bag_zip(self):
         logger.info(self.getTestHeader('archive bag zip format'))
         try:
@@ -345,6 +458,21 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_extract_bag_archive_zip_with_relocate_existing(self):
+        logger.info(self.getTestHeader('extract bag zip format, relocate existing'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'), temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'), temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["moving existing directory"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_extract_bag_archive_tgz(self):
         logger.info(self.getTestHeader('extract bag tgz format'))
         try:
@@ -369,6 +497,23 @@ class TestAPI(BaseTest):
         logger.info(self.getTestHeader('test full validation complete bag'))
         try:
             bdb.validate_bag(self.test_bag_dir, fast=False)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_validate_complete_bag_full_with_callback_and_cancel(self):
+        logger.info(self.getTestHeader('test full validation complete bag with callback and cancel'))
+        try:
+            def callback(current, total):
+                if current < total - 1:
+                    return True
+                else:
+                    return False
+
+            self.assertRaises(bdbagit.BaggingInterruptedError,
+                              bdb.validate_bag,
+                              self.test_bag_dir,
+                              fast=False,
+                              callback=callback)
         except Exception as e:
             self.fail(get_typed_exception(e))
 

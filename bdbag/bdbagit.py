@@ -1,3 +1,18 @@
+#
+# Copyright 2016 University of Southern California
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import json
 from collections import OrderedDict
 import bagit
@@ -7,13 +22,34 @@ from bdbag import escape_uri, VERSION, BAGIT_VERSION, PROJECT_URL
 
 LOGGER = logging.getLogger(__name__)
 
+SUPPORTED_BAGIT_SPECS = ["0.97", "1.0"]
 
-def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-8', remote_entries=None):
+
+def parse_version(version):
+    try:
+        return tuple(int(i) for i in version.split(".", 1))
+    except ValueError:
+        raise BagError(
+            _("Bag version numbers must be MAJOR.MINOR numbers, not %s") % version
+        )
+
+
+def make_bag(bag_dir,
+             bag_info=None,
+             processes=1,
+             checksums=None,
+             encoding='utf-8',
+             remote_entries=None,
+             spec_version="0.97"):
     """
     Convert a given directory into a bag. You can pass in arbitrary
     key/value pairs to put into the bag-info.txt metadata file as
     the bag_info dictionary.
     """
+
+    if spec_version not in SUPPORTED_BAGIT_SPECS:
+        raise RuntimeError(_("Unsupported BagIt specfication version: %s" % spec_version))
+    bag_version = parse_version(spec_version)
 
     if checksums is None:
         checksums = DEFAULT_CHECKSUMS
@@ -77,14 +113,15 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
             # original directory
             os.chmod('data', os.stat(cwd).st_mode)
 
+            strict = True if bag_version >= (1, 0) else False
             validate_remote_entries(remote_entries, bag_dir)
             total_bytes, total_files = make_manifests(
-                'data', processes, algorithms=checksums, encoding=encoding, remote=remote_entries)
+                'data', processes, algorithms=checksums, encoding=encoding, remote=remote_entries, strict=strict)
 
             _make_fetch_file(bag_dir, remote_entries)
 
             LOGGER.info(_("Creating bagit.txt"))
-            txt = """BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8\n"""
+            txt = """BagIt-Version: %s\nTag-File-Character-Encoding: UTF-8\n""" % spec_version
             with open_text_file('bagit.txt', 'w') as bagit_file:
                 bagit_file.write(txt)
 
@@ -112,7 +149,7 @@ def make_bag(bag_dir, bag_info=None, processes=1, checksums=None, encoding='utf-
     return BDBag(bag_dir)
 
 
-def make_manifests(data_dir, processes, algorithms=DEFAULT_CHECKSUMS, encoding='utf-8', remote=None):
+def make_manifests(data_dir, processes, algorithms=DEFAULT_CHECKSUMS, encoding='utf-8', remote=None, strict=False):
     LOGGER.info(_('Using %(process_count)d processes to generate manifests: %(algorithms)s'),
                 {'process_count': processes, 'algorithms': ', '.join(algorithms)})
 
@@ -154,6 +191,7 @@ def make_manifests(data_dir, processes, algorithms=DEFAULT_CHECKSUMS, encoding='
         for entry in batch:
             manifest_data.setdefault(entry[0], []).append(entry[1:])
 
+    file_entries = {}
     for algorithm, values in manifest_data.items():
         manifest_filename = 'manifest-%s.txt' % algorithm
 
@@ -162,6 +200,7 @@ def make_manifests(data_dir, processes, algorithms=DEFAULT_CHECKSUMS, encoding='
                 manifest.write("%s  %s\n" % (digest, _encode_filename(filename)))
                 num_files[algorithm] += 1
                 total_bytes[algorithm] += byte_count
+                file_entries[filename] = byte_count
 
     # We'll use sets of the values for the error checks and eventually return the payload oxum values:
     byte_value_set = set(total_bytes.values())
@@ -171,13 +210,21 @@ def make_manifests(data_dir, processes, algorithms=DEFAULT_CHECKSUMS, encoding='
     if not byte_value_set and not file_count_set:
         return 0, 0
 
-    if len(file_count_set) != 1:
-        raise RuntimeError(_('Expected the same number of files for each checksum'))
+    if strict:
+        if len(file_count_set) != 1:
+            raise RuntimeError(_('Expected the same number of files for each checksum'))
 
-    if len(byte_value_set) != 1:
-        raise RuntimeError(_('Expected the same number of bytes for each checksum'))
+        if len(byte_value_set) != 1:
+            raise RuntimeError(_('Expected the same number of bytes for each checksum'))
 
-    return byte_value_set.pop(), file_count_set.pop()
+        return byte_value_set.pop(), file_count_set.pop()
+
+    byte_total = file_total = 0
+    for file_size in file_entries.values():
+        file_total += 1
+        byte_total += file_size
+
+    return byte_total, file_total
 
 
 def validate_remote_entries(remote_entries, bag_path="."):
@@ -204,16 +251,6 @@ def make_remote_file_entry(remote_entries, filename, url, length, alg, digest):
     if not entry:
         remote_entries[filename] = {'url': url, 'length': length}
     remote_entries[filename][alg] = digest
-
-
-def get_remote_algs(remote_entries):
-    algs = set()
-    if remote_entries:
-        for v in remote_entries.values():
-            for alg in CHECKSUM_ALGOS:
-                if alg in v:
-                    algs.add(alg)
-    return algs
 
 
 def _denormalize_filename(filename):
@@ -387,12 +424,14 @@ class BDBag(Bag):
 
             # Generate new manifest files
             if manifests:
+                strict = True if (1, 0) >= self.version_info else False
                 self._sync_remote_entries_with_existing_fetch()
                 validate_remote_entries(self.remote_entries, self.path)
                 total_bytes, total_files = make_manifests('data', processes,
                                                           algorithms=self.algorithms,
                                                           encoding=self.encoding,
-                                                          remote=self.remote_entries)
+                                                          remote=self.remote_entries,
+                                                          strict=strict)
 
                 # Update fetch.txt
                 _make_fetch_file(self.path, self.remote_entries)

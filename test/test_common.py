@@ -1,10 +1,29 @@
+#
+# Copyright 2016 University of Southern California
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import os
 import gc
 import sys
 import shutil
 import tempfile
 import unittest
+import logging
 import bagit
+from bdbag.bdbag_api import configure_logging
+
+configure_logging(logpath='test.log', filemode='w', level=logging.DEBUG)
 
 
 class BaseTest(unittest.TestCase):
@@ -30,14 +49,26 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_bag_dir))
         self.test_bag_incomplete_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-incomplete')
         self.assertTrue(os.path.isdir(self.test_bag_incomplete_dir))
+        self.test_bag_incomplete_fetch_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-incomplete-fetch')
+        self.assertTrue(os.path.isdir(self.test_bag_incomplete_fetch_dir))
         self.test_bag_fetch_http_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-http')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_http_dir))
+        self.test_bag_fetch_http_bad_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-http-bad')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_http_bad_dir))
         self.test_bag_fetch_ark_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ark')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ark_dir))
+        self.test_bag_fetch_ark2_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ark2')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_ark2_dir))
+        self.test_bag_fetch_doi_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-doi')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_doi_dir))
+        self.test_bag_fetch_dataguid_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-dataguid')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_dataguid_dir))
         self.test_bag_fetch_minid_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-minid')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_minid_dir))
         self.test_bag_fetch_ftp_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ftp')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ftp_dir))
+        self.test_bag_fetch_auth_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ftp-auth')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_auth_dir))
         self.test_bag_invalid_structure_manifest_dir = os.path.join(
             self.tmpdir, 'test-data', 'test-bag-invalid-structure-manifest')
         self.assertTrue(os.path.isdir(self.test_bag_invalid_structure_manifest_dir))
@@ -82,9 +113,10 @@ class BaseTest(unittest.TestCase):
             return f.read()
 
     class MockResponse:
-        def __init__(self, json_data, status_code):
+        def __init__(self, json_data, status_code, headers={}):
             self.json_data = json_data
             self.status_code = status_code
+            self.headers = headers
 
         def json(self):
             return self.json_data

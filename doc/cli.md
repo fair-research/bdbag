@@ -1,6 +1,6 @@
 # *bdbag*: Command-line Interface (CLI)
 
-### Summary
+## Summary
 
 The *bdbag* command-line program is designed to operate on either bag directories or single file archives of bags in a
 supported format, such as ZIP, TAR, or TGZ. Different functions are available based on the context of the input bag
@@ -10,18 +10,20 @@ with an error message indicating the incompatibility.
 
 ----
 
-### Usage
-The only mandatory argument is a valid local path to a bag directory or bag archive file, all other arguments are optional.
+## Usage
+The only mandatory argument is a valid path to a local bag directory, a local bag archive file, or a URL/URI resolving to a remote bag archive file. All other arguments are optional.
 
-#### Basic arguments:
+### Basic arguments:
 ```
 usage: bdbag
+[--version]
 [--update]
 [--revert]
 [--archiver {zip,tar,tgz}]
 [--checksum {md5,sha1,sha256,sha512,all}]
 [--skip-manifests]
 [--prune-manifests]
+[--materialize]
 [--resolve-fetch {all,missing}]
 [--fetch-filter <column><operator><value>]
 [--validate {fast,full,structure}]
@@ -30,15 +32,15 @@ usage: bdbag
 [--keychain-file <file>]
 [--metadata-file <file>]
 [--ro-metadata-file <file>]
-[--remote-file-manifest <file>]
 [--ro-manifest-generate {overwrite, update}]
+[--remote-file-manifest <file>]
 [--quiet]
 [--debug]
 [--help]
 <path>
 ```
 
-#### Extended arguments:
+### Extended arguments:
 These extended arguments are mapped directly to metadata fields in bag-info.txt:
 ```
 [--bag-count BAG_COUNT]
@@ -61,50 +63,68 @@ These extended arguments are mapped directly to metadata fields in bag-info.txt:
 ### Argument descriptions:
 
 ----
-##### `<path>`
-Mandatory local path to a bag directory or bag archive file.
+#### `<path>`
+Mandatory path parameter. The path should represent either a local bag directory or local bag archive file, _or_ an actionable URL/URI referencing a serialized bag archive.
+In this context, an actionable URL/URI is defined as either content referenced directly by URL that can be retrieved with a supported
+fetch transport handler, or a URI whose scheme can be interpreted as an identifier scheme that can be handled by the currently installed identifier resolvers.
 
-If the target path is a directory and no bag structure exists in that path, a bag structure will be created "in-place".
+* If the target path is a directory and no bag structure exists in that path, a bag structure will be created "in-place".
 In order for a bag to be created in-place, the calling user must have write permissions for the specified directory.
-
-If the target path is an archive file and no other conflicting arguments are specified, the archive file will be extracted.
+* If the target path is an archive file and no other conflicting arguments are specified, the archive file will be extracted.
+* If the target path is an actionable URL/URI, the target of the URL (or resolved URI, if the URI represents a supported identifier scheme) will be downloaded to the current directory.
 
 ----
-##### `--update`
+#### `--update`
 Update an existing bag dir, recalculating tag-manifest checksums and regenerating manifests and fetch.txt if necessary.
 
 ----
-##### `--revert`
+#### `--revert`
 Revert an existing bag directory back to a normal directory, deleting all bag metadata files. Payload files in the `data` directory will be moved back to the directory root, and the `data` directory will be deleted.
 
 ----
-##### `--archiver {zip,tar,tgz}`
+#### `--archiver {zip,tar,tgz}`
 Archive a bag using the specified format.
 
 ----
-##### `--checksum {md5,sha1,sha256,sha512,all}`
+#### `--checksum {md5,sha1,sha256,sha512,all}`
 Checksum algorithm(s) to use: can be specified multiple times with different values. If `all` is specified,
 every supported checksum will be generated.
 
 ----
-##### `--skip-manifests`
+#### `--skip-manifests`
 If specified in conjunction with `--update`, only tagfile manifests will be regenerated, with payload manifests and
 fetch.txt (if any) left as is. This argument should be used as an optimization (to avoid recalculating payload file
 checksums) when only the bag metadata has been changed.
 
 ----
-##### `--prune-manifests`
+#### `--prune-manifests`
 If specified, any existing checksum manifests not explicitly configured (either by the `--checksum` argument or in
 `bdbag.json`) will be deleted from the bag during an update.
 
 ----
-##### `--resolve-fetch {missing,all}`
+#### `--materialize`
+The `materialize` function is a bag bootstrapper. When invoked,
+it will attempt to fully _reconstitute_ a bag by performing multiple
+possible actions depending on the context of the `<path>` argument.
+1. If `<path>` is a URL or a URI of a resolvable identifier scheme, the file
+referenced by this value will first be downloaded to the current directory.
+2. If the `<path>` (or previously downloaded file) represents a
+local path to a supported archive format, the archive will be extracted
+to the current directory.
+3. If the `<path>` (or previously extracted file) represents a valid
+bag directory, any remote file references contained within the bag's
+`fetch.txt` file will attempt to be resolved.
+4. Full validation will be run on the materialized bag. If any one of
+these steps fail, an error is raised.
+
+----
+#### `--resolve-fetch {missing,all}`
 Download remote files listed in the bag's fetch.txt file. The `missing` option only attempts to fetch files that do not
 already exist in the bag payload directory. The `all` option causes all fetch files to be re-acquired, even if they
 already exist in the bag payload directory.
 
 ----
-##### `--fetch-filter <column><operator><value>`
+#### `--fetch-filter <column><operator><value>`
 Selectively fetch files where entries in `fetch.txt` match the filter expression `<column><operator><value>` where:
 *  `column` is one of the following literal values corresponding to the field names in `fetch.txt`: `url`, `length`, or `filename`
 * `<operator>` is one of the following predefined tokens:
@@ -137,58 +157,58 @@ You can also use `length` and the integer relation operators to easily limit the
 * `bdbag --resolve-fetch all --fetch-filter length<=1000000`
 
 ----
-##### `--validate {fast,full,structure}`
+#### `--validate {fast,full,structure}`
 Validate a bag directory or bag archive. If `fast` is specified, the `Payload-Oxum` metadata field (if present) will be
 used to check that the payload files are present and accounted for. If `full` is specified, all checksums will
 be regenerated and compared to the corresponding entries in the manifest. If `structure` is specified, the bag will be checked for structural validity only.
 
 ----
-##### `--validate-profile`
+#### `--validate-profile`
 Validate a bag against the profile specified by the bag's `BagIt-Profile-Identifier` metadata field, if present.
 
 ----
-##### `--config-file <file>`
+#### `--config-file <file>`
 Optional path to a *bdbag* configuration file. The configuration file format is described
 [here](./config.md#bdbag.json).
 If this argument is not specified, the configuration file defaults to: `~/.bdbag/bdbag.json`
 
 ----
-##### `--keychain-file <file>`
+#### `--keychain-file <file>`
 Optional path to a *keychain* configuration file. The configuration file format is described
 [here](./config.md#keychain.json).
 If this argument is not specified, the configuration file defaults to: `~/.bdbag/keychain.json`
 
 ----
-##### `--metadata-file <file>`
+#### `--metadata-file <file>`
 Optional path to a JSON formatted metadata file. The configuration file format is described
 [here](./config.md#metadata).
 
 ----
-##### `--ro-metadata-file <file>`
+#### `--ro-metadata-file <file>`
 Optional path to a JSON formatted Research Object metadata configuration file. The configuration file format is described
 [here](./config.md#ro_metadata).
 
 ----
-##### `--remote-file-manifest <file>`
+#### `--remote-file-manifest <file>`
 Optional path to a JSON formatted remote file manifest. The configuration file format is described
 [here](./config.md#remote-file-manifest).
 This configuration file is used to add remote file entries to the bag manifest(s) and create the bag fetch.txt file.
 
 ----
-##### `--ro-manifest-generate {overwrite, update}`
+#### `--ro-manifest-generate {overwrite, update}`
 If specified, a RO `manifest.json` file will automatically be created in the `metadata` tagfile directory.
 The bag will be introspected and metadata from `bag-info.txt` along with lists of local payload files and files in `fetch.txt` will be used to generate the RO manifest.
 
 ----
-##### `--quiet`
+#### `--quiet`
 Suppress logging output.
 
 ----
-##### `--debug`
+#### `--debug`
 Enable debug logging output.
 
 ----
-##### `-h, --help`
+#### `-h, --help`
 Print a detailed help message and exit.
 
 ----
@@ -204,6 +224,7 @@ This following table enumerates the various arguments and compatibility modes.
 |`--checksum`|bag dir only|A checksum manifest cannot be added to an existing bag archive. The bag must be extracted, updated, and re-archived.
 |`--prune-manifests`|bag dir only, update only|Unused manifests may only be pruned from an existing bag during an update operation.
 |`--skip-manifests`|bag dir only, update only|Skipping the recalculation of payload checksums may only be performed on an existing bag during an update operation.
+|`--materialize`|bag archive, bag dir, or actionable bag URL/URI|The `--materialze` argument cannot be combined with any other arguments except for `--config-file`, `--keychain-file`, and `--fetch-filter`.
 |`--resolve-fetch`|bag dir only, no create or update|The resolution (download) of files listed in fetch.txt cannot be executed when creating or updating a bag.
 |`--fetch-filter`|bag dir only, fetch only|A fetch filter is only relevant during a `--resolve-fetch`.
 |`--validate`|all|A bag directory or a bag archive can be validated.  If a bag archive is to be validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.

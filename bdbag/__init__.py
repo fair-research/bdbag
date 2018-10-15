@@ -1,3 +1,18 @@
+#
+# Copyright 2016 University of Southern California
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import os
 import re
 import sys
@@ -5,49 +20,32 @@ import json
 import logging
 import mimetypes
 from requests.utils import requote_uri
+from distutils.util import strtobool
 from pkg_resources import get_distribution, DistributionNotFound
 
-__version__ = "1.4.2"
+__version__ = "1.5.0"
 
-if sys.version_info > (3,):
+if sys.version_info > (3,):  # pragma: no cover
     from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
-    from urllib.request import urlretrieve, urlopen
-else:
-    from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen
+    from urllib.request import urlretrieve, urlopen, urlcleanup
+else:  # pragma: no cover
+    from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen, urlcleanup
     from urlparse import urlsplit, urlunsplit
 
 try:
     VERSION = get_distribution("bdbag").version
-except DistributionNotFound:
+except DistributionNotFound:  # pragma: no cover
     VERSION = __version__ + '-dev'
 PROJECT_URL = 'https://github.com/fair-research/bdbag'
 
 try:
     BAGIT_VERSION = get_distribution("bagit").version
-except DistributionNotFound:
+except DistributionNotFound:  # pragma: no cover
     BAGIT_VERSION = 'unknown'
 
 BAG_PROFILE_TAG = 'BagIt-Profile-Identifier'
 BDBAG_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json'
 BDBAG_RO_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-ro-profile.json'
-
-ID_RESOLVER_TAG = 'identifier_resolvers'
-DEFAULT_ID_RESOLVERS = ['n2t.net', 'identifiers.org']
-
-DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser('~'), '.bdbag')
-DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')
-DEFAULT_CONFIG = {
-    'bag_config':
-    {
-        'bag_algorithms': ['md5', 'sha256'],
-        'bag_processes': 1,
-        'bag_metadata':
-        {
-            BAG_PROFILE_TAG: BDBAG_PROFILE_ID
-        }
-    },
-    ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
-}
 
 CONTENT_DISP_REGEX = re.compile(r"^filename[*]=UTF-8''(?P<name>[-_.~A-Za-z0-9%]+)$")
 FILTER_REGEX = re.compile(r"(?P<column>^.*)(?P<operator>==|!=|=\*|!\*|\^\*|\$\*|>=|>|<=|<)(?P<value>.*$)")
@@ -59,8 +57,15 @@ FILTER_DOCSTRING = "\"==\" (equal), " \
                    "\"$*\" (wildcard ends with), " \
                    "or \">\", \">=\", \"<\", \"<=\""
 
+DEFAULT_LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+DEFAULT_CONFIG_PATH = os.path.join(os.path.expanduser('~'), '.bdbag')
+
 if not mimetypes.inited:
     mimetypes.init()
+
+
+def stob(string):
+    return bool(strtobool(str(string)))
 
 
 def get_typed_exception(e):
@@ -89,7 +94,7 @@ def guess_mime_type(file_path):
     return content_type
 
 
-def parse_content_disposition(value):
+def parse_content_disposition(value):  # pragma: no cover
     m = CONTENT_DISP_REGEX.match(value)
     if not m:
         raise ValueError('Cannot parse content-disposition "%s".' % value)
@@ -110,7 +115,7 @@ def parse_content_disposition(value):
     return n
 
 
-def escape_uri(uri, illegal_only=True, safe="/"):
+def escape_uri(uri, illegal_only=True, safe="/"):  # pragma: no cover
     if not uri:
         return uri
 
@@ -187,3 +192,19 @@ def filter_dict(expr, entry):
             (json.dumps(entry), expr))
 
     return result
+
+
+def inspect_path(path):
+    abs_path = os.path.abspath(path)
+    exists = os.path.exists(abs_path)
+    is_uri = is_file = is_dir = False
+    if not exists:
+        upr = urlsplit(path)
+        drive, tail = os.path.splitdrive(path)
+        if upr.scheme and upr.scheme.lower() != drive.rstrip(":").lower():
+            is_uri = True
+    if not is_uri:
+        is_file = os.path.isfile(abs_path)
+        is_dir = os.path.isdir(abs_path)
+
+    return is_file, is_dir, is_uri

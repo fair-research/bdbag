@@ -1,3 +1,18 @@
+#
+# Copyright 2016 University of Southern California
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import atexit
 import unittest
 import subprocess
@@ -31,6 +46,11 @@ class TestCli(BaseTest):
                 self.assertExpectedMessages(expected, output)
             if unexpected:
                 self.assertUnexpectedMessages(unexpected, output)
+
+    def test_version(self):
+        args = ARGS + ["--version"]
+        logfile.writelines(self.getTestHeader('check version', args))
+        self._test_successful_invocation(args)
 
     def test_create(self):
         args = ARGS + [self.test_data_dir]
@@ -160,21 +180,21 @@ class TestCliArgParsing(BaseTest):
                        '--archive', 'tgz']
         logfile.writelines(self.getTestHeader('create bag from existing archive', args))
         self._test_bad_argument_error_handling(
-            args, ["Error: A bag archive cannot be created from an existing bag archive"])
+            args, ["Error: A bag archive can only be created on directories."])
 
     def test_set_checksum_on_existing_archive(self):
         args = ARGS + [ospj(self.test_archive_dir, 'test-bag.zip'),
                        '--checksum', 'md5']
         logfile.writelines(self.getTestHeader('--checksum on existing archive', args))
         self._test_bad_argument_error_handling(
-            args, ["Error: A checksum manifest cannot be added to an existing bag archive"])
+            args, ["Error: A checksum manifest can only be added to a bag directory."])
 
     def test_update_existing_archive(self):
         args = ARGS + [ospj(self.test_archive_dir, 'test-bag.zip'),
                        '--update']
         logfile.writelines(self.getTestHeader('--update an existing archive file', args))
         self._test_bad_argument_error_handling(
-            args, ["Error: An existing bag archive cannot be updated in-place"])
+            args, ["Error: Only existing bag directories can be updated."])
 
     def test_update_with_resolve_fetch(self):
         args = ARGS + [ospj(self.test_bag_dir),

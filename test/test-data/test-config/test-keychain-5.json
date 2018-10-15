@@ -1,0 +1,10 @@
+[
+  {
+    "uri": "ftp://speedtest.tele2.net/",
+    "auth_type": "ftp-basic",
+    "auth_params": {
+      "username": "anonymous",
+      "password": "bdbag@users.noreply.github.com"
+    }
+  }
+]

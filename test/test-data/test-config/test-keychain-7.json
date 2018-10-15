@@ -1,0 +1,11 @@
+[
+	{
+        "uri": "https://raw.githubusercontent.com/",
+        "auth_type": "bearer-token",
+        "auth_params": {
+            "token": "foo",
+			"allow_redirects_with_token": "False",
+			"additional_request_headers": {"X-Requested-With":"XMLHttpRequest"}
+        }
+    }
+]

@@ -1,6 +1,22 @@
+#
+# Copyright 2016 University of Southern California
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import os
-import platform
+import importlib
 import logging
+import platform
 from bdbag import urlsplit, get_typed_exception
 import bdbag.fetch.auth.keychain as keychain
 
@@ -22,27 +38,32 @@ def validate_auth_config(auth):
     return True
 
 
-def authenticate(url, auth_config):
+def get_credentials(url, auth_config):
 
-    for auth in list((entry for entry in auth_config if hasattr(entry, 'uri') and (entry.uri.lower() in url.lower()))):
-        try:
-            if not validate_auth_config(auth):
-                continue
-            if auth.auth_type == 'token':
-                return auth.auth_params.transfer_token, auth.auth_params.local_endpoint
-        except Exception as e:
-            logger.warn("Unhandled exception getting Globus token: %s" % get_typed_exception(e))
+    credentials = (None, None)
+    for auth in keychain.get_auth_entries(url, auth_config):
 
-    return None, None
+        if not validate_auth_config(auth):
+            continue
+
+        auth_type = auth.get("auth_type")
+        auth_params = auth.get("auth_params", {})
+        if auth_type == 'globus_transfer':
+            transfer_token = auth_params.get("transfer_token")
+            local_endpoint = auth_params.get("local_endpoint")
+            credentials = (transfer_token, local_endpoint)
+            break
+
+    return credentials
 
 
-def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
+def get_file(url, output_path, auth_config, **kwargs):
 
     # locate library
     global globus_sdk
     if globus_sdk is None:
         try:
-            globus_sdk = __import__(globus_sdk_name)
+            globus_sdk = importlib.import_module(globus_sdk_name)
         except ImportError:
             pass
     if globus_sdk is None:
@@ -52,22 +73,22 @@ def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
     try:
         src_endpoint = urlsplit(url).hostname
         src_path = urlsplit(url).path
+        output_path = ensure_valid_output_path(url, output_path)
         if platform.system() == "Windows":
             dest_path = ''.join(('/', output_path.replace('\\', '/').replace(':', '')))
         else:
             dest_path = os.path.abspath(output_path)
 
-        if not token:
-            token, dest_endpoint = authenticate(url, auth_config)
+        token, dest_endpoint = get_credentials(url, auth_config)
         if token is None:
-            logger.warn("A valid Globus access token is required to create transfers. "
-                        "Check keychain.json for valid parameters.")
-            return False
+            logger.warn("A valid Globus Transfer access token is required to create transfers. "
+                        "Check keychain.json for invalid parameters.")
+            return None
 
         if dest_endpoint is None:
-            logger.warn("A valid Globus destination endpoint must be specified. "
-                        "Check keychain.json for valid parameters.")
-            return False
+            logger.warn("A valid Globus Transfer destination endpoint must be specified. "
+                        "Check keychain.json for invalid parameters.")
+            return None
 
         # initialize transfer client
         authorizer = globus_sdk.AccessTokenAuthorizer(token)
@@ -96,11 +117,11 @@ def get_file(url, output_path, auth_config, token=None, dest_endpoint=None):
         data = client.submit_transfer(tdata)
         task_id = data["task_id"]
 
-        logger.info("Globus transfer started with ID %s" % task_id)
+        logger.info("Globus Transfer started with ID %s" % task_id)
         logger.debug("Transferring file %s to %s" % (url, output_path))
-        return True
+        return output_path
 
     except Exception as e:
-        logger.error('Globus transfer request exception: %s' % get_typed_exception(e))
+        logger.error('Globus Transfer request exception: %s' % get_typed_exception(e))
 
-    return False
+    return None
