@@ -49,7 +49,7 @@ Addresses [#25](https://github.com/fair-research/bdbag/issues/25).
     used in OAuth 2.0 authorization flows.
     * Improved handling for cookie-based authentication. Added a
     configurable mechanism that scans for multiple
-    Mozilla/Netscape/CURL compatible cookie files, merges them, and
+    Mozilla/Netscape/CURL/WGET compatible cookie files, merges them, and
     automatically uses them in outbound HTTP fetch requests.
     * Exposed some of the `requests` module's session parameters in the
     `bdbag.json` configuration file. This allows for tuning such values
