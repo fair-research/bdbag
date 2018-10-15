@@ -223,7 +223,7 @@ configure the authentication method and credentials to use for a specifed base U
 | --- | --- |
 |`uri`|This is the base URI used to specify when authentication should be used.  When a URI reference is encountered in fetch.txt, an attempt will be made to match it against all base URIs specified in `keychain.json` and if a match is found, the request will be authenticated before file retrieval is attempted.
 |`auth_uri`|This is the authentication URI used to establish an authenticated session for the specified `uri`.  This is currently assumed to be an HTTP(s) protocol URL.
-|`auth_type`|This is the authentication type used by the server specified by `auth_uri`.  Currently, only the values "http-basic", "http-form" and "cookie" are supported when using the HTTP(S) protocol, and "token" when using Globus Transfer protocol.
+|`auth_type`|This is the authentication type used by the server specified by `uri` or `auth_uri` (if present).
 |`auth_params`|This is a child object containing authentication-type specific parameters used in session establishment.  It will generally contain credential information such as a username and password, a cookie value, or client certificate parameters. It can also contain other parameters required for authentication with the given `auth_type` mechanism; for example the HTTP method (i.e., `GET` or `POST`) to use with HTTP Basic Auth.
 
 Below is a sample `keychain.json` file:
