@@ -280,7 +280,6 @@ class TestRemoteAPI(BaseTest):
                 args[0].headers = {}
                 patched_requests_get_auth.stop()
                 return BaseTest.MockResponse({}, 302, headers=headers)
-                #return args[0].get(args[1], **kwargs)
 
             patched_requests_get_auth = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
                                                             get=mocked_request_auth_token_get_success,
@@ -307,7 +306,6 @@ class TestRemoteAPI(BaseTest):
                 args[0].headers = {}
                 patched_requests_get_auth.stop()
                 return BaseTest.MockResponse({}, 302, headers=headers)
-                #return args[0].get(args[1], **kwargs)
 
             patched_requests_get_auth = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
                                                             get=mocked_request_auth_token_get_success,
@@ -602,9 +600,8 @@ class TestRemoteAPI(BaseTest):
         curdir = os.getcwd()
         os.chdir(self.tmpdir)
         try:
-            # TODO: change this URL after merging to master
-            bdb.materialize("https://github.com/fair-research/bdbag/raw/dev_branch_1_5/test/test-data/test-archives/"
-                            "test-bag-fetch-http.zip")
+            bdb.materialize("https://github.com/fair-research/bdbag/raw/master/test/test-data/test-archives/"
+                            "test-bag.zip")
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:
@@ -630,14 +627,12 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    @unittest.skip("Not implemented")
     def test_materialize_from_identifier(self):
-        logger.info(self.getTestHeader('test materialize from identifer'))
+        logger.info(self.getTestHeader('test materialize from identifier'))
         curdir = os.getcwd()
         os.chdir(self.tmpdir)
         try:
-            # TODO: change this to a legitimate identifier after merge
-            bdb.materialize("ark:/57799/foo")
+            bdb.materialize("ark:/57799/b91H6JHBS1u2FTG")
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:
