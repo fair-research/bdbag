@@ -8,10 +8,10 @@
 
 ## Big Data Bag Utilities
 
-The *bdbag* utilities are a collection of software programs for working with
+The `bdbag` utilities are a collection of software programs for working with
 [BagIt](https://datatracker.ietf.org/doc/draft-kunze-bagit/) packages that conform to the Bagit and Bagit/RO profiles.
 
-The *bdbag* [profiles](https://github.com/fair-research/bdbag/tree/master/profiles) specify the use of the fetch.txt file, require serialization, and specify what manifests must be provided with a *bdbag*.
+The `bdbag` [profiles](https://github.com/fair-research/bdbag/tree/master/profiles) specify the use of the fetch.txt file, require serialization, and specify what manifests must be provided with a *bdbag*.
 
 These utilities combine various other components such as the
 [Bagit-Python](https://github.com/LibraryOfCongress/bagit-python) bag creation utility and the
@@ -27,7 +27,7 @@ Enhanced bag support includes:
 * Built-in profile validation.
 * Built-in support for creation of bags with [Bagit/RO profile](https://github.com/ResearchObject/bagit-ro) compatibility.
 
-An experimental Graphical User Interface (GUI) for *bdbag* can be found [here](https://github.com/fair-research/bdbag_gui).
+An experimental Graphical User Interface (GUI) for `bdbag` can be found [here](https://github.com/fair-research/bdbag_gui).
 
 #### Technical Papers
 
@@ -41,17 +41,17 @@ An experimental Graphical User Interface (GUI) for *bdbag* can be found [here](h
 * The code and dependencies are also compatible with Python 3, versions 3.3 through 3.6.
 
 ### Installation
-The latest *bdbag* release is available on PyPi and can be installed using `pip`:
+The latest `bdbag` release is available on PyPi and can be installed using `pip`:
 
 ```sh
 pip install bdbag
 ```
 
 Note that the above command will install `bdbag` with only the minimal dependencies required to run.
-If you wish to install `bdbag` with extra fetch transport handler support provided by `boto` (for AWS S3)
+If you wish to install `bdbag` with the extra fetch transport handler support provided by `boto` (for AWS S3)
 and `globus` (for Globus Transfer) packages, use the following command:
 ```sh
-pip install "bdbag[boto,globus]"
+pip install bdbag[boto,globus]
 ```
 
 ### Installation from Source
@@ -65,13 +65,13 @@ or:
 pip install --user git+https://github.com/fair-research/bdbag
 ```
 
-You can also download the current [bdbag](https://github.com/fair-research/bdbag/archive/master.zip) source code from GitHub or
+You can also [download](https://github.com/fair-research/bdbag/archive/master.zip) the current `bdbag` source code from GitHub or
 alternatively clone the source from GitHub if you have *git* installed:
 
 ```sh
 git clone https://github.com/fair-research/bdbag
 ```
-From the root of the **bdbag** source code directory execute the following command:
+From the root of the `bdbag` source code directory execute the following command:
 ```sh
 sudo pip install .
 ```
@@ -81,28 +81,28 @@ pip install --user .
 ```
 Note that if you want to install the extra dependencies from a local source directory you would use the following command:
 ```sh
-pip install ".[boto,globus]"
+pip install .[boto,globus]
 ```
 
 ### Testing
-The unit tests can be run by invoking the following command from the root of the **bdbag** source code directory:
+The unit tests can be run by invoking the following command from the root of the `bdbag` source code directory:
 ```sh
 python setup.py test
 ```
 
 ### Usage
 
-This software can be used from the command-line environment by running the **bdbag** script.  For detailed usage
+This software can be used from the command-line environment by running the `bdbag` script.  For detailed usage
 instructions, see the [CLI Guide](./doc/cli.md).
 
 ### Configuration
 
-Some components of the **bdbag** software can be configured via JSON-formatted configuration files.
+Some components of the `bdbag` software can be configured via JSON-formatted configuration files.
 See the [Configuration Guide](./doc/config.md) for further details.
 
 ### Application Programming Interface
 
-It is also possible to use **bdbag** from within other Python programs via an API.
+It is also possible to use `bdbag` from within other Python programs via an API.
 See the [API Guide](./doc/api.md) for further details.
 
 ### Utilities
