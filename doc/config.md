@@ -242,7 +242,7 @@ Below is a sample `keychain.json` file:
     },
     {
         "uri": "https://some.host.com/somefiles/",
-        "auth_uri": "https://some.host.com/authenticate,
+        "auth_uri": "https://some.host.com/authenticate",
         "auth_type": "http-basic",
         "auth_params": {
             "auth_method":"POST",
