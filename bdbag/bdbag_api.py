@@ -121,7 +121,7 @@ def is_bag(bag_path):
     bag = None
     try:
         bag = bdbagit.BDBag(bag_path)
-    except (bdbagit.BagError, bdbagit.BagValidationError):
+    except (bdbagit.BagError, bdbagit.BagValidationError):  # pragma: no cover
         pass
     return True if bag else False
 

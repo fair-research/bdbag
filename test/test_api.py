@@ -196,6 +196,15 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_revert_non_bag(self):
+        logger.info(self.getTestHeader('revert bag'))
+        try:
+            bdb.revert_bag(self.test_data_dir)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Cannot revert the bag %s because it is not a bag directory!"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_update_bag_add_file(self):
         logger.info(self.getTestHeader('update bag add file'))
         try:
@@ -228,6 +237,16 @@ class TestAPI(BaseTest):
             output = self.stream.getvalue()
             self.assertIsInstance(bag, bdbagit.BDBag)
             self.assertExpectedMessages(['README.txt'], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_update_bag_change_file_with_skip_override(self):
+        logger.info(self.getTestHeader('update bag change file with no save manifest attempt'))
+        try:
+            bag = bdb.make_bag(self.test_bag_dir, algs=["md5"], update=True, prune_manifests=True, save_manifests=False)
+            output = self.stream.getvalue()
+            self.assertIsInstance(bag, bdbagit.BDBag)
+            self.assertExpectedMessages(['Manifests must be updated due to bag payload change'], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -445,6 +464,15 @@ class TestAPI(BaseTest):
         try:
             archive_file = bdb.archive_bag(self.test_bag_dir, 'tar')
             self.assertTrue(ospif(archive_file))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_archive_bag_incomplete_structure(self):
+        logger.info(self.getTestHeader('archive incomplete bag zip format'))
+        try:
+            self.assertRaises(bdbagit.BagValidationError,
+                              bdb.archive_bag,
+                              self.test_bag_invalid_structure_manifest_dir, 'zip')
         except Exception as e:
             self.fail(get_typed_exception(e))
 

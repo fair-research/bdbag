@@ -52,16 +52,17 @@ class TestRemoteAPI(BaseTest):
         logger.removeHandler(self.handler)
         super(TestRemoteAPI, self).tearDown()
 
-    def _test_bag_with_remote_file_manifest(self, update=False):
+    def _test_bag_with_remote_file_manifest(self, update=False, use_json_stream=False):
         try:
             bag_dir = self.test_data_dir if not update else self.test_bag_dir
+            filename = 'test-fetch-manifest.json' if not use_json_stream else 'test-fetch-manifest-2.json'
             bag = bdb.make_bag(bag_dir,
                                algs=["md5", "sha1", "sha256", "sha512"],
                                update=update,
-                               remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
+                               remote_file_manifest=ospj(self.test_config_dir, filename))
             output = self.stream.getvalue()
             self.assertIsInstance(bag, bdbagit.BDBag)
-            self.assertExpectedMessages(['Generating remote file references from', 'test-fetch-manifest.json'], output)
+            self.assertExpectedMessages(['Generating remote file references from', filename], output)
             fetch_file = ospj(bag_dir, 'fetch.txt')
             self.assertTrue(ospif(fetch_file))
             with open(fetch_file) as ff:
@@ -83,6 +84,10 @@ class TestRemoteAPI(BaseTest):
         logger.info(self.getTestHeader('update bag add remote file manifest'))
         self._test_bag_with_remote_file_manifest(True)
 
+    def test_create_bag_from_remote_file_manifest_json_stream(self):
+        logger.info(self.getTestHeader('create bag add remote file manifest with json stream format'))
+        self._test_bag_with_remote_file_manifest(use_json_stream=True)
+
     def test_validate_profile(self):
         logger.info(self.getTestHeader('validate profile'))
         try:
@@ -99,6 +104,19 @@ class TestRemoteAPI(BaseTest):
                 bag_path,
                 bag_profile_path=
                 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json')
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_invalid_profile_serialization(self):
+        logger.info(self.getTestHeader('validate invalid profile serialization'))
+        try:
+            bag_path = ospj(self.test_bag_dir)
+            self.assertRaises(bdbagit_profile.ProfileValidationError,
+                              bdb.validate_bag_serialization,
+                              bag_path,
+                              bag_profile_path=
+                              'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/'
+                              'bdbag-profile.json')
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
