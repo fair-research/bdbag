@@ -553,8 +553,9 @@ def resolve_fetch(bag_path,
                   **kwargs):
     bag = bdbagit.BDBag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=kwargs.get("quiet", True)):
-        logger.info("Attempting to resolve remote file references from fetch.txt%s" %
-                    ("." if not filter_expr else ", using filter expression [%s]." % filter_expr))
+        logger.info("Attempting to resolve remote file references from %s%s" %
+                    (os.path.join(bag_path, "fetch.txt"),
+                     "." if not filter_expr else ", using filter expression [%s]." % filter_expr))
 
         return fetch_bag_files(bag,
                                force=force,
@@ -574,6 +575,7 @@ def materialize(input_path,
                 keychain_file=DEFAULT_KEYCHAIN_FILE,
                 config_file=DEFAULT_CONFIG_FILE,
                 filter_expr=None,
+                force=False,
                 **kwargs):
 
     configure_logging()
@@ -597,7 +599,7 @@ def materialize(input_path,
 
     if bag_path:
         if not resolve_fetch(bag_path,
-                             force=False,
+                             force=force,
                              callback=fetch_callback,
                              keychain_file=keychain_file,
                              config_file=config_file,

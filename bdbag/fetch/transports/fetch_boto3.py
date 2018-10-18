@@ -105,11 +105,11 @@ def get_file(url, output_path, auth_config, **kwargs):
         try:
             if upr.scheme == "gs":
                 endpoint_url = "https://storage.googleapis.com"
-                config = BOTO3.session.Config(signature_version="s3v4")
+                session_config = BOTO3.session.Config(signature_version="s3v4")
                 kwargs = {"aws_access_key_id": key,
                           "aws_secret_access_key": secret,
                           "endpoint_url": endpoint_url,
-                          "config": config}
+                          "config": session_config}
             else:
                 kwargs = {"aws_access_key_id": key, "aws_secret_access_key": secret}
                 if token:

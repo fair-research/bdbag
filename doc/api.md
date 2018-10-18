@@ -217,6 +217,7 @@ materialize(input_path,
             keychain_file=DEFAULT_KEYCHAIN_FILE,
             config_file=DEFAULT_CONFIG_FILE,
             filter_expr=None,
+            force=False,
             **kwargs)
 ```
 The `materialize` function is a bag bootstrapper. When invoked,
@@ -243,6 +244,7 @@ these steps fail, an error is raised.
 |keychain_file|`string`|A normalized, absolute path to a keychain file. Defaults to the expansion of `~/.bdbag/keychain.json`.
 |config_file|`string`|A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.
 |filter_expr|`string`|A [selective fetch filter](#resolve_fetch_filter). NOTE: if a selective fetch filter is used to materialize an incomplete bag, a `BagValidationException` will be thrown during validation. This may be an acceptable error in some cases.
+|force|`boolean`|A boolean indicating that _all_ files listed in `fetch.txt` should be retrieved, regardless of whether they already exist in the payload directory or not. Otherwise, only missing or incomplete files will be retrieved.
 |**kwargs|`dict`|Unpacked keyword arguments in dictionary format.
 
 **Raises**: `BagValidationError`, `RuntimeError` if the bag could not be materialized and validated successfully.
