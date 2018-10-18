@@ -1,6 +1,17 @@
 #
-# Copyright 2015 University of Southern California
-# Distributed under the Apache License, Version 2.0. See LICENSE for more info.
+# Copyright 2016 University of Southern California
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 """ Installation script for the BDBag utilities.
@@ -65,6 +76,7 @@ setup(
         'boto': ["boto3>=1.9.5", "botocore", "awscli"],
         'globus': ["globus_sdk>=1.6.0"],
     },
+    python_requires='>=2.7.9, !=3.0.*, !=3.1.*, !=3.2.*, <4',
     license='Apache 2.0',
     classifiers=[
         'Intended Audience :: Science/Research',
