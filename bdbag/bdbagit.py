@@ -424,7 +424,7 @@ class BDBag(Bag):
 
             # Generate new manifest files
             if manifests:
-                strict = True if (1, 0) >= self.version_info else False
+                strict = True if self.version_info >= (1, 0) else False
                 self._sync_remote_entries_with_existing_fetch()
                 validate_remote_entries(self.remote_entries, self.path)
                 total_bytes, total_files = make_manifests('data', processes,

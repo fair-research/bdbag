@@ -430,6 +430,19 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_update_bag_mixed_checksums_allowed(self):
+        logger.info(self.getTestHeader('allow update bag with non-uniform checksum(s) per file'))
+        try:
+            bdb.make_bag(self.test_data_dir)
+            bdb.make_bag(self.test_data_dir,
+                         update=True,
+                         remote_file_manifest=ospj(self.test_config_dir,
+                                                   'test-fetch-manifest-mixed-checksums.json'),
+                         config_file=(ospj(self.test_config_dir, 'test-config-2.json')))
+            bdb.validate_bag(self.test_bag_dir, fast=True)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_create_bag_mixed_checksums_disallowed(self):
         logger.info(self.getTestHeader('disallow create bag with non-uniform checksum(s) per file'))
         try:
