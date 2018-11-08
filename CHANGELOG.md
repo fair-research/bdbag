@@ -1,5 +1,11 @@
 # CHANGE LOG
 
+## 1.5.1
+
+* Fixed bug with `bdbagit.save()` and "strict mode" version check logic
+that prohibited mixing of checksum types for payload files when the
+`bagit` specification version of the bag being updated was < `1.0`.
+Added a unit test that would have caught it.
 
 ## 1.5.0
 

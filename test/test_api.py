@@ -437,8 +437,7 @@ class TestAPI(BaseTest):
             bdb.make_bag(self.test_data_dir,
                          update=True,
                          remote_file_manifest=ospj(self.test_config_dir,
-                                                   'test-fetch-manifest-mixed-checksums.json'),
-                         config_file=(ospj(self.test_config_dir, 'test-config-2.json')))
+                                                   'test-fetch-manifest-mixed-checksums.json'))
             bdb.validate_bag(self.test_bag_dir, fast=True)
         except Exception as e:
             self.fail(get_typed_exception(e))
