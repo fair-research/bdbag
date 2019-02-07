@@ -20,8 +20,8 @@ import shutil
 import tempfile
 import unittest
 import logging
-import bagit
 from bdbag.bdbag_api import configure_logging
+from bdbag.bdbagit import open_text_file
 
 configure_logging(logpath='test.log', filemode='w', level=logging.DEBUG)
 
@@ -90,6 +90,9 @@ class BaseTest(unittest.TestCase):
         self.test_bag_invalid_state_duplicate_manifest_fetch_dir = os.path.join(
             self.tmpdir, 'test-data', 'test-bag-invalid-state-duplicate-manifest-fetch')
         self.assertTrue(os.path.isdir(self.test_bag_invalid_state_duplicate_manifest_fetch_dir))
+        self.test_bag_fetch_http_encoded_filename_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-fetch-http-encoded-filename')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_http_encoded_filename_dir))
 
     def tearDown(self):
         if os.path.isdir(self.tmpdir):
@@ -109,7 +112,7 @@ class BaseTest(unittest.TestCase):
 
     @staticmethod
     def slurp_text_file(filename):
-        with bagit.open_text_file(filename) as f:
+        with open_text_file(filename) as f:
             return f.read()
 
     class MockResponse:

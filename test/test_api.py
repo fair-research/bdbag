@@ -571,6 +571,13 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_validate_complete_bag_completeness(self):
+        logger.info(self.getTestHeader('test completeness validation complete bag'))
+        try:
+            bdb.validate_bag_structure(self.test_bag_dir, skip_remote=False)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_validate_incomplete_bag_full(self):
         logger.info(self.getTestHeader('test full validation incomplete bag'))
         try:
@@ -593,6 +600,16 @@ class TestAPI(BaseTest):
         logger.info(self.getTestHeader('test structure validation incomplete bag'))
         try:
             bdb.validate_bag_structure(self.test_bag_incomplete_dir)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_validate_incomplete_bag_completeness(self):
+        logger.info(self.getTestHeader('test completeness validation incomplete bag'))
+        try:
+            self.assertRaises(bdbagit.BagValidationError,
+                              bdb.validate_bag_structure,
+                              self.test_bag_incomplete_dir,
+                              skip_remote=False)
         except Exception as e:
             self.fail(get_typed_exception(e))
 

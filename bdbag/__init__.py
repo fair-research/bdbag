@@ -23,25 +23,26 @@ from requests.utils import requote_uri
 from distutils.util import strtobool
 from pkg_resources import get_distribution, DistributionNotFound
 
-__version__ = "1.5.1"
+__version__ = "1.5.2"
+__bagit_version__ = "1.7.0"
 
 if sys.version_info > (3,):  # pragma: no cover
-    from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
+    from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit, urlparse
     from urllib.request import urlretrieve, urlopen, urlcleanup
 else:  # pragma: no cover
     from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen, urlcleanup
-    from urlparse import urlsplit, urlunsplit
+    from urlparse import urlsplit, urlunsplit, urlparse
 
 try:
     VERSION = get_distribution("bdbag").version
 except DistributionNotFound:  # pragma: no cover
-    VERSION = __version__ + '-dev'
+    VERSION = __version__ + '-dev' if not getattr(sys, 'frozen', False) else __version__ + '-frozen'
 PROJECT_URL = 'https://github.com/fair-research/bdbag'
 
 try:
     BAGIT_VERSION = get_distribution("bagit").version
 except DistributionNotFound:  # pragma: no cover
-    BAGIT_VERSION = 'unknown'
+    BAGIT_VERSION = 'unknown' if not getattr(sys, 'frozen', False) else __bagit_version__ + '-frozen'
 
 BAG_PROFILE_TAG = 'BagIt-Profile-Identifier'
 BDBAG_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json'

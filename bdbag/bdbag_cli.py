@@ -17,7 +17,8 @@ import argparse
 import os
 import sys
 import logging
-import bagit
+import traceback
+from bdbagit import STANDARD_BAG_INFO_HEADERS
 from bdbag import bdbag_api as bdb, inspect_path, get_typed_exception, FILTER_DOCSTRING, VERSION, BAGIT_VERSION
 from bdbag.bdbag_config import bootstrap_config, DEFAULT_CONFIG_FILE
 from bdbag.fetch import fetcher
@@ -100,7 +101,7 @@ def parse_cli():
 
     skip_manifests_arg = "--skip-manifests"
     standard_args.add_argument(
-        skip_manifests_arg, action='store_true',
+        skip_manifests_arg, "--skip-payload", "--metadata-only", action='store_true',
         help=str("If \'skip-manifests\' is specified in conjunction with %s, only tagfile manifests will be "
                  "regenerated, with payload manifests and fetch.txt (if any) left as is. This argument should be used "
                  "when only bag metadata has changed." % update_arg))
@@ -141,11 +142,13 @@ def parse_cli():
 
     validate_arg = "--validate"
     standard_args.add_argument(
-        validate_arg, choices=['fast', 'full', 'structure'],
+        validate_arg, choices=['fast', 'full', 'structure', 'completeness'],
         help="Validate a bag directory or bag archive. If \"fast\" is specified, Payload-Oxum (if present) will be "
              "used to check that the payload files are present and accounted for. If \"full\" is specified, "
              "all checksums will be regenerated and compared to the corresponding entries in the manifest. " 
-             "If \"structure\" is specified, the bag will be checked for structural validity only.")
+             "If \"structure\" is specified, the bag will be checked for structural validity only. If \"completeness\" "
+             "is specified, the bag will be checked for both structural validity and completeness (presence) of files "
+             "listed in all manifests.")
 
     validate_profile_arg = "--validate-profile"
     standard_args.add_argument(
@@ -195,7 +198,7 @@ def parse_cli():
         'path', metavar="<path>", help="Path to a bag directory or bag archive file.")
 
     metadata_args = parser.add_argument_group('Bag metadata arguments')
-    headers = list(bagit.STANDARD_BAG_INFO_HEADERS)
+    headers = list(STANDARD_BAG_INFO_HEADERS)
     headers.append("Contact-Orcid")
     for header in sorted(headers):
         metadata_args.add_argument('--%s' % header.lower(), action=AddMetadataAction)
@@ -372,6 +375,8 @@ def main():
                 temp_path = bdb.extract_bag(path, temp=True)
             if args.validate == 'structure':
                 bdb.validate_bag_structure(temp_path if temp_path else path)
+            elif args.validate == 'completeness':
+                bdb.validate_bag_structure(temp_path if temp_path else path, skip_remote=False)
             else:
                 bdb.validate_bag(temp_path if temp_path else path,
                                  fast=True if args.validate == 'fast' else False,
@@ -396,6 +401,8 @@ def main():
     except Exception as e:
         result = 1
         error = "Error: %s" % get_typed_exception(e)
+        if args.debug:
+            traceback.print_exc()
 
     finally:
         if temp_path:

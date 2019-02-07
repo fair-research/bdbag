@@ -136,6 +136,15 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_resolve_fetch_http_encoded_filename(self):
+        logger.info(self.getTestHeader('test resolve fetch http with encoded filename'))
+        try:
+            bdb.resolve_fetch(self.test_bag_fetch_http_encoded_filename_dir, cookie_scan=False)
+            bdb.validate_bag(self.test_bag_fetch_http_encoded_filename_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_http_encoded_filename_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def test_resolve_fetch_http_with_callback_cancel(self):
         logger.info(self.getTestHeader('test resolve fetch http'))
         try:

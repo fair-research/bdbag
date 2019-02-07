@@ -1032,7 +1032,7 @@ class TestFetch(SelfCleaningTestCase):
         os.remove(j(self.tmpdir, 'data/loc/3314493806_6f1db86d66_o_d.jpg'))
         self.bag.save(manifests=True)
 
-        with mock.patch.object(bagit.BDBag, 'validate_fetch') as mock_vf:
+        with mock.patch.object(bagit.BDBag, '_validate_fetch') as mock_vf:
             self.bag.validate(completeness_only=True)
             self.assertTrue(mock_vf.called, msg='Bag.validate() should call Bag.validate_fetch()')
 

@@ -26,7 +26,7 @@ usage: bdbag
 [--materialize]
 [--resolve-fetch {all,missing}]
 [--fetch-filter <column><operator><value>]
-[--validate {fast,full,structure}]
+[--validate {fast,full,structure,completeness}]
 [--validate-profile]
 [--config-file <file>]
 [--keychain-file <file>]
@@ -158,9 +158,12 @@ You can also use `length` and the integer relation operators to easily limit the
 
 ----
 #### `--validate {fast,full,structure}`
-Validate a bag directory or bag archive. If `fast` is specified, the `Payload-Oxum` metadata field (if present) will be
-used to check that the payload files are present and accounted for. If `full` is specified, all checksums will
-be regenerated and compared to the corresponding entries in the manifest. If `structure` is specified, the bag will be checked for structural validity only.
+Validate a bag directory or bag archive.
+* If `fast` is specified, the `Payload-Oxum` metadata field (if present) will be
+used to check that the payload files are present and accounted for.
+* If `full` is specified, all checksums will be regenerated and compared to the corresponding entries in the manifest.
+* If `structure` is specified, the bag will be checked for structural validity only.
+* If `completeness` is specified, the bag will be checked for both structural validity and completeness (presence) of files listed in all manifests.
 
 ----
 #### `--validate-profile`

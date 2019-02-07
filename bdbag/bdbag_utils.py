@@ -21,6 +21,7 @@ import hashlib
 import logging
 import json
 import binascii
+import traceback
 from collections import namedtuple
 from csv import DictReader, Sniffer
 from bdbag import bdbag_api as bdb, parse_content_disposition, urlsplit, filter_dict, FILTER_DOCSTRING
@@ -542,6 +543,8 @@ def main():
     except Exception as e:
         result = 1
         error = "Error: %s" % gte(e)
+        if args.debug:
+            traceback.print_exc()
 
     finally:
         if result != 0:

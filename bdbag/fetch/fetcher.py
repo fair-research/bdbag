@@ -15,7 +15,7 @@
 #
 import datetime
 from collections import namedtuple
-from bdbag import urlsplit, filter_dict
+from bdbag import urlsplit, urlunquote, filter_dict
 from bdbag.bdbag_config import *
 from bdbag.fetch.transports import *
 from bdbag.fetch.auth.keychain import *
@@ -55,10 +55,11 @@ def fetch_bag_files(bag,
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     start = datetime.datetime.now()
     for entry in map(FetchEntry._make, bag.fetch_entries()):
+        filename = urlunquote(entry.filename)
         if filter_expr:
             if not filter_dict(filter_expr, entry._asdict()):
                 continue
-        output_path = os.path.normpath(os.path.join(bag.path, entry.filename))
+        output_path = os.path.normpath(os.path.join(bag.path, filename))
         local_size = os.path.getsize(output_path) if os.path.exists(output_path) else None
         try:
             remote_size = int(entry.length)

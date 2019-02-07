@@ -1,5 +1,29 @@
 # CHANGE LOG
 
+## 1.5.2
+* Added a monkeypatch for `hashlib.algorithms_guaranteed` prior to the
+import of any `bagit` code so that `bagit-1.7.0` (which assumes
+`algorithms_guaranteed` is present, but in reality only _consistently_
+exists on Python 2.7.9 or greater) can still be used by `bdbag` on
+systems that only have Python 2.7.0 to 2.7.8 installed.
+Lifted the strict pin on Python>=2.7.9. Note that this won't make
+standalone `bagit` installations work on these systems, but it will
+allow `bdbag` to successfully import and use `bagit` as a library.
+Additional notes
+[here](https://github.com/fair-research/bdbag/commit/86517b9ba89524c3e1328eea7f4537552f0af82e#commitcomment-31548879).
+
+* Added code to properly url encode whitespace and other illegal
+characters in the `filename` field of `fetch.txt`, per the `bagit` spec.
+This will automatically be encoded when `bdbag` generates a bag from a
+`remote-file-manifest`, and will automatically decoded when attempting
+to resolve files via fetch. Added a corresponding unit test.
+* Added a new CLI validate option: `--completeness`. This is in parity
+with `bagit` CLI options and is useful primarily for determining which
+files in `fetch.txt` have not yet been retrieved. Added a corresponding
+unit test.
+* Added code in the CLIs to print stack traces in when `--debug` is
+specified.
+
 ## 1.5.1
 
 * Fixed bug with `bdbagit.save()` and "strict mode" version check logic

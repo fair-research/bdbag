@@ -13,12 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import sys
+import hashlib
 import json
 from collections import OrderedDict
+
+# monkeypatch hashlib.algorithms_guaranteed on Python < 2.7.9, before importing bagit, since bagit-1.7.0 makes a
+# direct call to it at initialization time which will cause the module to fail to load - this can be removed if
+# bagit-python fixes the underlying issue
+try:
+    algorithms_guaranteed = hashlib.algorithms_guaranteed
+except AttributeError:
+    # Python 2.7.0-2.7.8
+    hashlib.algorithms_guaranteed = set(hashlib.algorithms)
+
 import bagit
 from bagit import *
-from bagit import _, _can_read, _can_bag, _make_tagmanifest_file, _encode_filename, _decode_filename, _calc_hashes,_walk
-from bdbag import escape_uri, VERSION, BAGIT_VERSION, PROJECT_URL
+from bagit import (_, _can_read, _can_bag, _make_tagmanifest_file, _encode_filename, _decode_filename, _calc_hashes,
+                   _walk)
+from bdbag import escape_uri, urlunquote, VERSION, BAGIT_VERSION, PROJECT_URL
 
 LOGGER = logging.getLogger(__name__)
 
@@ -274,7 +287,7 @@ def _make_fetch_file(path, remote_entries):
             fetch_file.write("%s\t%s\t%s\n" %
                              (escape_uri(remote_entries[filename]['url']),
                               remote_entries[filename]['length'],
-                              _denormalize_filename(filename)))
+                              escape_uri(_denormalize_filename(filename))))
 
 
 def _find_tag_files(bag_dir):
@@ -327,7 +340,7 @@ class BagManifestConflict(BagError):
 
 class UnexpectedRemoteFile(ManifestErrorDetail):
     def __str__(self):
-        return _("%s exists in fetch.txt but is not in manifest") % self.path
+        return _("%s exists in fetch.txt but is not in manifest") % force_unicode(self.path)
 
 
 class BDBag(Bag):
@@ -338,6 +351,7 @@ class BDBag(Bag):
 
     def files_to_be_fetched(self, normalize=True):
         for f, size, path in self.fetch_entries():
+            path = urlunquote(path)
             if normalize:
                 yield os.path.normpath(path)
             else:
@@ -468,13 +482,13 @@ class BDBag(Bag):
         self._validate_structure()
         self._validate_bagittxt()
 
-        self.validate_fetch()
+        self._validate_fetch()
 
         self._validate_contents(processes=processes, fast=fast, completeness_only=completeness_only, callback=callback)
 
         return True
 
-    def validate_fetch(self):
+    def _validate_fetch(self):
         """Validate the fetch.txt file
 
         Raises `BagError` for errors and otherwise returns no value

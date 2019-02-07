@@ -128,6 +128,11 @@ class TestCli(BaseTest):
         logfile.writelines(self.getTestHeader('validate bag', args))
         self._test_successful_invocation(args, ["test-bag is a valid bag structure"])
 
+    def test_validate_completeness(self):
+        args = ARGS + [self.test_bag_dir, '--validate', 'completeness']
+        logfile.writelines(self.getTestHeader('validate bag', args))
+        self._test_successful_invocation(args, ["test-bag is a valid bag structure"])
+
     def test_validate_profile(self):
         args = ARGS + [ospj(self.test_archive_dir, 'test-bag.zip'), '--validate-profile']
         logfile.writelines(self.getTestHeader('validate-profile', args))

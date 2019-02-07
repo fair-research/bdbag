@@ -150,11 +150,13 @@ def check_payload_consistency(bag, skip_remote=False, quiet=False):
             payload_consistent = False
 
         # check for fetch files that are simply missing from the payload
-        unresolved_fetch_files = set(bag.files_to_be_fetched()) - set(bag.payload_files())
+        unresolved_fetch_files = list(set(bag.files_to_be_fetched()) - set(bag.payload_files()))
         if unresolved_fetch_files:
             payload_consistent = False
             if not quiet:
-                logger.warning("The bag contains remote file references in fetch.txt that have not been resolved.")
+                logger.warning("The bag contains remote file references in fetch.txt that have not been resolved: [%s]"
+                               % (", ".join(unresolved_fetch_files) if len(unresolved_fetch_files) > 1 else
+                                  unresolved_fetch_files[0]))
 
         # check for size mismatches of local files that may have been fetched already
         for url, size, path in bag.fetch_entries():

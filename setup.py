@@ -25,6 +25,11 @@ __version__ = re.search(
     io.open('bdbag/__init__.py', encoding='utf_8_sig').read()
     ).group(1)
 
+__bagit_version__ = re.search(
+    r'__bagit_version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+    io.open('bdbag/__init__.py', encoding='utf_8_sig').read()
+    ).group(1)
+
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
@@ -37,7 +42,7 @@ setup(
     maintainer='USC Information Sciences Institute, Informatics Systems Research Division',
     maintainer_email='isrd-support@isi.edu',
     version=__version__,
-    packages=find_packages(),
+    packages=find_packages(exclude=["test"]),
     package_data={'bdbag': ['profiles/*.*']},
     test_suite='test',
     tests_require=['mock', 'coverage'],
@@ -71,12 +76,13 @@ setup(
                       'tzlocal',
                       'certifi',
                       'requests>=2.7.0',
-                      'bagit==1.7.0'],
+                      'setuptools_scm',  # for bagit<=1.7.0 which does not properly include it in install_requires
+                      'bagit==%s' % __bagit_version__],
     extras_require={
         'boto': ["boto3>=1.9.5", "botocore", "awscli"],
         'globus': ["globus_sdk>=1.6.0"],
     },
-    python_requires='>=2.7.9, !=3.0.*, !=3.1.*, !=3.2.*, <4',
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4',
     license='Apache 2.0',
     classifiers=[
         'Intended Audience :: Science/Research',
