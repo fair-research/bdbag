@@ -15,8 +15,8 @@
 #
 import logging
 from bdbag import get_typed_exception
+from bdbag.bdbagit import CHECKSUM_ALGOS
 from bdbag.fetch.resolvers.base_resolver import BaseResolverHandler
-from bagit import CHECKSUM_ALGOS
 
 logger = logging.getLogger(__name__)
 
