@@ -18,7 +18,7 @@ import os
 import sys
 import logging
 import traceback
-from bdbagit import STANDARD_BAG_INFO_HEADERS
+from bdbag.bdbagit import STANDARD_BAG_INFO_HEADERS
 from bdbag import bdbag_api as bdb, inspect_path, get_typed_exception, FILTER_DOCSTRING, VERSION, BAGIT_VERSION
 from bdbag.bdbag_config import bootstrap_config, DEFAULT_CONFIG_FILE
 from bdbag.fetch import fetcher
