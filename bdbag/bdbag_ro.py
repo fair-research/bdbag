@@ -234,7 +234,7 @@ def add_annotation(obj, about, uri=None, content=None, motivatedBy=None, update_
     if motivatedBy:
         annotation['oa:motivatedBy'] = motivatedBy
 
-    exists = false
+    exists = False
     if update_existing:
         for i, item in enumerate(annotations):
             if annotation['about'] == item["about"]:
