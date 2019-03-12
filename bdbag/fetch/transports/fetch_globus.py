@@ -18,6 +18,7 @@ import importlib
 import logging
 import platform
 from bdbag import urlsplit, get_typed_exception
+from bdbag.fetch import ensure_valid_output_path
 import bdbag.fetch.auth.keychain as keychain
 
 logger = logging.getLogger(__name__)
