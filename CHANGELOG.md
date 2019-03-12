@@ -1,6 +1,11 @@
 # CHANGE LOG
 
-## 1.5.2
+## 1.5.4
+
+* Fix #31: Missing import of `ensure_valid_output_path` in `fetch_globus.py`.
+* Fix e745f98: Undefined `false` in `bdbag_ro.py` .
+
+## 1.5.3
 * Added a monkeypatch for `hashlib.algorithms_guaranteed` prior to the
 import of any `bagit` code so that `bagit-1.7.0` (which assumes
 `algorithms_guaranteed` is present, but in reality only _consistently_
