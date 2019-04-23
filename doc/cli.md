@@ -119,8 +119,10 @@ these steps fail, an error is raised.
 
 ----
 #### `--resolve-fetch {missing,all}`
-Download remote files listed in the bag's fetch.txt file. The `missing` option only attempts to fetch files that do not
-already exist in the bag payload directory. The `all` option causes all fetch files to be re-acquired, even if they
+Download remote files listed in the bag's fetch.txt file. 
+* The `missing` option only attempts to fetch files that do not
+already exist in the bag payload directory. Additionally, files that do exist but have a different size in bytes than the file size as declared by the `length` field in `fetch.txt` are considered as _incomplete_ and will be fetched when using the `missing` argument. 
+* The `all` option causes all fetch files to be re-acquired, even if they
 already exist in the bag payload directory.
 
 ----
@@ -145,16 +147,19 @@ Selectively fetch files where entries in `fetch.txt` match the filter expression
 
 With this mechanism you can do various string-based pattern matching on `filename` and `url`. Using `missing` as the mode for `--resolve-fetch`,  you can invoke the command multiple times with a different filter to perform a effective disjunction. For example:
 
-* `bdbag --resolve-fetch missing --fetch-filter filename$*.txt ./my-bag`
-* `bdbag --resolve fetch missing --fetch-filter filename^*README ./my-bag`
-* `bdbag --resolve fetch missing --fetch-filter filename==data/change.log ./my-bag`
-* `bdbag --resolve fetch missing --fetch-filter url=*/requirements/ ./my-bag`
+* `bdbag --resolve-fetch missing --fetch-filter 'filename$*.txt' ./my-bag`
+* `bdbag --resolve-fetch missing --fetch-filter 'filename^*README' ./my-bag`
+* `bdbag --resolve-fetch missing --fetch-filter 'filename==data/change.log' ./my-bag`
+* `bdbag --resolve-fetch missing --fetch-filter 'url=*/requirements/' ./my-bag`
 
-The above commands will get all files ending with ".txt", all files beginning with "README", the exact file "data/change.log", and all urls containing "/requirements/" in the url path.
+The above commands will get all files ending with ".txt", all files beginning with "README", the exact file "data/change.log", and all urls containing "/requirements/" in the url path, respectively.
 
 You can also use `length` and the integer relation operators to easily limit the size of the files retrieved, for example:
 
 * `bdbag --resolve-fetch all --fetch-filter length<=1000000`
+
+###### Important Note: enclosing the `fetch-filter` expression in single quotes
+For those users of Unix or MacOS systems whose shell environment expands certain characters like `*` and `$`, the `--fetch-filter` expression should be enclosed in single quotation (`'`) marks.
 
 ----
 #### `--validate {fast,full,structure}`
