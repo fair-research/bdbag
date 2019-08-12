@@ -1,5 +1,13 @@
 # CHANGE LOG
 
+## 1.5.5
+
+* Ensure tag file manifest entries for additional tag files uses 
+denormalized path separator (unix-style `/`) similar to payload file 
+manifest entries.
+* Return result bag path from the `materialize()` function.
+* Don't use strict mode when guessing mime types to allow for user-extended types.
+
 ## 1.5.4
 
 * Fix #31: Missing import of `ensure_valid_output_path` in `fetch_globus.py`.

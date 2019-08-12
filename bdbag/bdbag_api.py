@@ -370,18 +370,18 @@ def extract_bag(bag_path, output_path=None, temp=False):
                 shutil.move(output_path, newpath)
             output_path = os.path.dirname(bag_path)
         if zipfile.is_zipfile(bag_path):
-            logger.info("Extracting ZIP archived bag file: %s" % bag_path)
+            logger.info("Extracting ZIP archived file: %s" % bag_path)
             with open(bag_path, 'rb') as bag_file:
                 zipped = zipfile.ZipFile(bag_file)
                 zipped.extractall(output_path)
                 zipped.close()
         elif tarfile.is_tarfile(bag_path):
-            logger.info("Extracting TAR/GZ/BZ2 archived bag file: %s" % bag_path)
+            logger.info("Extracting TAR/GZ/BZ2 archived file: %s" % bag_path)
             tarred = tarfile.open(bag_path)
             tarred.extractall(output_path)
             tarred.close()
         else:
-            raise RuntimeError("Archive format not supported for bag file: %s"
+            raise RuntimeError("Archive format not supported for file: %s"
                                "\nSupported archive formats are ZIP or TAR/GZ/BZ2" % bag_path)
 
     extracted_path = os.path.join(output_path, bag_dir)
@@ -600,6 +600,11 @@ def materialize(input_path,
         bag_path = extract_bag(bag_file)
 
     if bag_path:
+        if not is_bag(bag_path):
+            logging.info("The directory [%s] is not a valid bag directory. "
+                         "Only a properly structured bag directory can be fully materialized." % bag_path)
+            return bag_path
+
         if not resolve_fetch(bag_path,
                              force=force,
                              callback=fetch_callback,
@@ -610,3 +615,5 @@ def materialize(input_path,
             logging.warning("One or more bag files were not fetched successfully.")
 
         validate_bag(bag_path, fast=False, callback=validation_callback, config_file=config_file)
+
+    return bag_path

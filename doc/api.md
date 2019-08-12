@@ -230,7 +230,9 @@ local path to a supported archive format, the archive will be extracted
 to the current directory.
 3. If the `input_path` (or previously extracted file) represents a valid
 bag directory, any remote file references contained within the bag's
-`fetch.txt` file will attempt to be resolved.
+`fetch.txt` file will attempt to be resolved. If the `input_path` does 
+not represent a valid bag directory, the function will terminate without 
+errors and emit a log message stating this fact.
 4. Full validation will be run on the materialized bag. If any one of
 these steps fail, an error is raised.
 
@@ -248,6 +250,8 @@ these steps fail, an error is raised.
 |**kwargs|`dict`|Unpacked keyword arguments in dictionary format.
 
 **Raises**: `BagValidationError`, `RuntimeError` if the bag could not be materialized and validated successfully.
+
+**Returns**: `string` - The normalized, absolute path to the directory of the materialized bag.
 
 -----
 <a name="read_metadata"></a>

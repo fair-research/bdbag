@@ -23,7 +23,7 @@ from requests.utils import requote_uri
 from distutils.util import strtobool
 from pkg_resources import get_distribution, DistributionNotFound
 
-__version__ = "1.5.4"
+__version__ = "1.5.5"
 __bagit_version__ = "1.7.0"
 
 if sys.version_info > (3,):  # pragma: no cover
@@ -83,7 +83,7 @@ def add_mime_types(types):
 
 
 def guess_mime_type(file_path):
-    mtype = mimetypes.guess_type(file_path)
+    mtype = mimetypes.guess_type(file_path, strict=False)
     content_type = 'application/octet-stream'
     if mtype[0] is not None and mtype[1] is not None:
         content_type = "+".join([mtype[0], mtype[1]])

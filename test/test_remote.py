@@ -600,12 +600,25 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_materialize_non_bag(self):
+        logger.info(self.getTestHeader('test materialize non-bag'))
+        curdir = os.getcwd()
+        os.chdir(self.tmpdir)
+        try:
+            bag_path = bdb.materialize(self.test_data_dir)
+            self.assertFalse(bdb.is_bag(bag_path))
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+        finally:
+            os.chdir(curdir)
+
     def test_materialize_from_dir(self):
         logger.info(self.getTestHeader('test materialize from dir'))
         curdir = os.getcwd()
         os.chdir(self.tmpdir)
         try:
-            bdb.materialize(self.test_bag_fetch_http_dir)
+            bag_path = bdb.materialize(self.test_bag_fetch_http_dir)
+            self.assertTrue(bdb.is_bag(bag_path))
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:
@@ -616,7 +629,8 @@ class TestRemoteAPI(BaseTest):
         curdir = os.getcwd()
         os.chdir(self.tmpdir)
         try:
-            bdb.materialize(ospj(self.test_archive_dir, 'test-bag-fetch-http.zip'))
+            bag_path = bdb.materialize(ospj(self.test_archive_dir, 'test-bag-fetch-http.zip'))
+            self.assertTrue(bdb.is_bag(bag_path))
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:
@@ -627,8 +641,9 @@ class TestRemoteAPI(BaseTest):
         curdir = os.getcwd()
         os.chdir(self.tmpdir)
         try:
-            bdb.materialize("https://github.com/fair-research/bdbag/raw/master/test/test-data/test-archives/"
-                            "test-bag.zip")
+            bag_path = bdb.materialize("https://github.com/fair-research/bdbag/raw/master/test/test-data/test-archives/"
+                                       "test-bag.zip")
+            self.assertTrue(bdb.is_bag(bag_path))
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:

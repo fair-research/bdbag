@@ -301,7 +301,7 @@ def _find_tag_files(bag_dir):
                         continue
                     # remove everything up to the bag_dir directory
                     p = os.path.join(dir_name, filename)
-                    yield p
+                    yield _denormalize_filename(p)
 
 
 # monkeypatch bagit._find_tag_files with our version
