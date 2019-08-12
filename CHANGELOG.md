@@ -7,6 +7,7 @@ denormalized path separator (unix-style `/`) similar to payload file
 manifest entries.
 * Return result bag path from the `materialize()` function.
 * Don't use strict mode when guessing mime types to allow for user-extended types.
+* Dropped Python 3.3 support.
 
 ## 1.5.4
 
