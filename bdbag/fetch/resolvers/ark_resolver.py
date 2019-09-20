@@ -24,10 +24,12 @@ class MinidResolverHandler(BaseResolverHandler):
 
     def __init__(self, identifier_resolvers, args):
         super(MinidResolverHandler, self).__init__(identifier_resolvers, args)
+        if not self.args.get("allow_automatic_redirects"):
+            self.args["allow_automatic_redirects"] = False
 
     def resolve(self, identifier, headers=None):
         if not headers:
-            headers = {'Accept': 'application/json', 'Connection': 'close'}
+            headers = {"Accept": "application/json"}
         return super(MinidResolverHandler, self).resolve(identifier, headers)
 
     def handle_response(self, response):
@@ -36,8 +38,8 @@ class MinidResolverHandler(BaseResolverHandler):
             content = response.json()
         except Exception as e:
             logger.warning(
-                "Unable to parse identifier resolution result, a MINID or other supported JSON metadata "
-                "structure was not found. Exception: %s" % get_typed_exception(e))
+                "Unable to parse identifier resolution result: a valid JSON structure was not found. Exception: %s. "
+                "Server response: %s" % (get_typed_exception(e), response.content))
             return entries
 
         base_entry = dict()

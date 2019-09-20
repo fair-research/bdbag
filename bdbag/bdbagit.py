@@ -386,8 +386,11 @@ class BDBag(Bag):
             entry_path = os.path.normpath(filename.lstrip("*"))
             if entry_path in payload_entries:
                 for alg in self.algorithms:
-                    if payload_entries[entry_path].get(alg, None):
-                        self.add_remote_file(filename, url, length, alg, payload_entries[entry_path][alg])
+                    digest = payload_entries[entry_path].get(alg, None)
+                    remote_entry = self.remote_entries.get(filename)
+                    if remote_entry:
+                        continue
+                    self.add_remote_file(filename, url, length, alg, digest)
 
     def add_remote_file(self, filename, url, length, alg, digest):
         if alg not in self.algorithms:

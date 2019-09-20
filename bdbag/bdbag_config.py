@@ -84,17 +84,20 @@ DEFAULT_RESOLVER_CONFIG = {
         {
             "prefix": "57799",
             "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+            "args": {"allow_automatic_redirects": False},
             ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
         },
         {
             "prefix": "99999/fk4",  # we cannot assume every identifier in this test ARK shoulder references a MINID
             "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+            "args": {"allow_automatic_redirects": False},
             ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
         }
     ],
     "minid": [
         {
             "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+            "args": {"allow_automatic_redirects": False},
             ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
         }
     ],

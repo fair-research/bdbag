@@ -122,10 +122,13 @@ class TestRemoteAPI(BaseTest):
 
     def test_validate_remote_bag_from_rfm(self):
         logger.info(self.getTestHeader('create, resolve, and validate bag from remote file manifest'))
-        self._test_bag_with_remote_file_manifest()
-        bdb.resolve_fetch(self.test_data_dir)
-        bdb.validate_bag(self.test_data_dir, fast=True)
-        bdb.validate_bag(self.test_data_dir, fast=False)
+        try:
+            self._test_bag_with_remote_file_manifest()
+            bdb.resolve_fetch(self.test_data_dir)
+            bdb.validate_bag(self.test_data_dir, fast=True)
+            bdb.validate_bag(self.test_data_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
 
     def test_resolve_fetch_http(self):
         logger.info(self.getTestHeader('test resolve fetch http'))

@@ -478,15 +478,15 @@ Here's an example of what a `remote-file-manifest` looks like:
 [
   {
     "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json",
-    "length":723,
+    "length":747,
     "filename":"bdbag-profile.json",
-    "sha256":"3039ea47828e032ea2fe63679281c50760e68b5773a76f5873c4ae7acdf87951"
+    "sha256":"3275665cda7f4e8e1919f34f22320e4c0eb14004afcbb90ca625bd877efb44f7"
   },
   {
-    "url":"ark:/88120/r8059v",
-    "length": 632860,
-    "filename": "minid_v0.1_Nov_2015.pdf",
-    "sha256": "cacc1abf711425d3c554277a5989df269cefaa906d27f1aaa72205d30224ed5f"
+    "url":"ark:/57799/b9dd5t",
+    "length": 223,
+    "filename": "test-fetch-identifier.txt",
+    "sha256": "59e6e0b91b51d49a5fb0e1068980d2e7d2b2001a6d11c59c64156d32e197a626"
   }
 ]
 ```
@@ -513,29 +513,29 @@ The result of this command is a `fetch.txt` file in our bag directory, along wit
 ```
 [mdarcy@dev ~]$ ls -lagR test_bag/
 test_bag/:
-total 36
-drwxrwxr-x.  3 mdarcy 4096 Apr 22 12:16 .
-drwxr-xr-x. 24 mdarcy 4096 Apr 22 11:54 ..
--rw-rw-r--.  1 mdarcy  368 Apr 22 12:16 bag-info.txt
--rw-rw-r--.  1 mdarcy   55 Apr 22 11:54 bagit.txt
-drwxrwxr-x.  2 mdarcy   38 Apr 22 11:54 data
--rw-rw-r--.  1 mdarcy  186 Apr 22 12:16 fetch.txt
--rw-rw-r--.  1 mdarcy  156 Apr 22 12:16 manifest-md5.txt
--rw-rw-r--.  1 mdarcy  347 Apr 22 12:16 manifest-sha256.txt
--rw-rw-r--.  1 mdarcy  235 Apr 22 12:16 tagmanifest-md5.txt
--rw-rw-r--.  1 mdarcy  395 Apr 22 12:16 tagmanifest-sha256.txt
+total 32
+drwxrwxr-x.  3 mdarcy  180 Sep 19 20:25 .
+drwxr-xr-x. 11 mdarcy 4096 Sep 19 20:27 ..
+-rw-rw-r--.  1 mdarcy  349 Sep 18 19:13 bag-info.txt
+-rw-rw-r--.  1 mdarcy   55 Sep 12 19:18 bagit.txt
+drwxrwxr-x.  2 mdarcy   40 Sep 19 20:25 data
+-rw-rw-r--.  1 mdarcy  170 Sep 18 19:13 fetch.txt
+-rw-rw-r--.  1 mdarcy   98 Sep 18 19:13 manifest-md5.txt
+-rw-rw-r--.  1 mdarcy  349 Sep 18 19:13 manifest-sha256.txt
+-rw-rw-r--.  1 mdarcy  235 Sep 18 19:13 tagmanifest-md5.txt
+-rw-rw-r--.  1 mdarcy  395 Sep 18 19:13 tagmanifest-sha256.txt
 
 test_bag/data:
-total 12
-drwxrwxr-x. 2 mdarcy   38 Apr 22 11:54 .
-drwxrwxr-x. 3 mdarcy 4096 Apr 22 12:16 ..
--rw-rw-r--. 1 mdarcy   45 Apr 20 19:53 test1.txt
--rw-rw-r--. 1 mdarcy   56 Apr 20 19:53 test2.txt
+total 8
+drwxrwxr-x. 2 mdarcy  40 Sep 19 20:25 .
+drwxrwxr-x. 3 mdarcy 180 Sep 19 20:25 ..
+-rw-rw-r--. 1 mdarcy  30 Sep 12 19:17 test1.txt
+-rw-rw-r--. 1 mdarcy  38 Sep 12 19:17 test2.txt
 
 [mdarcy@dev ~]$ cat test_bag/fetch.txt
 
-https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json     723     data/bdbag-profile.json
-ark:/88120/r8059v       632860  data/minid_v0.1_Nov_2015.pdf
+https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json        747     data/bdbag-profile.json
+ark:/57799/b9dd5t       223     data/test-fetch-identifier.txt
 
 [mdarcy@dev ~]$  cat test_bag/manifest-md5.txt
 
@@ -544,10 +544,10 @@ dad6891eb4148dfed2d162370983d06f  data/test1.txt
 
 [mdarcy@dev ~]$  cat test_bag/manifest-sha256.txt
 
-3039ea47828e032ea2fe63679281c50760e68b5773a76f5873c4ae7acdf87951  data/bdbag-profile.json
-cacc1abf711425d3c554277a5989df269cefaa906d27f1aaa72205d30224ed5f  data/minid_v0.1_Nov_2015.pdf
-359185267ff38b191b451db1be2cd419cd423568b1e79f36a764e43c9fd604e2  data/test1.txt
-23e9ba3d71a709f4f3885825c614d0c2a4dd42bf03fdb713ff2485aac411b5e3  data/test2.txt
+2d874441132225aa2d63754efb7af0aa2c22bd63c5225dba73e3f49d360e9e63  data/test1.txt
+46e94d2bc7804ae2c92674e0d16e8a8b26dc1f7eba90b1d225c88b67d566761d  data/test2.txt
+3275665cda7f4e8e1919f34f22320e4c0eb14004afcbb90ca625bd877efb44f7  data/bdbag-profile.json
+59e6e0b91b51d49a5fb0e1068980d2e7d2b2001a6d11c59c64156d32e197a626  data/test-fetch-identifier.txt
 ```
 
 ----
@@ -563,65 +563,66 @@ attempt to validate it, the following output would be produced:
 ```
 [mdarcy@dev ~]$ bdbag ./test_bag/ --validate fast
 
-2016-04-22 12:39:57,781 - INFO - Validating bag: /home/mdarcy/test_bag
-2016-04-22 12:39:57,782 - WARNING - BagIncompleteError: Found 2 files and 101 bytes on disk; expected 4 files and 633684 bytes. This validation error may be transient if the bag contains unresolved remote file references from a fetch.txt file. In this case the bag is incomplete but not necessarily invalid. Resolve remote file references (if any) and re-validate.
+2019-09-19 20:30:00,750 - INFO - Validating bag: /home/mdarcy/test_bag
+2019-09-19 20:30:00,753 - WARNING - BagValidationError: A BagValidationError may be transient if the bag contains unresolved remote file references from a fetch.txt file. In this case the bag is incomplete but not necessarily invalid. Resolve remote file references (if any) and re-validate.
 
-Error: [BagIncompleteError] Found 2 files and 101 bytes on disk; expected 4 files and 633684 bytes.
+Error: [BagValidationError] Payload-Oxum validation failed. Expected 4 files and 1038 bytes but found 2 files and 68 bytes
 ```
 Resolving remote references on the example bag would yield:
 ```
 [mdarcy@dev ~]$ bdbag ./test_bag/ --resolve-fetch all
 
-2016-04-22 12:33:20,045 - INFO - Attempting to resolve remote file references from fetch.txt...
-2016-04-22 12:33:20,054 - INFO - Starting new HTTPS connection (1): raw.githubusercontent.com
-2016-04-22 12:33:20,226 - INFO - File [/home/mdarcy/test_bag/data/bdbag-profile.json] transfer successful.
-2016-04-22 12:33:20,227 - INFO - Attempting to resolve ark:/88120/r8059v into a valid set of URLs.
-2016-04-22 12:33:20,228 - INFO - Starting new HTTP connection (1): n2t.net
-2016-04-22 12:33:20,580 - INFO - Starting new HTTP connection (1): minid.bd2k.org
-2016-04-22 12:33:20,900 - INFO - The identifier ark:/88120/r8059v resolved into the following locations: [u'http://bd2k.ini.usc.edu/assets/all-hands-meeting/minid_v0.1_Nov_2015.pdf']
-2016-04-22 12:33:20,901 - INFO - Starting new HTTP connection (1): bd2k.ini.usc.edu
-2016-04-22 12:33:21,159 - INFO - File [/home/mdarcy/test_bag/data/minid_v0.1_Nov_2015.pdf] transfer successful.
+2019-09-19 20:31:01,790 - INFO - Attempting to resolve remote file references from /home/mdarcy/test_bag/fetch.txt.
+2019-09-19 20:31:01,793 - INFO - Attempting GET from URL: https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json
+2019-09-19 20:31:01,983 - INFO - File [/home/mdarcy/test_bag/data/bdbag-profile.json] transfer successful. 0.729 KB transferred. Elapsed time: 0:00:00.007388.
+2019-09-19 20:31:01,985 - INFO - Attempting to resolve http://n2t.net/ark:/57799/b9dd5t into a valid set of URLs.
+2019-09-19 20:31:02,508 - INFO - The identifier ark:/57799/b9dd5t resolved into the following locations: [https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt]
+2019-09-19 20:31:02,509 - INFO - Attempting GET from URL: https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt
+2019-09-19 20:31:02,650 - INFO - File [/home/mdarcy/test_bag/data/test-fetch-identifier.txt] transfer successful. 0.218 KB transferred. Elapsed time: 0:00:00.006668.
+2019-09-19 20:31:02,650 - INFO - Fetch complete. Elapsed time: 0:00:00.857709
+
 ```
 The bag directory would now contain the following files:
 ```
 [mdarcy@dev ~]$ ls -lagR test_bag/
 test_bag/:
-total 36
-drwxrwxr-x.  3 mdarcy 4096 Apr 22 12:16 .
-drwxr-xr-x. 24 mdarcy 4096 Apr 22 11:54 ..
--rw-rw-r--.  1 mdarcy  368 Apr 22 12:16 bag-info.txt
--rw-rw-r--.  1 mdarcy   55 Apr 22 11:54 bagit.txt
-drwxrwxr-x.  2 mdarcy   93 Apr 22 12:33 data
--rw-rw-r--.  1 mdarcy  186 Apr 22 12:16 fetch.txt
--rw-rw-r--.  1 mdarcy  156 Apr 22 12:16 manifest-md5.txt
--rw-rw-r--.  1 mdarcy  347 Apr 22 12:16 manifest-sha256.txt
--rw-rw-r--.  1 mdarcy  235 Apr 22 12:16 tagmanifest-md5.txt
--rw-rw-r--.  1 mdarcy  395 Apr 22 12:16 tagmanifest-sha256.txt
+total 32
+drwxrwxr-x.  3 mdarcy  180 Sep 19 20:25 .
+drwxr-xr-x. 12 mdarcy 4096 Sep 19 20:30 ..
+-rw-rw-r--.  1 mdarcy  349 Sep 18 19:13 bag-info.txt
+-rw-rw-r--.  1 mdarcy   55 Sep 12 19:18 bagit.txt
+drwxrwxr-x.  2 mdarcy   99 Sep 19 20:31 data
+-rw-rw-r--.  1 mdarcy  170 Sep 18 19:13 fetch.txt
+-rw-rw-r--.  1 mdarcy   98 Sep 18 19:13 manifest-md5.txt
+-rw-rw-r--.  1 mdarcy  349 Sep 18 19:13 manifest-sha256.txt
+-rw-rw-r--.  1 mdarcy  235 Sep 18 19:13 tagmanifest-md5.txt
+-rw-rw-r--.  1 mdarcy  395 Sep 18 19:13 tagmanifest-sha256.txt
 
 test_bag/data:
-total 636
-drwxrwxr-x. 2 mdarcy     93 Apr 22 12:33 .
-drwxrwxr-x. 3 mdarcy   4096 Apr 22 12:16 ..
--rw-rw-r--. 1 mdarcy    723 Apr 22 12:33 bdbag-profile.json
--rw-rw-r--. 1 mdarcy 632860 Apr 22 12:33 minid_v0.1_Nov_2015.pdf
--rw-rw-r--. 1 mdarcy     45 Apr 20 19:53 test1.txt
--rw-rw-r--. 1 mdarcy     56 Apr 20 19:53 test2.txt
+total 16
+drwxrwxr-x. 2 mdarcy  99 Sep 19 20:31 .
+drwxrwxr-x. 3 mdarcy 180 Sep 19 20:25 ..
+-rw-rw-r--. 1 mdarcy 747 Sep 19 20:31 bdbag-profile.json
+-rw-rw-r--. 1 mdarcy  30 Sep 12 19:17 test1.txt
+-rw-rw-r--. 1 mdarcy  38 Sep 12 19:17 test2.txt
+-rw-rw-r--. 1 mdarcy 223 Sep 19 20:31 test-fetch-identifier.txt
+
 ```
 Finally, we can run `--validate full` on the bag in order to verify that the bag is now both complete and valid:
 ```
 [mdarcy@dev ~]$ bdbag ./test_bag/ --validate full
 
-2016-04-22 12:37:52,317 - INFO - Validating bag: /home/mdarcy/test_bag
-2016-04-22 12:37:52,318 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/test1.txt
-2016-04-22 12:37:52,319 - INFO - Verifying checksum for file /home/mdarcy/test_bag/fetch.txt
-2016-04-22 12:37:52,319 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/bdbag-profile.json
-2016-04-22 12:37:52,319 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/test2.txt
-2016-04-22 12:37:52,319 - INFO - Verifying checksum for file /home/mdarcy/test_bag/manifest-sha256.txt
-2016-04-22 12:37:52,319 - INFO - Verifying checksum for file /home/mdarcy/test_bag/bagit.txt
-2016-04-22 12:37:52,320 - INFO - Verifying checksum for file /home/mdarcy/test_bag/bag-info.txt
-2016-04-22 12:37:52,320 - INFO - Verifying checksum for file /home/mdarcy/test_bag/manifest-md5.txt
-2016-04-22 12:37:52,320 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/minid_v0.1_Nov_2015.pdf
-2016-04-22 12:37:52,324 - INFO - Bag /home/mdarcy/test_bag is valid
+2019-09-19 20:32:11,145 - INFO - Validating bag: /home/mdarcy/test_bag
+2019-09-19 20:32:11,148 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/test1.txt
+2019-09-19 20:32:11,149 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/test2.txt
+2019-09-19 20:32:11,149 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/bdbag-profile.json
+2019-09-19 20:32:11,149 - INFO - Verifying checksum for file /home/mdarcy/test_bag/data/test-fetch-identifier.txt
+2019-09-19 20:32:11,149 - INFO - Verifying checksum for file /home/mdarcy/test_bag/bag-info.txt
+2019-09-19 20:32:11,150 - INFO - Verifying checksum for file /home/mdarcy/test_bag/bagit.txt
+2019-09-19 20:32:11,150 - INFO - Verifying checksum for file /home/mdarcy/test_bag/fetch.txt
+2019-09-19 20:32:11,150 - INFO - Verifying checksum for file /home/mdarcy/test_bag/manifest-md5.txt
+2019-09-19 20:32:11,150 - INFO - Verifying checksum for file /home/mdarcy/test_bag/manifest-sha256.txt
+2019-09-19 20:32:11,150 - INFO - Bag /home/mdarcy/test_bag is valid
 ```
 
 ----

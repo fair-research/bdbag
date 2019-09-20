@@ -30,7 +30,7 @@ class DataGUIDResolverHandler(BaseResolverHandler):
 
     def resolve(self, identifier, headers=None):
         if not headers:
-            headers = {'Accept': 'application/json', 'Connection': 'close'}
+            headers = {'Accept': 'application/json'}
         return super(DataGUIDResolverHandler, self).resolve(identifier, headers)
 
     def handle_response(self, response):
@@ -39,8 +39,8 @@ class DataGUIDResolverHandler(BaseResolverHandler):
             content = response.json()
         except Exception as e:
             logger.warning(
-                "Unable to parse identifier resolution result, a supported JSON metadata "
-                "structure was not found. Exception: %s" % get_typed_exception(e))
+                "Unable to parse identifier resolution result: a valid JSON structure was not found. Exception: %s. "
+                "Server response: %s" % (get_typed_exception(e), response.content))
             return entries
 
         base_entry = dict()

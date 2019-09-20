@@ -23,7 +23,7 @@ from requests.utils import requote_uri
 from distutils.util import strtobool
 from pkg_resources import get_distribution, DistributionNotFound
 
-__version__ = "1.5.5"
+__version__ = "1.5.6"
 __bagit_version__ = "1.7.0"
 
 if sys.version_info > (3,):  # pragma: no cover
