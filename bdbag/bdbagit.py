@@ -576,7 +576,7 @@ class BDBag(Bag):
                         if not callback(count, totalHashes):
                             raise BaggingInterruptedError("Bag validation interrupted!")
 
-            else:
+            else:  # pragma: no cover
                 pool = None
                 try:
                     pool = multiprocessing.Pool(processes if processes else None, initializer=worker_init)

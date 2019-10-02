@@ -25,7 +25,8 @@ from bdbag import DEFAULT_CONFIG_PATH
 logger = logging.getLogger(__name__)
 
 DEFAULT_KEYCHAIN_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'keychain.json')
-DEFAULT_KEYCHAIN = [
+DEFAULT_KEYCHAIN = []
+KEYCHAIN_EXAMPLE = [
     {
         "uri": "https://<hostname>/<path>",
         "auth_uri": "",
@@ -105,6 +106,44 @@ def read_keychain(keychain_file=DEFAULT_KEYCHAIN_FILE, create_default=True):
             keychain = kf.read()
 
     return json.loads(keychain, object_hook=collections.OrderedDict)
+
+
+def update_keychain(keychain_entries, keychain_file=None, delete=False):
+    assert keychain_entries
+    if not isinstance(keychain_entries, list):
+        keychain_entries = [keychain_entries]
+    keychain_file = keychain_file or DEFAULT_KEYCHAIN_FILE
+    if not os.path.isfile(keychain_file):
+        keychain = list()
+    else:
+        keychain = read_keychain(keychain_file, create_default=False)
+    updated_keychain = list()
+
+    # copy all existing entries except those we are updating
+    for entry in keychain:
+        skip = False
+        for update_entry in keychain_entries:
+            update_uri = update_entry.get("uri")
+            update_auth_type = update_entry.get("auth_type")
+            if not (update_uri and update_auth_type):
+                logging.warning("Keychain entry update requires valid \"uri\" and \"auth_type\" parameters.")
+                continue
+            update_uri = update_uri.lower().strip()
+            uri = entry.get("uri", "").lower().strip()
+            update_auth_type = update_auth_type.lower().strip()
+            auth_type = entry.get("auth_type", "").lower().strip()
+            if (uri == update_uri) and (auth_type == update_auth_type):
+                skip = True
+                continue
+        if not skip:
+            updated_keychain.append(entry)
+
+    if not delete:
+        updated_keychain.extend(keychain_entries)
+
+    write_keychain(updated_keychain, keychain_file)
+
+    return updated_keychain
 
 
 def has_auth_attr(auth, attr, quiet=False):

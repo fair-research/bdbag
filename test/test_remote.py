@@ -29,6 +29,7 @@ from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg
 from bdbag.fetch import fetcher
 from bdbag.fetch.auth import cookies
+from bdbag.fetch.auth.keychain import read_keychain, update_keychain, get_auth_entries
 from test.test_common import BaseTest
 
 if sys.version_info > (3,):
@@ -682,6 +683,168 @@ class TestRemoteAPI(BaseTest):
             self.fail(bdbag.get_typed_exception(e))
         finally:
             os.chdir(curdir)
+
+    def test_update_keychain_single(self):
+        logger.info(self.getTestHeader('test update keychain single'))
+        keychain_file = ospj(self.test_config_dir, 'test-keychain-8.json')
+        updated_entry = {
+            "uri": "https://raw.githubusercontent.com/",
+            "auth_type": "http-basic",
+            "auth_params": {
+              "auth_method": "get",
+              "username": "foo",
+              "password": "bar!"
+            }
+          }
+        try:
+            updated_keychain = update_keychain(updated_entry, keychain_file=keychain_file)
+            entries = get_auth_entries("https://raw.githubusercontent.com/", updated_keychain)
+            found = False
+            for entry in entries:
+                if entry["auth_type"] == "http-basic":
+                    if entry["auth_params"]["username"] == "foo" and entry["auth_params"]["password"] == "bar!":
+                        found = True
+                        break
+            self.assertTrue(found)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_update_keychain_multi(self):
+        logger.info(self.getTestHeader('test update keychain multi'))
+        keychain_file = ospj(self.test_config_dir, 'test-keychain-8.json')
+        updated_entries = [
+            {
+                "uri": "https://raw.githubusercontent.com/",
+                "auth_type": "http-basic",
+                "auth_params": {
+                  "auth_method": "get",
+                  "username": "fake",
+                  "password": "bar!"
+                }
+            },
+            {
+                "uri": "https://raw.githubusercontent.com/",
+                "auth_type": "bearer-token",
+                "auth_params": {
+                    "token": "bar",
+                    "allow_redirects_with_token": "True",
+                    "additional_request_headers": {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                }
+            }
+        ]
+        try:
+            updated_keychain = update_keychain(updated_entries, keychain_file=keychain_file)
+            entries = get_auth_entries("https://raw.githubusercontent.com/", updated_keychain)
+            found1 = found2 = False
+            for entry in entries:
+                if entry["auth_type"] == "http-basic":
+                    if entry["auth_params"]["password"] == "bar!":
+                        found1 = True
+                if entry["auth_type"] == "bearer-token":
+                    if entry["auth_params"]["allow_redirects_with_token"] == "True":
+                        found2 = True
+            self.assertTrue(found1 and found2)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_update_keychain_add_single(self):
+        logger.info(self.getTestHeader('test update keychain add single'))
+        keychain_file = ospj(self.test_config_dir, 'test-keychain-8.json')
+        added_entry = {
+            "uri": "https://foo.bar.com/",
+            "auth_type": "http-basic",
+            "auth_params": {
+              "auth_method": "get",
+              "username": "foo",
+              "password": "bar!"
+            }
+          }
+        try:
+            keychain = read_keychain(keychain_file, create_default=False)
+            entries = get_auth_entries("https://foo.bar.com/", keychain)
+            self.assertFalse(entries)
+            updated_keychain = update_keychain(added_entry, keychain_file=keychain_file)
+            entries = get_auth_entries("https://foo.bar.com/", updated_keychain)
+            self.assertTrue(len(entries) == 1)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_update_keychain_add_multi(self):
+        logger.info(self.getTestHeader('test update keychain add multi'))
+        keychain_file = ospj(self.test_config_dir, 'test-keychain-8.json')
+        added_entries = [
+            {
+                "uri": "https://foo.bar.com/",
+                "auth_type": "http-basic",
+                "auth_params": {
+                  "auth_method": "get",
+                  "username": "fake",
+                  "password": "bar!"
+                }
+            },
+            {
+                "uri": "https://foo.bar.com/",
+                "auth_type": "bearer-token",
+                "auth_params": {
+                    "token": "bar",
+                    "allow_redirects_with_token": "True",
+                    "additional_request_headers": {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                }
+            }
+        ]
+        try:
+            keychain = read_keychain(keychain_file, create_default=False)
+            entries = get_auth_entries("https://foo.bar.com/", keychain)
+            self.assertFalse(entries)
+            updated_keychain = update_keychain(added_entries, keychain_file=keychain_file)
+            entries = get_auth_entries("https://foo.bar.com/", updated_keychain)
+            self.assertTrue(len(entries) == 2)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_update_keychain_del_single(self):
+        logger.info(self.getTestHeader('test update keychain del single'))
+        keychain_file = ospj(self.test_config_dir, 'test-keychain-8.json')
+        deleted_entry = {
+            "uri": "ftp://ftp.nist.gov/",
+            "auth_type": "ftp-basic"
+        }
+        try:
+            keychain = read_keychain(keychain_file, create_default=False)
+            entries = get_auth_entries("ftp://ftp.nist.gov/", keychain)
+            self.assertTrue(len(entries) == 1)
+            updated_keychain = update_keychain(deleted_entry, keychain_file=keychain_file, delete=True)
+            entries = get_auth_entries("ftp://ftp.nist.gov/", updated_keychain)
+            self.assertFalse(entries)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_update_keychain_del_multi(self):
+        logger.info(self.getTestHeader('test update keychain del multi'))
+        keychain_file = ospj(self.test_config_dir, 'test-keychain-8.json')
+        deleted_entries = [
+            {
+                "uri": "https://raw.githubusercontent.com/",
+                "auth_type": "http-basic"
+            },
+            {
+                "uri": "https://raw.githubusercontent.com/",
+                "auth_type": "bearer-token"
+            }
+        ]
+        try:
+            keychain = read_keychain(keychain_file, create_default=False)
+            entries = get_auth_entries("https://raw.githubusercontent.com/", keychain)
+            self.assertTrue(entries)
+            updated_keychain = update_keychain(deleted_entries, keychain_file=keychain_file, delete=True)
+            entries = get_auth_entries("https://raw.githubusercontent.com/", updated_keychain)
+            self.assertFalse(entries)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
 
     @unittest.skip("Not implemented")
     def test_resolve_fetch_globus(self):
