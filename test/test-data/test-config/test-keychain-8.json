@@ -1,6 +1,7 @@
 [
   {
     "uri": "https://raw.githubusercontent.com/",
+    "tag": "unit test",
     "auth_type": "http-basic",
     "auth_params": {
       "auth_method": "get",
@@ -10,6 +11,7 @@
   },
   {
     "uri": "https://raw.githubusercontent.com/",
+    "tag": "unit test",
     "auth_type": "bearer-token",
     "auth_params": {
       "token": "bar",

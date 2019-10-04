@@ -17,6 +17,7 @@ import os
 import sys
 import logging
 import mock
+import json
 import unittest
 import requests
 import tempfile
@@ -698,6 +699,7 @@ class TestRemoteAPI(BaseTest):
           }
         try:
             updated_keychain = update_keychain(updated_entry, keychain_file=keychain_file)
+            logger.info("Updated keychain: %s" % json.dumps(updated_keychain))
             entries = get_auth_entries("https://raw.githubusercontent.com/", updated_keychain)
             found = False
             for entry in entries:
@@ -736,6 +738,7 @@ class TestRemoteAPI(BaseTest):
         ]
         try:
             updated_keychain = update_keychain(updated_entries, keychain_file=keychain_file)
+            logger.info("Updated keychain: %s" % json.dumps(updated_keychain))
             entries = get_auth_entries("https://raw.githubusercontent.com/", updated_keychain)
             found1 = found2 = False
             for entry in entries:
@@ -766,6 +769,7 @@ class TestRemoteAPI(BaseTest):
             entries = get_auth_entries("https://foo.bar.com/", keychain)
             self.assertFalse(entries)
             updated_keychain = update_keychain(added_entry, keychain_file=keychain_file)
+            logger.info("Updated keychain: %s" % json.dumps(updated_keychain))
             entries = get_auth_entries("https://foo.bar.com/", updated_keychain)
             self.assertTrue(len(entries) == 1)
         except Exception as e:
@@ -801,6 +805,7 @@ class TestRemoteAPI(BaseTest):
             entries = get_auth_entries("https://foo.bar.com/", keychain)
             self.assertFalse(entries)
             updated_keychain = update_keychain(added_entries, keychain_file=keychain_file)
+            logger.info("Updated keychain: %s" % json.dumps(updated_keychain))
             entries = get_auth_entries("https://foo.bar.com/", updated_keychain)
             self.assertTrue(len(entries) == 2)
         except Exception as e:
@@ -818,6 +823,7 @@ class TestRemoteAPI(BaseTest):
             entries = get_auth_entries("ftp://ftp.nist.gov/", keychain)
             self.assertTrue(len(entries) == 1)
             updated_keychain = update_keychain(deleted_entry, keychain_file=keychain_file, delete=True)
+            logger.info("Updated keychain: %s" % json.dumps(updated_keychain))
             entries = get_auth_entries("ftp://ftp.nist.gov/", updated_keychain)
             self.assertFalse(entries)
         except Exception as e:
@@ -841,8 +847,49 @@ class TestRemoteAPI(BaseTest):
             entries = get_auth_entries("https://raw.githubusercontent.com/", keychain)
             self.assertTrue(entries)
             updated_keychain = update_keychain(deleted_entries, keychain_file=keychain_file, delete=True)
+            logger.info("Updated keychain: %s" % json.dumps(updated_keychain))
             entries = get_auth_entries("https://raw.githubusercontent.com/", updated_keychain)
             self.assertFalse(entries)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_update_keychain_del_by_tag(self):
+        logger.info(self.getTestHeader('test update keychain del by tag'))
+        keychain_file = ospj(self.test_config_dir, 'test-keychain-8.json')
+        deleted_entries = {"tag": "unit test"}
+        try:
+            keychain = read_keychain(keychain_file, create_default=False)
+            entries = get_auth_entries("https://raw.githubusercontent.com/", keychain)
+            self.assertTrue(entries)
+            updated_keychain = update_keychain(deleted_entries, keychain_file=keychain_file, delete=True)
+            logger.info("Updated keychain: %s" % json.dumps(updated_keychain))
+            entries = get_auth_entries("https://raw.githubusercontent.com/", updated_keychain)
+            self.assertFalse(entries)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_update_keychain_invalid_params(self):
+        logger.info(self.getTestHeader('test update keychain invalid params'))
+        keychain_file = ospj(self.test_config_dir, 'test-keychain-8.json')
+        deleted_entries = [
+            {
+                "uri": "https://raw.githubusercontent.com/",
+            },
+            {
+                "auth_type": "bearer-token"
+            },
+            {
+                "uri": "ftp://ftp.nist.gov/",
+                "tag": "invalid"
+            }
+        ]
+        try:
+            keychain = read_keychain(keychain_file, create_default=False)
+            entries = get_auth_entries("https://raw.githubusercontent.com/", keychain)
+            self.assertTrue(entries)
+            updated_keychain = update_keychain(deleted_entries, keychain_file=keychain_file, delete=True)
+            logger.info("Updated keychain: %s" % json.dumps(updated_keychain))
+            self.assertTrue(len(updated_keychain) == 3)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 

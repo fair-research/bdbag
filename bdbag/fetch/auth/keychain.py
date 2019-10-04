@@ -125,14 +125,18 @@ def update_keychain(keychain_entries, keychain_file=None, delete=False):
         for update_entry in keychain_entries:
             update_uri = update_entry.get("uri")
             update_auth_type = update_entry.get("auth_type")
-            if not (update_uri and update_auth_type):
-                logging.warning("Keychain entry update requires valid \"uri\" and \"auth_type\" parameters.")
+            update_tag = update_entry.get("tag")
+            if not ((update_uri and update_auth_type) or update_tag):
+                logging.warning("BDBag keychain entry update requires either a pair of valid \"uri\" and \"auth_type\" "
+                                "parameters or a \"tag\" parameter to match keychain entries against.")
                 continue
-            update_uri = update_uri.lower().strip()
+            update_uri = update_uri.lower().strip() if update_uri else None
             uri = entry.get("uri", "").lower().strip()
-            update_auth_type = update_auth_type.lower().strip()
+            update_auth_type = update_auth_type.lower().strip() if update_auth_type else None
             auth_type = entry.get("auth_type", "").lower().strip()
-            if (uri == update_uri) and (auth_type == update_auth_type):
+            tag = entry.get("tag")
+            if (uri == update_uri) and (auth_type == update_auth_type) or \
+                    ((tag is not None and update_tag is not None) and tag == update_tag):
                 skip = True
                 continue
         if not skip:
