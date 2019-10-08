@@ -478,6 +478,14 @@ class TestAPI(BaseTest):
             self.assertTrue(ospif(archive_file))
         except Exception as e:
             self.fail(get_typed_exception(e))
+    
+    def test_archive_bag_tar_with_trailing_slash(self):
+        logger.info(self.getTestHeader('archive bag tar format'))
+        try:
+            archive_file = bdb.archive_bag(self.test_bag_dir + os.sep, 'tar')
+            self.assertTrue(ospif(archive_file))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
 
     def test_archive_bag_incomplete_structure(self):
         logger.info(self.getTestHeader('archive incomplete bag zip format'))
