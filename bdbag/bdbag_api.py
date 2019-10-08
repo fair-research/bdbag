@@ -316,6 +316,9 @@ def archive_bag(bag_path, bag_archiver):
         logger.error("Error while archiving bag: %s", e)
         raise e
 
+    if bag_path[-1] == os.sep:
+        bag_path = bag_path[:-1]
+
     logger.info("Archiving bag (%s): %s" % (bag_archiver, bag_path))
     tarmode = None
     archive = None
