@@ -309,6 +309,7 @@ def make_bag(bag_path,
 
 def archive_bag(bag_path, bag_archiver):
     bag_archiver = bag_archiver.lower()
+    bag_path = bag_path.rstrip(os.path.sep)
 
     try:
         validate_bag_structure(bag_path, skip_remote=True)
