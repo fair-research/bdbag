@@ -1,5 +1,11 @@
 # CHANGE LOG
 
+## 1.5.6
+* Fix [#34](https://github.com/fair-research/bdbag/issues/34): New file hashes for existing manifest entries generated from remote-file-manifests don't get updated in bags.
+* Fix [#36](https://github.com/fair-research/bdbag/issues/36): Directory paths with slash at the end during "archive_bag" results in a malformed archive name.
+* Added `update_keychain` API function in `auth/keychain.py` for add/update/delete of keychain entries.
+* Added Python 3.7 support to `setup.py` metadata and travis builds.
+
 ## 1.5.5
 
 * Ensure tag file manifest entries for additional tag files uses 
