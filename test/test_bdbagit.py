@@ -16,8 +16,7 @@
 # limitations under the License.
 #
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import (absolute_import, division, print_function, unicode_literals)
 import platform
 import codecs
 import datetime
@@ -36,6 +35,10 @@ from os.path import join as j
 from bdbag import bdbagit as bagit
 import mock
 
+if sys.version_info > (3,):
+    from io import StringIO
+else:
+    from StringIO import StringIO
 
 logger = logging.getLogger()
 
@@ -54,6 +57,9 @@ class SelfCleaningTestCase(unittest.TestCase):
 
     def setUp(self):
         super(SelfCleaningTestCase, self).setUp()
+        self.stream = StringIO()
+        self.handler = logging.StreamHandler(self.stream)
+        logger.addHandler(self.handler)
 
         self.starting_directory = os.getcwd()   # FIXME: remove this after we stop changing directories in bagit.py
         self.tmpdir = tempfile.mkdtemp()
@@ -797,6 +803,21 @@ Tag-File-Character-Encoding: UTF-8
             bag.save()
 
         self.assertEqual('Cannot save bag to non-existent or inaccessible directory %s' % self.tmpdir,
+                         str(error_catcher.exception))
+
+    @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')
+    def test_save_bag_with_unwritable_source(self):
+        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
+        bag = bagit.make_bag(self.tmpdir, checksums=['sha256'])
+        path_suffixes = ('', 'loc')
+
+        for path_suffix in reversed(path_suffixes):
+            os.chmod(j(self.tmpdir, 'data', path_suffix), 0o500)
+
+        with self.assertRaises(bagit.BagError) as error_catcher:
+            bag.save()
+
+        self.assertEqual('Missing permissions to move all files and directories',
                          str(error_catcher.exception))
 
     @unittest.skipIf(platform.system() == "Windows", 'Unit test compatibility issue on Windows')

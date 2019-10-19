@@ -29,6 +29,7 @@ from os.path import exists as ospe
 from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg
 from bdbag.fetch import fetcher
+from bdbag.fetch.transports.fetch_http import HTTPFetchTransport
 from bdbag.fetch.auth import cookies
 from bdbag.fetch.auth.keychain import read_keychain, update_keychain, get_auth_entries
 from test.test_common import BaseTest
@@ -39,6 +40,18 @@ else:
     from StringIO import StringIO
 
 logger = logging.getLogger()
+
+
+class CustomTestFetchTransport(HTTPFetchTransport):
+
+    def __init__(self, **kwargs):
+        super(CustomTestFetchTransport, self).__init__(**kwargs)
+
+    def fetch(self, url, output_path, **kwargs):
+        return super(CustomTestFetchTransport, self).fetch(url, output_path, **kwargs)
+
+    def cleanup(self):
+        super(CustomTestFetchTransport, self).cleanup()
 
 
 class TestRemoteAPI(BaseTest):
@@ -126,7 +139,7 @@ class TestRemoteAPI(BaseTest):
         logger.info(self.getTestHeader('create, resolve, and validate bag from remote file manifest'))
         try:
             self._test_bag_with_remote_file_manifest()
-            bdb.resolve_fetch(self.test_data_dir)
+            self.assertTrue(bdb.resolve_fetch(self.test_data_dir), "Fetch incomplete")
             bdb.validate_bag(self.test_data_dir, fast=True)
             bdb.validate_bag(self.test_data_dir, fast=False)
         except Exception as e:
@@ -135,7 +148,7 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_http(self):
         logger.info(self.getTestHeader('test resolve fetch http'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir, cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir, cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
         except Exception as e:
@@ -144,7 +157,8 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_http_encoded_filename(self):
         logger.info(self.getTestHeader('test resolve fetch http with encoded filename'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_http_encoded_filename_dir, cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_encoded_filename_dir, cookie_scan=False),
+                            "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_http_encoded_filename_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_encoded_filename_dir, fast=False)
         except Exception as e:
@@ -173,7 +187,7 @@ class TestRemoteAPI(BaseTest):
             self.assertExpectedMessages(["HTTP GET Failed for URL",
                                          "HTTP Request Exception",
                                          "Transfer protocol",
-                                         "is not supported by this implementation"],
+                                         "is not supported"],
                                         output)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
@@ -181,7 +195,9 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_incomplete(self):
         logger.info(self.getTestHeader('test resolve fetch incomplete'))
         try:
-            bdb.resolve_fetch(self.test_bag_incomplete_fetch_dir, force=False, cookie_scan=False, quiet=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_incomplete_fetch_dir,
+                                              force=False, cookie_scan=False, quiet=False),
+                            "Fetch incomplete")
             bdb.validate_bag(self.test_bag_incomplete_fetch_dir, fast=True)
             bdb.validate_bag(self.test_bag_incomplete_fetch_dir, fast=False)
         except Exception as e:
@@ -190,7 +206,10 @@ class TestRemoteAPI(BaseTest):
     def _test_resolve_fetch_http_with_filter(self, expr, files):
         logger.info(self.getTestHeader('test resolve fetch http with filter expression "%s"' % expr))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir, filter_expr=expr, cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              filter_expr=expr,
+                                              cookie_scan=False),
+                            "Fetch incomplete")
             for test_file in files:
                 self.assertTrue(ospif(ospj(self.test_bag_fetch_http_dir, test_file)))
         except Exception as e:
@@ -222,8 +241,9 @@ class TestRemoteAPI(BaseTest):
                                                        create=True)
 
             patched_requests_get.start()
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, 'test-keychain-1.json'), cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              keychain_file=ospj(self.test_config_dir, 'test-keychain-1.json'),
+                                              cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
         except Exception as e:
@@ -232,8 +252,9 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_http_basic_auth_get_bad_key(self):
         logger.info(self.getTestHeader('test resolve fetch http basic auth GET with bad key'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, 'test-keychain-bad-1.json'), cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              keychain_file=ospj(self.test_config_dir, 'test-keychain-bad-1.json'),
+                                              cookie_scan=False))
             output = self.stream.getvalue()
             self.assertExpectedMessages(["Missing required parameters [username, password]"], output)
         except Exception as e:
@@ -251,8 +272,10 @@ class TestRemoteAPI(BaseTest):
                                                         auth=None,
                                                         create=True)
             patched_requests_post.start()
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, keychain_file), cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              keychain_file=ospj(self.test_config_dir, keychain_file),
+                                              cookie_scan=False),
+                            "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
         except Exception as e:
@@ -269,8 +292,9 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_http_cookie_auth(self):
         logger.info(self.getTestHeader('test resolve fetch http cookie auth'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, 'test-keychain-4.json'), cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              keychain_file=ospj(self.test_config_dir, 'test-keychain-4.json'),
+                                              cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
         except Exception as e:
@@ -293,8 +317,9 @@ class TestRemoteAPI(BaseTest):
                                                             create=True)
 
             patched_requests_get_auth.start()
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, 'test-keychain-6.json'), cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                            keychain_file=ospj(self.test_config_dir, 'test-keychain-6.json'),
+                            cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
         except Exception as e:
@@ -319,8 +344,9 @@ class TestRemoteAPI(BaseTest):
                                                             create=True)
 
             patched_requests_get_auth.start()
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, 'test-keychain-6.json'), cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                            keychain_file=ospj(self.test_config_dir, 'test-keychain-6.json'),
+                                              cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
         except Exception as e:
@@ -345,8 +371,10 @@ class TestRemoteAPI(BaseTest):
                                                             create=True)
 
             patched_requests_get_auth.start()
-            bdb.resolve_fetch(self.test_bag_fetch_http_dir,
-                              keychain_file=ospj(self.test_config_dir, 'test-keychain-7.json'), cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              keychain_file=ospj(self.test_config_dir, 'test-keychain-7.json'),
+                                              cookie_scan=False),
+                            "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
             output = self.stream.getvalue()
@@ -357,7 +385,7 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_ark(self):
         logger.info(self.getTestHeader('test resolve fetch ark'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_ark_dir, cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_ark_dir, cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ark_dir, fast=False)
         except Exception as e:
@@ -407,9 +435,29 @@ class TestRemoteAPI(BaseTest):
                                                           create=True)
             patched_resolve_ark_get.start()
 
-            bdb.resolve_fetch(self.test_bag_fetch_ark2_dir, cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_ark2_dir, cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_ark2_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ark2_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_bad_ark(self):
+        logger.info(self.getTestHeader('test resolve fetch bad ark'))
+        try:
+            self.assertFalse(bdb.resolve_fetch(self.test_bag_fetch_ark_bad_dir,
+                                               config_file=ospj(self.test_config_dir, 'test-config-3.json'),
+                                               cookie_scan=False))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["No file locations were found for identifier"], output)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_ark_bad_response(self):
+        logger.info(self.getTestHeader('test resolve fetch ark bad response'))
+        try:
+            self.assertFalse(bdb.resolve_fetch(self.test_bag_fetch_ark2_dir,
+                                               config_file=ospj(self.test_config_dir, 'test-config-3.json'),
+                                               cookie_scan=False), "Fetch complete")
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -472,7 +520,7 @@ class TestRemoteAPI(BaseTest):
                                                           create=True)
             patched_resolve_doi_get.start()
 
-            bdb.resolve_fetch(self.test_bag_fetch_doi_dir, cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_doi_dir, cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_doi_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_doi_dir, fast=False)
         except Exception as e:
@@ -520,7 +568,7 @@ class TestRemoteAPI(BaseTest):
                                                                create=True)
             patched_resolve_dataguid_get.start()
 
-            bdb.resolve_fetch(self.test_bag_fetch_dataguid_dir, cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_dataguid_dir, cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_dataguid_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_dataguid_dir, fast=False)
         except Exception as e:
@@ -529,9 +577,36 @@ class TestRemoteAPI(BaseTest):
     def test_resolve_fetch_minid(self):
         logger.info(self.getTestHeader('test resolve fetch minid'))
         try:
-            bdb.resolve_fetch(self.test_bag_fetch_minid_dir, cookie_scan=False)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_minid_dir, cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_minid_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_minid_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_resolver_handler_not_found(self):
+        logger.info(self.getTestHeader('test resolve fetch with resolver handler not found'))
+        try:
+            self.assertFalse(bdb.resolve_fetch(self.test_bag_fetch_minid_dir,
+                                               config_file=ospj(self.test_config_dir, 'test-config-4.json'),
+                                               cookie_scan=False), "Fetch complete")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_resolver_handler_unspecified(self):
+        logger.info(self.getTestHeader('test resolve fetch with resolver handler unspecified'))
+        try:
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_minid_dir,
+                                              config_file=ospj(self.test_config_dir, 'test-config-5.json'),
+                                              cookie_scan=False), "Fetch incomplete")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_resolver_scheme_not_supported(self):
+        logger.info(self.getTestHeader('test resolve fetch with resolver scheme not supported'))
+        try:
+            self.assertFalse(bdb.resolve_fetch(self.test_bag_fetch_minid_dir,
+                                               config_file=ospj(self.test_config_dir, 'test-config-6.json'),
+                                               cookie_scan=False), "Fetch complete")
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -548,7 +623,7 @@ class TestRemoteAPI(BaseTest):
                                                       urlretrieve=mocked_urlretrieve_success)
             patched_urlretrieve.start()
 
-            bdb.resolve_fetch(self.test_bag_fetch_ftp_dir, force=True)
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_ftp_dir, force=True), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_ftp_dir, fast=False)
         except Exception as e:
@@ -567,8 +642,8 @@ class TestRemoteAPI(BaseTest):
                                                       urlretrieve=mocked_urlretrieve_success)
             patched_urlretrieve.start()
 
-            bdb.resolve_fetch(self.test_bag_fetch_auth_dir, force=True,
-                              keychain_file=ospj(self.test_config_dir, 'test-keychain-5.json'))
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_auth_dir, force=True,
+                            keychain_file=ospj(self.test_config_dir, 'test-keychain-5.json')), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_auth_dir, fast=False)
         except Exception as e:
@@ -587,9 +662,16 @@ class TestRemoteAPI(BaseTest):
                                                       urlretrieve=mocked_urlretrieve_success)
             patched_urlretrieve.start()
 
-            bdb.resolve_fetch(self.test_bag_fetch_ftp_dir, force=True)
+            self.assertFalse(bdb.resolve_fetch(self.test_bag_fetch_ftp_dir, force=True), "Fetch complete")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_tag(self):
+        logger.info(self.getTestHeader('test resolve fetch tag'))
+        try:
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_tag_dir, cookie_scan=False), "Fetch incomplete")
             output = self.stream.getvalue()
-            self.assertExpectedMessages(["FTP Request Exception"], output)
+            self.assertExpectedMessages(["The fetch entry for file", "specifies the tag URI"], output)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -890,6 +972,30 @@ class TestRemoteAPI(BaseTest):
             updated_keychain = update_keychain(deleted_entries, keychain_file=keychain_file, delete=True)
             logger.info("Updated keychain: %s" % json.dumps(updated_keychain))
             self.assertTrue(len(updated_keychain) == 3)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_custom_handler(self):
+        logger.info(self.getTestHeader('test resolve fetch custom handler'))
+        try:
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              config_file=ospj(self.test_config_dir, 'test-config-7.json'),
+                                              cookie_scan=False),
+                            "Fetch incomplete")
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_invalid_custom_handler(self):
+        logger.info(self.getTestHeader('test resolve fetch invalid custom handler'))
+        try:
+            self.assertRaisesRegex(RuntimeError,
+                                   "Unable to import specified fetch handler class: \\[foo\\.bar\\.InvalidHandler\\]",
+                                   bdb.resolve_fetch,
+                                   self.test_bag_fetch_http_dir,
+                                   config_file=ospj(self.test_config_dir, 'test-config-8.json'),
+                                   cookie_scan=False)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 

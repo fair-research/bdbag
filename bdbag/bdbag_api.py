@@ -409,7 +409,7 @@ def validate_bag(bag_path, fast=False, callback=None, config_file=DEFAULT_CONFIG
     except bdbagit.BaggingInterruptedError as e:
         logger.warning(get_typed_exception(e))
         raise e
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise RuntimeError("Unhandled exception while validating bag: %s" % e)
 
 

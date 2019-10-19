@@ -19,6 +19,15 @@ from bdbag import urlsplit, urlunquote
 Kilobyte = 1024
 Megabyte = Kilobyte ** 2
 
+SCHEME_HTTP = 'http'
+SCHEME_HTTPS = 'https'
+SCHEME_S3 = 's3'
+SCHEME_GS = 'gs'
+SCHEME_GLOBUS = 'globus'
+SCHEME_FTP = 'ftp'
+SCHEME_SFTP = 'sftp'
+SCHEME_TAG = 'tag'
+
 
 def get_transfer_summary(total_bytes, elapsed_time):
     total_secs = elapsed_time.total_seconds()

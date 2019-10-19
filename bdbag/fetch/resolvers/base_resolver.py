@@ -61,8 +61,8 @@ class BaseResolverHandler(object):
                         break
             r = session.get(resolver_url, headers=headers)
             if r.status_code != 200:
-                logger.error('HTTP GET Failed for %s with code: %s' % (r.url, r.status_code))
-                logger.error("Host %s responded:\n\n%s" % (urlsplit(r.url).netloc, r.text))
+                logger.error('HTTP GET Failed for %s with code: %s' % (resolver_url, r.status_code))
+                logger.error("Host %s responded:\n\n%s" % (urlsplit(resolver_url).netloc, r.text))
                 continue
             else:
                 urls = self.handle_response(r)
@@ -73,7 +73,7 @@ class BaseResolverHandler(object):
                     (identifier, ', '.join([url["url"] for url in urls])))
                 break
             else:
-                logger.warning("No file locations were found for identifier %s" % identifier)
+                logger.warning("No file locations were found for identifier: [%s]" % identifier)
 
         session.close()
         return urls

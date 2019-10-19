@@ -4,4 +4,4 @@ Bagging-Date: 2018-03-19
 Bagging-Time: 13:52:08 PDT
 Contact-Name: mdarcy
 Contact-Orcid: 0000-0003-2280-917X
-Payload-Oxum: 267.2
+Payload-Oxum: 490.3

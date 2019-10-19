@@ -68,3 +68,14 @@ def load_and_merge_cookie_jars(cookie_jar_paths):
             cookie.expires = None
 
     return cookie_jar
+
+
+def get_request_cookies(config):
+    cookie_jars = set()
+    fetch_config = config.get(FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG)
+    for config in fetch_config.values():
+        cookie_jar_config = config.get(COOKIE_JAR_TAG, DEFAULT_COOKIE_JAR_SEARCH_CONFIG)
+        if cookie_jar_config.get(COOKIE_JAR_SEARCH_TAG, True):
+            cookie_jars.update(set(find_cookie_jars(cookie_jar_config)))
+    cookies = load_and_merge_cookie_jars(cookie_jars)
+    return cookies

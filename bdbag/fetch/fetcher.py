@@ -13,27 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
 import datetime
+import logging
 from collections import namedtuple
 from bdbag import urlsplit, urlunquote, filter_dict
-from bdbag.bdbag_config import *
-from bdbag.fetch.transports import *
-from bdbag.fetch.auth.keychain import *
-from bdbag.fetch.auth.cookies import *
+from bdbag.bdbag_config import read_config, DEFAULT_CONFIG, DEFAULT_CONFIG_FILE, DEFAULT_KEYCHAIN_FILE, \
+    FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG, RESOLVER_CONFIG_TAG, DEFAULT_RESOLVER_CONFIG
+from bdbag.fetch.auth.keychain import read_keychain, DEFAULT_KEYCHAIN_FILE
+from bdbag.fetch.auth.cookies import get_request_cookies
 from bdbag.fetch.resolvers import resolve
+from bdbag.fetch.transports import find_fetcher
+from bdbag.fetch.transports.base_transport import BaseFetchTransport
 
 logger = logging.getLogger(__name__)
 
-UNIMPLEMENTED = "Transfer protocol \"%s\" is not supported by this implementation"
-
-SCHEME_HTTP = 'http'
-SCHEME_HTTPS = 'https'
-SCHEME_S3 = 's3'
-SCHEME_GS = 'gs'
-SCHEME_GLOBUS = 'globus'
-SCHEME_FTP = 'ftp'
-SCHEME_SFTP = 'sftp'
-SCHEME_TAG = 'tag'
+UNIMPLEMENTED = "Transfer protocol \"%s\" is not supported."
 
 FetchEntry = namedtuple("FetchEntry", ["url", "length", "filename"])
 
@@ -46,14 +41,15 @@ def fetch_bag_files(bag,
                     filter_expr=None,
                     **kwargs):
 
-    auth = read_keychain(keychain_file)
+    keychain = read_keychain(keychain_file)
     config = read_config(config_file)
     cookies = get_request_cookies(config) if kwargs.get("cookie_scan", True) else None
-
+    fetchers = kwargs.get("fetchers") or dict()
     success = True
     current = 0
     total = 0 if not callback else len(set(bag.files_to_be_fetched()))
     start = datetime.datetime.now()
+
     for entry in map(FetchEntry._make, bag.fetch_entries()):
         filename = urlunquote(entry.filename)
         if filter_expr:
@@ -71,16 +67,15 @@ def fetch_bag_files(bag,
                 missing = False
 
         if not force and not missing:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("Not fetching already present file: %s" % output_path)
-            pass
+            logger.debug("Not fetching already present file: %s" % output_path)
         else:
             result_path = fetch_file(entry.url,
                                      output_path,
-                                     auth,
+                                     keychain=keychain,
                                      size=entry.length,
                                      config=config,
                                      cookies=cookies,
+                                     fetchers=fetchers,
                                      **kwargs)
             if not result_path:
                 success = False
@@ -93,42 +88,8 @@ def fetch_bag_files(bag,
                 break
     elapsed = datetime.datetime.now() - start
     logger.info("Fetch complete. Elapsed time: %s" % elapsed)
-    cleanup_transports()
+    cleanup_fetchers(fetchers)
     return success
-
-
-def fetch_file(url, path, auth, **kwargs):
-
-    scheme = urlsplit(url).scheme.lower()
-    if SCHEME_HTTP == scheme or SCHEME_HTTPS == scheme:
-        return fetch_http.get_file(url, path, auth, **kwargs)
-    if SCHEME_FTP == scheme:
-        return fetch_ftp.get_file(url, path, auth, **kwargs)
-    if SCHEME_S3 == scheme or SCHEME_GS == scheme:
-        return fetch_boto3.get_file(url, path, auth, **kwargs)
-    if SCHEME_GLOBUS == scheme:
-        return fetch_globus.get_file(url, path, auth, **kwargs)
-    if SCHEME_TAG == scheme:  # pragma: no cover
-        logger.info("The fetch entry for file %s specifies the tag URI %s. Tag URIs may represent objects that "
-                    "cannot be directly resolved as network resources and therefore cannot be automatically fetched. "
-                    "Such files must be acquired outside of the context of this software." % (path, url))
-        return path
-
-    # if we get here, assume the url is an identifier and try to resolve it
-    config = kwargs.get("config")
-    resolver_config = config.get(RESOLVER_CONFIG_TAG, DEFAULT_RESOLVER_CONFIG) if config else DEFAULT_RESOLVER_CONFIG
-    supported_resolvers = resolver_config.keys()
-    if scheme in supported_resolvers:
-        for entry in resolve(url, resolver_config):
-            url = entry.get("url")
-            if url:
-                output_path = fetch_file(url, path, auth, **kwargs)
-                if output_path:
-                    return output_path
-        return None
-
-    logger.warning(UNIMPLEMENTED % scheme)
-    return None
 
 
 def fetch_single_file(url,
@@ -137,24 +98,52 @@ def fetch_single_file(url,
                       keychain_file=DEFAULT_KEYCHAIN_FILE,
                       **kwargs):
 
-    auth = read_keychain(keychain_file)
+    keychain = read_keychain(keychain_file)
     config = read_config(config_file)
     cookies = get_request_cookies(config) if kwargs.get("cookie_scan", True) else None
-    result_path = fetch_file(url, output_path, auth, config=config, cookies=cookies, **kwargs)
-    cleanup_transports()
+    fetchers = kwargs.get("fetchers") or dict()
+    result_path = fetch_file(url, output_path,
+                             keychain=keychain,
+                             config=config,
+                             cookies=cookies,
+                             fetchers=fetchers,
+                             **kwargs)
+    cleanup_fetchers(fetchers)
 
     return result_path
 
 
-def get_request_cookies(config):
-    fetch_config = config.get(FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG)
-    http_fetch_config = fetch_config.get("http", dict())
-    cookie_jar_config = http_fetch_config.get(COOKIE_JAR_TAG, DEFAULT_COOKIE_JAR_SEARCH_CONFIG)
-    cookies = load_and_merge_cookie_jars(find_cookie_jars(cookie_jar_config)) if \
-        cookie_jar_config.get(COOKIE_JAR_SEARCH_TAG, True) else None
-    return cookies
+def fetch_file(url, output_path, **kwargs):
+    scheme = urlsplit(url).scheme.lower()
+    config = kwargs.get("config") or DEFAULT_CONFIG
+    fetch_config = config.get(FETCH_CONFIG_TAG) or DEFAULT_FETCH_CONFIG
+    fetchers = kwargs.get("fetchers", dict())
+    fetcher = fetchers.get(scheme)
+    if not fetcher:
+        fetcher = find_fetcher(scheme, fetch_config)
+        if fetcher:
+            fetchers[scheme] = fetcher
+    if fetcher:
+        return fetcher.fetch(url, output_path, **kwargs)
+
+    # if we get here, assume the url contains an identifier scheme and try to resolve it as such
+    resolver_config = config.get(RESOLVER_CONFIG_TAG, DEFAULT_RESOLVER_CONFIG) if config else DEFAULT_RESOLVER_CONFIG
+    supported_resolvers = resolver_config.keys()
+    if scheme in supported_resolvers:
+        for entry in resolve(url, resolver_config):
+            url = entry.get("url")
+            if url:
+                result_path = fetch_file(url, output_path, **kwargs)
+                if result_path:
+                    return result_path
+        return None
+
+    logger.warning(UNIMPLEMENTED % scheme)
+    return None
 
 
-def cleanup_transports():
-    fetch_http.cleanup()
-    fetch_ftp.cleanup()
+def cleanup_fetchers(fetchers):
+    if isinstance(fetchers, dict):
+        for fetcher in fetchers.values():
+            if isinstance(fetcher, BaseFetchTransport):
+                fetcher.cleanup()

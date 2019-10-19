@@ -42,7 +42,8 @@
                     "n2t.net",
                     "identifiers.org"
                 ],
-                "prefix": null
+                "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+                "args": {"allow_automatic_redirects": "True"}
             },
             {
                 "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",

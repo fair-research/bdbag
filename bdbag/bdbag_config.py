@@ -65,6 +65,18 @@ DEFAULT_FETCH_CONFIG = {
         COOKIE_JAR_TAG: DEFAULT_COOKIE_JAR_SEARCH_CONFIG
 
     },
+    "https": {
+        "session_config": {
+            "retry_connect": 7,
+            "retry_read": 7,
+            "retry_backoff_factor": 1.0,
+            "retry_status_forcelist": [500, 502, 503, 504]
+        },
+        "allow_redirects": True,
+        "redirect_status_codes": DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES,
+        COOKIE_JAR_TAG: DEFAULT_COOKIE_JAR_SEARCH_CONFIG
+
+    },
     "s3": {
         "read_chunk_size": 10 * Megabyte,
         "read_timeout_seconds": 120,
@@ -78,7 +90,6 @@ RESOLVER_CONFIG_TAG = "resolver_config"
 DEFAULT_RESOLVER_CONFIG = {
     "ark": [
         {
-            "prefix": None,
             ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS
         },
         {
@@ -148,8 +159,7 @@ def write_config(config=DEFAULT_CONFIG, config_file=DEFAULT_CONFIG_FILE):
             cf.write(json.dumps(config if config is not None else DEFAULT_CONFIG, indent=4, sort_keys=True))
             cf.close()
     except Exception as e:
-        logger.debug("Unable to create configuration file %s. %s" %
-                     (config_file, get_typed_exception(e)))
+        logger.warning("Unable to create configuration file %s. %s" % (config_file, get_typed_exception(e)))
 
 
 def read_config(config_file, create_default=True, auto_upgrade=False):

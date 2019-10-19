@@ -589,6 +589,15 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_validate_unexpected_bag_fetch(self):
+        logger.info(self.getTestHeader('test bag validation with unexpected entries bag in fetch.txt'))
+        try:
+            bdb.validate_bag(self.test_bag_invalid_structure_fetch_dir)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["exists in fetch.txt but is not in manifest"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_validate_incomplete_bag_fast(self):
         logger.info(self.getTestHeader('test fast validation incomplete bag'))
         try:
@@ -636,7 +645,8 @@ class TestAPI(BaseTest):
         try:
             self.assertRaises(bdbagit.BagValidationError,
                               bdb.validate_bag_structure,
-                              self.test_bag_invalid_structure_fetch_dir)
+                              self.test_bag_invalid_structure_fetch_dir,
+                              skip_remote=False)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -657,6 +667,10 @@ class TestAPI(BaseTest):
                               bdb.validate_bag_structure,
                               self.test_bag_invalid_state_fetch_filesize_dir,
                               skip_remote=False)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["The size of the local file",
+                                         "does not match the size of the file",
+                                         "specified in fetch.txt"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
