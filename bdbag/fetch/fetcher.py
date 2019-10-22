@@ -43,7 +43,6 @@ def fetch_bag_files(bag,
 
     keychain = read_keychain(keychain_file)
     config = read_config(config_file)
-    cookies = get_request_cookies(config) if kwargs.get("cookie_scan", True) else None
     fetchers = kwargs.get("fetchers") or dict()
     success = True
     current = 0
@@ -69,14 +68,7 @@ def fetch_bag_files(bag,
         if not force and not missing:
             logger.debug("Not fetching already present file: %s" % output_path)
         else:
-            result_path = fetch_file(entry.url,
-                                     output_path,
-                                     keychain=keychain,
-                                     size=entry.length,
-                                     config=config,
-                                     cookies=cookies,
-                                     fetchers=fetchers,
-                                     **kwargs)
+            result_path = fetch_file(entry.url, output_path, config, keychain, fetchers, size=remote_size, **kwargs)
             if not result_path:
                 success = False
 
@@ -100,27 +92,19 @@ def fetch_single_file(url,
 
     keychain = read_keychain(keychain_file)
     config = read_config(config_file)
-    cookies = get_request_cookies(config) if kwargs.get("cookie_scan", True) else None
     fetchers = kwargs.get("fetchers") or dict()
-    result_path = fetch_file(url, output_path,
-                             keychain=keychain,
-                             config=config,
-                             cookies=cookies,
-                             fetchers=fetchers,
-                             **kwargs)
+    result_path = fetch_file(url, output_path, config, keychain, fetchers, **kwargs)
     cleanup_fetchers(fetchers)
 
     return result_path
 
 
-def fetch_file(url, output_path, **kwargs):
+def fetch_file(url, output_path, config, keychain, fetchers, **kwargs):
     scheme = urlsplit(url).scheme.lower()
-    config = kwargs.get("config") or DEFAULT_CONFIG
     fetch_config = config.get(FETCH_CONFIG_TAG) or DEFAULT_FETCH_CONFIG
-    fetchers = kwargs.get("fetchers", dict())
     fetcher = fetchers.get(scheme)
     if not fetcher:
-        fetcher = find_fetcher(scheme, fetch_config)
+        fetcher = find_fetcher(scheme, fetch_config, keychain, **kwargs)
         if fetcher:
             fetchers[scheme] = fetcher
     if fetcher:
@@ -133,7 +117,7 @@ def fetch_file(url, output_path, **kwargs):
         for entry in resolve(url, resolver_config):
             url = entry.get("url")
             if url:
-                result_path = fetch_file(url, output_path, **kwargs)
+                result_path = fetch_file(url, output_path, config, keychain, fetchers, **kwargs)
                 if result_path:
                     return result_path
         return None
@@ -143,7 +127,6 @@ def fetch_file(url, output_path, **kwargs):
 
 
 def cleanup_fetchers(fetchers):
-    if isinstance(fetchers, dict):
-        for fetcher in fetchers.values():
-            if isinstance(fetcher, BaseFetchTransport):
-                fetcher.cleanup()
+    for fetcher in fetchers.values():
+        if isinstance(fetcher, BaseFetchTransport):
+            fetcher.cleanup()

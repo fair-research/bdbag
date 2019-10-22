@@ -29,32 +29,30 @@ globus_sdk_name = "globus_sdk"
 
 class GlobusTransferFetchTransport(BaseFetchTransport):
 
-    def __init__(self, **kwargs):
-        super(GlobusTransferFetchTransport, self).__init__(**kwargs)
+    def __init__(self, config, keychain, **kwargs):
+        super(GlobusTransferFetchTransport, self).__init__(config, keychain, **kwargs)
 
     @staticmethod
     def validate_auth_config(auth):
-        if not kc.has_auth_attr(auth, 'auth_type'):
+        if not kc.has_auth_attr(auth, "auth_type"):
             return False
-        if not kc.has_auth_attr(auth, 'auth_params'):
+        if not kc.has_auth_attr(auth, "auth_params"):
             return False
-        if not kc.has_auth_attr(auth.auth_params, 'transfer_token'):
+        if not kc.has_auth_attr(auth.auth_params, "transfer_token"):
             return False
-        if not kc.has_auth_attr(auth.auth_params, 'local_endpoint'):
+        if not kc.has_auth_attr(auth.auth_params, "local_endpoint"):
             return False
 
         return True
 
-    def get_credentials(self, url, keychain):
-
+    def get_credentials(self, url):
         credentials = (None, None)
-        for auth in kc.get_auth_entries(url, keychain):
+        for auth in kc.get_auth_entries(url, self.keychain):
             if not self.validate_auth_config(auth):
                 continue
-
             auth_type = auth.get("auth_type")
             auth_params = auth.get("auth_params", {})
-            if auth_type == 'globus_transfer':
+            if auth_type == "globus_transfer":
                 transfer_token = auth_params.get("transfer_token")
                 local_endpoint = auth_params.get("local_endpoint")
                 credentials = (transfer_token, local_endpoint)
@@ -80,12 +78,11 @@ class GlobusTransferFetchTransport(BaseFetchTransport):
             src_path = urlsplit(url).path
             output_path = ensure_valid_output_path(url, output_path)
             if platform.system() == "Windows":
-                dest_path = ''.join(('/', output_path.replace('\\', '/').replace(':', '')))
+                dest_path = "".join(("/", output_path.replace("\\", "/").replace(":", "")))
             else:
                 dest_path = os.path.abspath(output_path)
 
-            keychain = kwargs.get("keychain", [])
-            token, dest_endpoint = self.get_credentials(url, keychain)
+            token, dest_endpoint = self.get_credentials(url)
             if token is None:
                 logger.warning("A valid Globus Transfer access token is required to create transfers. "
                                "Check keychain.json for invalid parameters.")
@@ -108,8 +105,8 @@ class GlobusTransferFetchTransport(BaseFetchTransport):
             logger.debug("Activating destination endpoint: %s" % dest_endpoint)
             data = client.endpoint_autoactivate(dest_endpoint, if_expires_in=600)
 
-            filename = src_path.rsplit('/', 1)[-1]
-            label = "".join(("BDBag Fetch -- ", filename.replace('.', '_')))
+            filename = src_path.rsplit("/", 1)[-1]
+            label = "".join(("BDBag Fetch -- ", filename.replace(".", "_")))
 
             # get a unique ID for this transfer
             tdata = globus_sdk.TransferData(client,
@@ -128,7 +125,7 @@ class GlobusTransferFetchTransport(BaseFetchTransport):
             return output_path
 
         except Exception as e:
-            logger.error('Globus Transfer request exception: %s' % get_typed_exception(e))
+            logger.error("Globus Transfer request exception: %s" % get_typed_exception(e))
 
         return None
 

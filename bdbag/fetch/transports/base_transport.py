@@ -16,7 +16,9 @@
 
 
 class BaseFetchTransport(object):
-    def __init__(self, **kwargs):
+    def __init__(self, config, keychain, **kwargs):
+        self.config = config or dict()
+        self.keychain = keychain or list()
         self.kwargs = kwargs
 
     @classmethod

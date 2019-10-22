@@ -40,7 +40,7 @@ DEFAULT_FETCH_TRANSPORTS = {
 DEFAULT_SUPPORTED_SCHEMES = [DEFAULT_FETCH_TRANSPORTS.keys()]
 
 
-def find_fetcher(scheme, fetch_config, **kwargs):
+def find_fetcher(scheme, fetch_config, keychain, **kwargs):
     clazz = None
     config = fetch_config.get(scheme, fetch_config.get(scheme.lower(), fetch_config.get(scheme.upper()))) or {}
     handler = config.get("handler")
@@ -62,5 +62,10 @@ def find_fetcher(scheme, fetch_config, **kwargs):
         if not clazz:
             raise RuntimeError("Unable to import specified fetch handler class: [%s]" % handler)
 
-    return clazz(**kwargs)
+        if not config.get("allow_keychain", False):
+            keychain = None
+            logging.debug("Keychain will not be passed to fetch handler class [%s]. Set \"allow_keychain\":\"True\" in "
+                          "fetch config to enable keychain propagation." % handler)
+
+    return clazz(config, keychain, **kwargs)
 

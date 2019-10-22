@@ -13,8 +13,7 @@
     "bdbag_config_version": "1.5.0",
     "fetch_config": {
         "https": {
-            "handler": "test.test_remote.CustomTestFetchTransport",
-            "allow_keychain": "True",
+            "handler": "foo.bar.InvalidHandler",
             "session_config": {
                 "retry_backoff_factor": 1.0,
                 "retry_connect": 1,

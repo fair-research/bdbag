@@ -26,33 +26,30 @@ logger = logging.getLogger(__name__)
 
 class FTPFetchTransport(BaseFetchTransport):
 
-    def __init__(self, **kwargs):
-        super(FTPFetchTransport, self).__init__(**kwargs)
+    def __init__(self, config, keychain, **kwargs):
+        super(FTPFetchTransport, self).__init__(config, keychain, **kwargs)
 
     @staticmethod
     def validate_auth_config(auth):
-        if not kc.has_auth_attr(auth, 'uri'):
+        if not kc.has_auth_attr(auth, "uri"):
             return False
-        if not kc.has_auth_attr(auth, 'auth_type'):
+        if not kc.has_auth_attr(auth, "auth_type"):
             return False
-        if not kc.has_auth_attr(auth, 'auth_params'):
+        if not kc.has_auth_attr(auth, "auth_params"):
             return False
 
         return True
 
-    def get_credentials(self, url, keychain):
-
+    def get_credentials(self, url):
         credentials = (None, None)
-        for auth in kc.get_auth_entries(url, keychain):
-
+        for auth in kc.get_auth_entries(url, self.keychain):
             if not self.validate_auth_config(auth):
                 continue
-
             auth_type = auth.get("auth_type")
             auth_params = auth.get("auth_params", {})
             username = auth_params.get("username")
             password = auth_params.get("password")
-            if auth_type == 'ftp-basic':
+            if auth_type == "ftp-basic":
                 credentials = (username, password)
                 break
 
@@ -60,10 +57,9 @@ class FTPFetchTransport(BaseFetchTransport):
 
     def fetch(self, url, output_path, **kwargs):
         try:
-            keychain = kwargs.get("keychain")
             credentials = kwargs.get("credentials")
             if not credentials:
-                credentials = self.get_credentials(url, keychain)
+                credentials = self.get_credentials(url)
             output_path = ensure_valid_output_path(url, output_path)
             logger.info("Attempting FTP retrieve from URL: %s" % url)
             creds = "%s:%s@" % (credentials[0] or "anonymous", credentials[1] or "bdbag@users.noreply.github.com")
@@ -76,13 +72,13 @@ class FTPFetchTransport(BaseFetchTransport):
             urlretrieve(full_url, output_path)
             elapsed = datetime.datetime.now() - start
             total = os.path.getsize(output_path)
-            summary = get_transfer_summary(total, elapsed)
-            logger.info('File [%s] transfer successful. %s' % (output_path, summary))
+            check_transfer_size_mismatch(output_path, kwargs.get("size"), total)
+            logger.info("File [%s] transfer successful. %s" % (output_path, get_transfer_summary(total, elapsed)))
             return output_path
 
         except Exception as e:
-            logger.error('FTP Request Exception: %s' % (get_typed_exception(e)))
-            logger.warning('File transfer failed: [%s]' % output_path)
+            logger.error("FTP Request Exception: %s" % (get_typed_exception(e)))
+            logger.warning("File transfer failed: [%s]" % output_path)
 
         return None
 

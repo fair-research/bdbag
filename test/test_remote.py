@@ -29,7 +29,7 @@ from os.path import exists as ospe
 from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg
 from bdbag.fetch import fetcher
-from bdbag.fetch.transports.fetch_http import HTTPFetchTransport
+from bdbag.fetch.transports.fetch_http import BaseFetchTransport, HTTPFetchTransport
 from bdbag.fetch.auth import cookies
 from bdbag.fetch.auth.keychain import read_keychain, update_keychain, get_auth_entries
 from test.test_common import BaseTest
@@ -44,14 +44,22 @@ logger = logging.getLogger()
 
 class CustomTestFetchTransport(HTTPFetchTransport):
 
-    def __init__(self, **kwargs):
-        super(CustomTestFetchTransport, self).__init__(**kwargs)
+    def __init__(self, config, keychain, **kwargs):
+        super(CustomTestFetchTransport, self).__init__(config, keychain, **kwargs)
+        if self.keychain:
+            logging.debug("Got propagated keychain: %s" % json.dumps(self.keychain))
 
     def fetch(self, url, output_path, **kwargs):
         return super(CustomTestFetchTransport, self).fetch(url, output_path, **kwargs)
 
     def cleanup(self):
         super(CustomTestFetchTransport, self).cleanup()
+
+
+class BadCustomTestFetchTransport(BaseFetchTransport):
+
+    def __init__(self, config, keychain, **kwargs):
+        super(BadCustomTestFetchTransport, self).__init__(config, keychain, **kwargs)
 
 
 class TestRemoteAPI(BaseTest):
@@ -151,6 +159,16 @@ class TestRemoteAPI(BaseTest):
             self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir, cookie_scan=False), "Fetch incomplete")
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_unexpected_filesize(self):
+        logger.info(self.getTestHeader('test resolve fetch http unexpected filesize warning'))
+        try:
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_unexpected_filesize_dir, cookie_scan=False),
+                            "Fetch incomplete")
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["transfer size mismatch. Expected 200 bytes but received 201 bytes"], output)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -975,15 +993,44 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    def test_resolve_fetch_custom_handler(self):
-        logger.info(self.getTestHeader('test resolve fetch custom handler'))
+    def test_resolve_fetch_custom_handler_no_keychain(self):
+        logger.info(self.getTestHeader('test resolve fetch custom handler no keychain'))
         try:
             self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
                                               config_file=ospj(self.test_config_dir, 'test-config-7.json'),
                                               cookie_scan=False),
                             "Fetch incomplete")
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Keychain will not be passed to fetch handler class"], output)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_custom_handler_with_keychain(self):
+        logger.info(self.getTestHeader('test resolve fetch custom handler with keychain'))
+        try:
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              config_file=ospj(self.test_config_dir, 'test-config-8.json'),
+                                              keychain_file=ospj(self.test_config_dir, 'test-keychain-9.json'),
+                                              cookie_scan=False),
+                            "Fetch incomplete")
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Got propagated keychain: ", "ftp://ftp.nist.gov/"], output)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
+            bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_bad_custom_handler(self):
+        logger.info(self.getTestHeader('test resolve fetch bad custom handler'))
+        try:
+            self.assertRaisesRegex(NotImplementedError,
+                                   "Method must be implemented by subclass",
+                                   bdb.resolve_fetch,
+                                   self.test_bag_fetch_http_dir,
+                                   config_file=ospj(self.test_config_dir, 'test-config-9.json'),
+                                   cookie_scan=False)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
@@ -994,7 +1041,7 @@ class TestRemoteAPI(BaseTest):
                                    "Unable to import specified fetch handler class: \\[foo\\.bar\\.InvalidHandler\\]",
                                    bdb.resolve_fetch,
                                    self.test_bag_fetch_http_dir,
-                                   config_file=ospj(self.test_config_dir, 'test-config-8.json'),
+                                   config_file=ospj(self.test_config_dir, 'test-config-10.json'),
                                    cookie_scan=False)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))

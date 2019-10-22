@@ -32,8 +32,9 @@ CHUNK_SIZE = 10 * Megabyte
 
 class BOTO3FetchTransport(BaseFetchTransport):
 
-    def __init__(self, **kwargs):
-        super(BOTO3FetchTransport, self).__init__(**kwargs)
+    def __init__(self, config, keychain, **kwargs):
+        super(BOTO3FetchTransport, self).__init__(config, keychain, **kwargs)
+        self.config = config or DEFAULT_FETCH_CONFIG[SCHEME_S3]
 
     @staticmethod
     def import_boto3():
@@ -47,26 +48,23 @@ class BOTO3FetchTransport(BaseFetchTransport):
                 raise RuntimeError(
                     "Unable to find required module. Ensure that the Python package \"boto3\" is installed.", e)
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            BOTO3.set_stream_logger('')
+            BOTO3.set_stream_logger("")
 
     @staticmethod
     def validate_auth_config(auth):
-        if not kc.has_auth_attr(auth, 'auth_type'):
+        if not kc.has_auth_attr(auth, "auth_type"):
             return False
 
         return True
 
-    def get_credentials(self, url, keychain):
-
+    def get_credentials(self, url):
         credentials = None
-        for auth in kc.get_auth_entries(url, keychain):
-
+        for auth in kc.get_auth_entries(url, self.keychain):
             if not self.validate_auth_config(auth):
                 continue
-
             auth_type = auth.get("auth_type")
             auth_params = auth.get("auth_params")
-            if auth_type == 'aws-credentials':
+            if auth_type == "aws-credentials":
                 credentials = auth_params
                 break
 
@@ -79,11 +77,7 @@ class BOTO3FetchTransport(BaseFetchTransport):
         try:
             self.import_boto3()
 
-            bdbag_config = kwargs.get("config", DEFAULT_CONFIG)
-            fetch_config = bdbag_config.get(FETCH_CONFIG_TAG, DEFAULT_FETCH_CONFIG)
-            config = fetch_config.get(SCHEME_S3, DEFAULT_FETCH_CONFIG[SCHEME_S3])
-            keychain = kwargs.get("keychain", [])
-            credentials = self.get_credentials(url, keychain) or {}
+            credentials = self.get_credentials(url) or {}
             key = credentials.get("key")
             secret = credentials.get("secret")
             token = credentials.get("token")
@@ -97,12 +91,12 @@ class BOTO3FetchTransport(BaseFetchTransport):
 
             if role_arn:
                 try:
-                    sts = session.client('sts')
-                    response = sts.assume_role(RoleArn=role_arn, RoleSessionName='BDBag-Fetch', DurationSeconds=3600)
-                    temp_credentials = response['Credentials']
-                    key = temp_credentials['AccessKeyId']
-                    secret = temp_credentials['SecretAccessKey']
-                    token = temp_credentials['SessionToken']
+                    sts = session.client("sts")
+                    response = sts.assume_role(RoleArn=role_arn, RoleSessionName="BDBag-Fetch", DurationSeconds=3600)
+                    temp_credentials = response["Credentials"]
+                    key = temp_credentials["AccessKeyId"]
+                    secret = temp_credentials["SecretAccessKey"]
+                    token = temp_credentials["SessionToken"]
                 except Exception as e:
                     raise RuntimeError(
                         "Unable to get temporary credentials using arn [%s]. %s" % (role_arn, get_typed_exception(e)))
@@ -126,16 +120,16 @@ class BOTO3FetchTransport(BaseFetchTransport):
 
             logger.info("Attempting GET from URL: %s" % url)
             response = s3_client.get_object(Bucket=upr.netloc, Key=upr.path.lstrip("/"))
-            chunk_size = config.get("read_chunk_size", CHUNK_SIZE)
-            max_retries = config.get("max_read_retries", 5)
+            chunk_size = self.config.get("read_chunk_size", CHUNK_SIZE)
+            max_retries = self.config.get("max_read_retries", 5)
             retry_count = 0
             total = 0
 
             logger.debug("Transferring file %s to %s" % (url, output_path))
             start = datetime.datetime.now()
-            with open(output_path, 'wb') as data_file:
+            with open(output_path, "wb") as data_file:
                 stream = response["Body"]
-                stream.set_socket_timeout(config.get("read_timeout_seconds", 120))
+                stream.set_socket_timeout(self.config.get("read_timeout_seconds", 120))
                 chunk = None
                 while True:
                     while retry_count < max_retries:
@@ -154,19 +148,19 @@ class BOTO3FetchTransport(BaseFetchTransport):
                     total += len(chunk)
                 stream.close()
             elapsed_time = datetime.datetime.now() - start
-            summary = get_transfer_summary(total, elapsed_time)
-            logger.info('File [%s] transfer successful. %s' % (output_path, summary))
+            check_transfer_size_mismatch(output_path, kwargs.get("size"), total)
+            logger.info("File [%s] transfer successful. %s" % (output_path, get_transfer_summary(total, elapsed_time)))
             success = True
         except BOTOCORE.exceptions.ClientError as e:
-            logger.error('Boto3 Client Error: %s' % get_typed_exception(e))
+            logger.error("Boto3 Client Error: %s" % get_typed_exception(e))
         except BOTOCORE.exceptions.BotoCoreError as e:
-            logger.error('Boto3 Error: %s' % get_typed_exception(e))
+            logger.error("Boto3 Error: %s" % get_typed_exception(e))
         except Exception as e:
             logger.error(get_typed_exception(e))
         finally:
             if not success:
-                logger.error('Boto3 GET Failed for URL: %s' % url)
-                logger.warning('File transfer failed: [%s]' % output_path)
+                logger.error("Boto3 GET Failed for URL: %s" % url)
+                logger.warning("File transfer failed: [%s]" % output_path)
 
         return output_path if success else None
 

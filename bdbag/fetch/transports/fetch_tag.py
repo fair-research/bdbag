@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 class TAGFetchTransport(BaseFetchTransport):
 
-    def __init__(self, **kwargs):
-        super(TAGFetchTransport, self).__init__(**kwargs)
+    def __init__(self, config, keychain, **kwargs):
+        super(TAGFetchTransport, self).__init__(config, keychain, **kwargs)
 
     @staticmethod
     def fetch(url, output_path, **kwargs):
