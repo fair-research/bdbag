@@ -101,6 +101,9 @@ class BaseTest(unittest.TestCase):
         self.test_bag_fetch_http_unexpected_filesize_dir = os.path.join(
             self.tmpdir, 'test-data', 'test-bag-fetch-http-unexpected-filesize')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_http_unexpected_filesize_dir))
+        self.test_bag_fetch_http_no_redirect_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-fetch-http-no-redirect')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_http_no_redirect_dir))
 
     def tearDown(self):
         if os.path.isdir(self.tmpdir):

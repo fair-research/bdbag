@@ -21,7 +21,7 @@ import logging
 import mimetypes
 from requests.utils import requote_uri
 from distutils.util import strtobool
-from pkg_resources import get_distribution, DistributionNotFound
+from pkg_resources import parse_version, get_distribution, DistributionNotFound
 
 __version__ = "1.5.6"
 __bagit_version__ = "1.7.0"

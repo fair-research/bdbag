@@ -162,6 +162,15 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_resolve_fetch_http_no_redirects(self):
+        logger.info(self.getTestHeader('test resolve fetch http no redirects'))
+        try:
+            self.assertFalse(bdb.resolve_fetch(self.test_bag_fetch_http_no_redirect_dir,
+                                               config_file=ospj(self.test_config_dir, 'test-config-6.json'),
+                                               cookie_scan=False), "Fetch complete")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def test_resolve_fetch_http_unexpected_filesize(self):
         logger.info(self.getTestHeader('test resolve fetch http unexpected filesize warning'))
         try:
@@ -371,7 +380,7 @@ class TestRemoteAPI(BaseTest):
             self.fail(bdbag.get_typed_exception(e))
 
     def test_resolve_fetch_http_auth_token_get_with_disallowed_redirects(self):
-        logger.info(self.getTestHeader('test resolve fetch http token auth with allowed redirect'))
+        logger.info(self.getTestHeader('test resolve fetch http token auth with disallowed redirect'))
         try:
             patched_requests_get_auth = None
 

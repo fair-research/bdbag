@@ -18,6 +18,7 @@ import sys
 import logging
 from importlib import import_module
 
+from bdbag import stob
 from bdbag.fetch import *
 from bdbag.fetch.transports.fetch_http import HTTPFetchTransport
 from bdbag.fetch.transports.fetch_ftp import FTPFetchTransport
@@ -62,7 +63,7 @@ def find_fetcher(scheme, fetch_config, keychain, **kwargs):
         if not clazz:
             raise RuntimeError("Unable to import specified fetch handler class: [%s]" % handler)
 
-        if not config.get("allow_keychain", False):
+        if not stob(config.get("allow_keychain", False)):
             keychain = None
             logging.debug("Keychain will not be passed to fetch handler class [%s]. Set \"allow_keychain\":\"True\" in "
                           "fetch config to enable keychain propagation." % handler)

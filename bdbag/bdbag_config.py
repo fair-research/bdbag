@@ -18,7 +18,7 @@ import errno
 import logging
 import json
 from collections import OrderedDict
-from bdbag import get_typed_exception, DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION
+from bdbag import parse_version, get_typed_exception, DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION
 from bdbag.fetch import Megabyte
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE, write_keychain
 
@@ -145,6 +145,8 @@ DEFAULT_CONFIG = {
     RESOLVER_CONFIG_TAG: DEFAULT_RESOLVER_CONFIG
 }
 
+DEPRECATED_CONFIG_KEYS = []
+
 
 def write_config(config=DEFAULT_CONFIG, config_file=DEFAULT_CONFIG_FILE):
     try:
@@ -187,19 +189,30 @@ def upgrade_config(config_file):
         config = json.loads(cf.read(), object_pairs_hook=OrderedDict)
 
     new_config = None
-    config_version = config.get(CONFIG_VERSION_TAG)
-    if VERSION != config_version:
-        if not config_version:
-            new_config = DEFAULT_CONFIG.copy()
-            for k, v in config.get(BAG_CONFIG_TAG, {}).items():
-                new_config[BAG_CONFIG_TAG][k] = v
-            if config.get(ID_RESOLVER_TAG):
-                new_config[ID_RESOLVER_TAG] = config[ID_RESOLVER_TAG]
-            updated = True
+    if parse_version(VERSION) > parse_version(config.get(CONFIG_VERSION_TAG, "0")):
+        new_config = DEFAULT_CONFIG.copy()
+        config_items = [BAG_CONFIG_TAG, FETCH_CONFIG_TAG, RESOLVER_CONFIG_TAG, ID_RESOLVER_TAG]
+        copy_config_items(config, new_config, config_items)
+        updated = True
 
     if updated and new_config:
         write_config(new_config, config_file)
         print("Updated configuration file [%s] to current version format: %s" % (config_file, str(VERSION)))
+
+
+def copy_config_items(old_config, new_config, key_names):
+    for key_name in key_names:
+        if key_name in DEPRECATED_CONFIG_KEYS:
+            continue
+        item = old_config.get(key_name)
+        if isinstance(item, dict):
+            for k, v in item.items():
+                if k not in DEPRECATED_CONFIG_KEYS:
+                    new_config[key_name][k] = v
+        elif isinstance(item, list):
+            new_config[key_name] = item
+
+    return new_config
 
 
 def bootstrap_config(config_file=DEFAULT_CONFIG_FILE, keychain_file=DEFAULT_KEYCHAIN_FILE, base_dir=None):

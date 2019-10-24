@@ -168,8 +168,7 @@ class HTTPFetchTransport(BaseFetchTransport):
 
             session = self.get_session(url)
             output_path = ensure_valid_output_path(url, output_path)
-
-            allow_redirects = self.config.get("allow_redirects", False)
+            allow_redirects = stob(self.config.get("allow_redirects", True))
             allow_redirects_with_token = False
             auth = self.get_auth(url) or {}
             auth_type = auth.get("auth_type")
@@ -206,6 +205,9 @@ class HTTPFetchTransport(BaseFetchTransport):
                                            "security reasons. Enable token propagation for this URL in keychain.json")
                             if session.headers.get("Authorization"):
                                 del session.headers["Authorization"]
+                    elif not allow_redirects:
+                        logger.warning("Redirects for this scheme have been disabled via the configuration file.")
+                        break
                 else:
                     break
 

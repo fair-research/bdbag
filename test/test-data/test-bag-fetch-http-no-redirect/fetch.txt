@@ -1,0 +1,2 @@
+https://github.com/fair-research/bdbag/raw/master/test/test-data/test-http/test-fetch-http.txt	201	data/test-fetch-http.txt
+https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-identifier.txt	-	data/test-fetch-identifier.txt
