@@ -24,7 +24,7 @@ from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg, bdbag_ro as bdbro, bdbagit as bdbagit, filter_dict, \
-    get_typed_exception
+    get_typed_exception, DEFAULT_CONFIG_PATH
 from bdbag.fetch.auth import keychain
 from test.test_common import BaseTest
 
@@ -72,6 +72,86 @@ class TestAPI(BaseTest):
             bdbcfg.read_config(config_file=config_file, auto_upgrade=True)
         except Exception as e:
             self.fail(get_typed_exception(e))
+
+    def test_read_with_default_config(self):
+        logger.info(self.getTestHeader('read config with explicit path'))
+        config_envar = os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR)
+        try:
+            if config_envar:
+                logging.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
+            self.assertIsNone(os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR))
+            bdbcfg.read_config()
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Loading configuration file from: %s" % bdbcfg.DEFAULT_CONFIG_FILE], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_explicit_config(self):
+        logger.info(self.getTestHeader('read config with explicit path'))
+        try:
+            config_file = ospj(self.test_config_dir, 'test-config.json')
+            bdbcfg.read_config(config_file=config_file, create_default=False)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Loading configuration file from: %s" % config_file], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_invalid_config(self):
+        logger.info(self.getTestHeader('read config with invalid path'))
+        try:
+            config_file = ospj(self.test_config_dir, 'bdbag-invalid.json')
+            bdbcfg.read_config(config_file=config_file, create_default=False)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Unable to read configuration file: [%s]. Using internal defaults." %
+                                         config_file], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_config_from_env(self):
+        logger.info(self.getTestHeader('read config from env'))
+        config_envar = os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR)
+        try:
+            if config_envar:
+                logging.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
+            self.assertIsNone(os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR))
+            config_file = ospj(self.test_config_dir, 'base-config.json')
+            os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR] = config_file
+            config = bdbcfg.read_config()
+            self.assertEqual("bdbag test", config["bag_config"]["bag_metadata"]["Contact-Name"],
+                             "Unexpected config value")
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+        finally:
+            if os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR):
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
+
+    def test_read_config_from_env_invalid(self):
+        logger.info(self.getTestHeader('read config from env invalid file path'))
+        config_envar = os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR)
+        try:
+            if config_envar:
+                logging.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
+            self.assertIsNone(os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR))
+            config_file = ospj(self.test_config_dir, 'bse-config.json')
+            os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR] = config_file
+            bdbcfg.DEFAULT_CONFIG_FILE = ospj(self.test_config_dir, 'base-config.json')
+            config = bdbcfg.read_config(create_default=False)
+            self.assertEqual("bdbag test", config["bag_config"]["bag_metadata"]["Contact-Name"],
+                             "Unexpected config value")
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Invalid configuration file path specified using environment variable %s: "
+                                         "[%s]. Falling back to default configuration file path: [%s]" %
+                                         (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_file, bdbcfg.DEFAULT_CONFIG_FILE)],
+                                        output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+        finally:
+            bdbcfg.DEFAULT_CONFIG_FILE = ospj(DEFAULT_CONFIG_PATH, 'bdbag.json')
+            if os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR):
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
 
     def test_create_keychain(self):
         logger.info(self.getTestHeader('create keychain'))
@@ -201,7 +281,7 @@ class TestAPI(BaseTest):
         try:
             bdb.revert_bag(self.test_data_dir)
             output = self.stream.getvalue()
-            self.assertExpectedMessages(["Cannot revert the bag %s because it is not a bag directory!"], output)
+            self.assertExpectedMessages(["Cannot revert the bag", "because it is not a bag directory!"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 

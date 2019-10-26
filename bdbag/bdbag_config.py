@@ -31,6 +31,7 @@ BAG_PROCESSES_TAG = "bag_processes"
 BAG_METADATA_TAG = "bag_metadata"
 CONFIG_VERSION_TAG = "bdbag_config_version"
 DEFAULT_BAG_SPEC_VERSION = "0.97"
+DEFAULT_CONFIG_FILE_ENVAR = "BDBAG_CONFIG_FILE"
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')
 DEFAULT_BAG_ALGORITHMS = ['md5', 'sha256']
 
@@ -160,22 +161,33 @@ def write_config(config=DEFAULT_CONFIG, config_file=DEFAULT_CONFIG_FILE):
         with open(config_file, 'w') as cf:
             cf.write(json.dumps(config if config is not None else DEFAULT_CONFIG, indent=4, sort_keys=True))
             cf.close()
+            logging.info("Wrote configuration file: %s" % config_file)
     except Exception as e:
         logger.warning("Unable to create configuration file %s. %s" % (config_file, get_typed_exception(e)))
 
 
-def read_config(config_file, create_default=True, auto_upgrade=False):
-    if config_file == DEFAULT_CONFIG_FILE and not os.path.isfile(config_file) and create_default:
-        write_config()
-    elif auto_upgrade:
+def read_config(config_file=None, create_default=True, auto_upgrade=False):
+    if not config_file:
+        config_file = os.getenv(DEFAULT_CONFIG_FILE_ENVAR, DEFAULT_CONFIG_FILE)
+        if not os.path.isfile(config_file) and (config_file != DEFAULT_CONFIG_FILE) and not create_default:
+            logging.warning("Invalid configuration file path specified using environment variable %s: [%s]. "
+                            "Falling back to default configuration file path: [%s]" %
+                            (DEFAULT_CONFIG_FILE_ENVAR, config_file, DEFAULT_CONFIG_FILE))
+            config_file = DEFAULT_CONFIG_FILE
+
+    if not os.path.isfile(config_file) and create_default:
+        write_config(config_file=config_file)
+
+    if os.path.isfile(config_file) and auto_upgrade:
         upgrade_config(config_file)
 
     if os.path.isfile(config_file):
+        logging.debug("Loading configuration file from: %s" % config_file)
         with open(config_file) as cf:
             config = cf.read()
     else:
         config = json.dumps(DEFAULT_CONFIG)
-        logger.warning("Unable to read configuration file: [%s]. Using internal defaults." % DEFAULT_CONFIG_FILE)
+        logger.warning("Unable to read configuration file: [%s]. Using internal defaults." % config_file)
 
     return json.loads(config, object_pairs_hook=OrderedDict)
 
@@ -209,7 +221,7 @@ def copy_config_items(old_config, new_config, key_names):
             for k, v in item.items():
                 if k not in DEPRECATED_CONFIG_KEYS:
                     new_config[key_name][k] = v
-        elif isinstance(item, list):
+        else:
             new_config[key_name] = item
 
     return new_config

@@ -35,7 +35,7 @@ FetchEntry = namedtuple("FetchEntry", ["url", "length", "filename"])
 
 def fetch_bag_files(bag,
                     keychain_file=DEFAULT_KEYCHAIN_FILE,
-                    config_file=DEFAULT_CONFIG_FILE,
+                    config_file=None,
                     force=False,
                     callback=None,
                     filter_expr=None,
@@ -86,7 +86,7 @@ def fetch_bag_files(bag,
 
 def fetch_single_file(url,
                       output_path=None,
-                      config_file=DEFAULT_CONFIG_FILE,
+                      config_file=None,
                       keychain_file=DEFAULT_KEYCHAIN_FILE,
                       **kwargs):
 

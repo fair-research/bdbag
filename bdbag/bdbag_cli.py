@@ -20,7 +20,7 @@ import logging
 import traceback
 from bdbag.bdbagit import STANDARD_BAG_INFO_HEADERS
 from bdbag import bdbag_api as bdb, inspect_path, get_typed_exception, FILTER_DOCSTRING, VERSION, BAGIT_VERSION
-from bdbag.bdbag_config import bootstrap_config, DEFAULT_CONFIG_FILE
+from bdbag.bdbag_config import bootstrap_config, DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_FILE_ENVAR
 from bdbag.fetch import fetcher
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 
@@ -158,9 +158,10 @@ def parse_cli():
 
     config_file_arg = "--config-file"
     standard_args.add_argument(
-        config_file_arg, default=DEFAULT_CONFIG_FILE, metavar='<file>',
+        config_file_arg, metavar='<file>',
         help="Optional path to a configuration file. If this argument is not specified, the configuration file "
-             "defaults to: %s " % DEFAULT_CONFIG_FILE)
+             "will be set to the value of the environment variable %s (if present) or otherwise default to: %s"
+             % (DEFAULT_CONFIG_FILE_ENVAR, DEFAULT_CONFIG_FILE))
 
     keychain_file_arg = "--keychain-file"
     standard_args.add_argument(

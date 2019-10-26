@@ -183,7 +183,7 @@ make_bag(bag_path,
          metadata=None,
          metadata_file=None,
          remote_file_manifest=None,
-         config_file=bdbag.DEFAULT_CONFIG_FILE,
+         config_file=None,
          ro_metadata=None,
          ro_metadata_file=None)
 ```
@@ -215,7 +215,7 @@ materialize(input_path,
             fetch_callback=None,
             validation_callback=None,
             keychain_file=DEFAULT_KEYCHAIN_FILE,
-            config_file=DEFAULT_CONFIG_FILE,
+            config_file=None,
             filter_expr=None,
             force=False,
             **kwargs)
@@ -277,7 +277,7 @@ resolve_fetch(bag_path,
               force=False,
               callback=None,
               keychain_file=DEFAULT_KEYCHAIN_FILE,
-              config_file=DEFAULT_CONFIG_FILE,
+              config_file=None,
               filter_expr=None,
               **kwargs)
 ```

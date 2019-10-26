@@ -81,7 +81,7 @@ def ensure_bag_path_exists(bag_path, save=True):
 
 def revert_bag(bag_path):
     if not is_bag(bag_path):
-        logger.warning("Cannot revert the bag %s because it is not a bag directory!")
+        logger.warning("Cannot revert the bag %s because it is not a bag directory!" % bag_path)
         return
 
     for path in os.listdir(bag_path):
@@ -227,7 +227,7 @@ def make_bag(bag_path,
              metadata=None,
              metadata_file=None,
              remote_file_manifest=None,
-             config_file=DEFAULT_CONFIG_FILE,
+             config_file=None,
              ro_metadata=None,
              ro_metadata_file=None):
     bag = None
@@ -391,7 +391,7 @@ def extract_bag(bag_path, output_path=None, temp=False):
     return extracted_path
 
 
-def validate_bag(bag_path, fast=False, callback=None, config_file=DEFAULT_CONFIG_FILE):
+def validate_bag(bag_path, fast=False, callback=None, config_file=None):
     config = read_config(config_file)
     bag_config = config['bag_config']
     bag_processes = bag_config.get('bag_processes', 1)
@@ -504,7 +504,7 @@ def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False
     return remote_files
 
 
-def generate_ro_manifest(bag_path, overwrite=False, config_file=DEFAULT_CONFIG_FILE):
+def generate_ro_manifest(bag_path, overwrite=False, config_file=None):
     bag = bdbagit.BDBag(bag_path)
     bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata", "manifest.json"))
     exists = os.path.isfile(bag_ro_metadata_path)
@@ -551,7 +551,7 @@ def resolve_fetch(bag_path,
                   force=False,
                   callback=None,
                   keychain_file=DEFAULT_KEYCHAIN_FILE,
-                  config_file=DEFAULT_CONFIG_FILE,
+                  config_file=None,
                   filter_expr=None,
                   **kwargs):
     bag = bdbagit.BDBag(bag_path)
@@ -576,7 +576,7 @@ def materialize(input_path,
                 fetch_callback=None,
                 validation_callback=None,
                 keychain_file=DEFAULT_KEYCHAIN_FILE,
-                config_file=DEFAULT_CONFIG_FILE,
+                config_file=None,
                 filter_expr=None,
                 force=False,
                 **kwargs):

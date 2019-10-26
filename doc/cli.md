@@ -178,7 +178,7 @@ Validate a bag against the profile specified by the bag's `BagIt-Profile-Identif
 #### `--config-file <file>`
 Optional path to a *bdbag* configuration file. The configuration file format is described
 [here](./config.md#bdbag.json).
-If this argument is not specified, the configuration file defaults to: `~/.bdbag/bdbag.json`
+If this argument is not specified, the configuration file will be set to the value of the environment variable `BDBAG_CONFIG_FILE` (if present) or otherwise default to `~/.bdbag/bdbag.json`.
 
 ----
 #### `--keychain-file <file>`
