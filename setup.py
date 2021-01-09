@@ -60,7 +60,7 @@ setup(
         'bagit'
     ],
     install_requires=['pytz',
-                      'tzlocal',
+                      'tzlocal==2.1',
                       'certifi',
                       'requests>=2.7.0',
                       'setuptools_scm',  # for bagit<=1.7.0 which does not properly include it in install_requires
@@ -80,10 +80,9 @@ setup(
         "Operating System :: Microsoft :: Windows",
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7'
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8'
     ]
 )
 
