@@ -18,7 +18,8 @@ import errno
 import logging
 import json
 from collections import OrderedDict
-from bdbag import parse_version, get_typed_exception, DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION
+from bdbag import parse_version, get_typed_exception, safe_move, \
+    DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION
 from bdbag.fetch import Megabyte
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE, write_keychain
 
@@ -56,8 +57,8 @@ DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES = [301, 302, 303, 307, 308]
 DEFAULT_FETCH_CONFIG = {
     "http": {
         "session_config": {
-            "retry_connect": 5,
-            "retry_read": 5,
+            "retry_connect": 2,
+            "retry_read": 4,
             "retry_backoff_factor": 1.0,
             "retry_status_forcelist": [500, 502, 503, 504]
         },
@@ -68,8 +69,8 @@ DEFAULT_FETCH_CONFIG = {
     },
     "https": {
         "session_config": {
-            "retry_connect": 7,
-            "retry_read": 7,
+            "retry_connect": 2,
+            "retry_read": 4,
             "retry_backoff_factor": 1.0,
             "retry_status_forcelist": [500, 502, 503, 504]
         },
@@ -80,13 +81,13 @@ DEFAULT_FETCH_CONFIG = {
     },
     "s3": {
         "read_chunk_size": 10 * Megabyte,
-        "read_timeout_seconds": 120,
-        "max_read_retries": 5
+        "read_timeout_seconds": 60,
+        "max_read_retries": 3
     }
 }
 
 ID_RESOLVER_TAG = "identifier_resolvers"
-DEFAULT_ID_RESOLVERS = ['n2t.net', 'identifiers.org']
+DEFAULT_ID_RESOLVERS = ['identifiers.org', 'n2t.net']
 RESOLVER_CONFIG_TAG = "resolver_config"
 DEFAULT_RESOLVER_CONFIG = {
     "ark": [
@@ -146,7 +147,19 @@ DEFAULT_CONFIG = {
     RESOLVER_CONFIG_TAG: DEFAULT_RESOLVER_CONFIG
 }
 
-DEPRECATED_CONFIG_KEYS = []
+
+def get_updated_config_keys(config):
+    updated_config_keys = list()
+    if parse_version(config.get(CONFIG_VERSION_TAG, "0")) < parse_version("1.6.0"):
+        updated_config_keys.append([FETCH_CONFIG_TAG, ID_RESOLVER_TAG, RESOLVER_CONFIG_TAG])
+
+    return updated_config_keys
+
+
+def get_deprecated_config_keys(config):
+    deprecated_config_keys = list()
+
+    return deprecated_config_keys
 
 
 def write_config(config=DEFAULT_CONFIG, config_file=DEFAULT_CONFIG_FILE):
@@ -208,18 +221,21 @@ def upgrade_config(config_file):
         updated = True
 
     if updated and new_config:
+        safe_move(config_file)
         write_config(new_config, config_file)
         print("Updated configuration file [%s] to current version format: %s" % (config_file, str(VERSION)))
 
 
 def copy_config_items(old_config, new_config, key_names):
     for key_name in key_names:
-        if key_name in DEPRECATED_CONFIG_KEYS:
+        if key_name in get_deprecated_config_keys(old_config):
             continue
         item = old_config.get(key_name)
-        if isinstance(item, dict):
+        if (item is None) or (key_name in get_updated_config_keys(old_config)):
+            new_config[key_name] = DEFAULT_CONFIG[key_name]
+        elif isinstance(item, dict):
             for k, v in item.items():
-                if k not in DEPRECATED_CONFIG_KEYS:
+                if k not in get_deprecated_config_keys(old_config):
                     new_config[key_name][k] = v
         else:
             new_config[key_name] = item

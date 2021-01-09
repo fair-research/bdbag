@@ -277,11 +277,20 @@ class TestAPI(BaseTest):
             self.fail(get_typed_exception(e))
 
     def test_revert_non_bag(self):
-        logger.info(self.getTestHeader('revert bag'))
+        logger.info(self.getTestHeader('revert non-bag'))
         try:
             bdb.revert_bag(self.test_data_dir)
             output = self.stream.getvalue()
             self.assertExpectedMessages(["Cannot revert the bag", "because it is not a bag directory!"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_revert_no_payload(self):
+        logger.info(self.getTestHeader('revert no data directory'))
+        try:
+            bdb.revert_bag(self.test_bag_no_data_dir)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Bag directory", "does not contain a \"data\" directory to revert."], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -578,6 +587,39 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_extract_bag_archive_zip_to_target(self):
+        logger.info(self.getTestHeader('extract bag zip format to target'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'),
+                                       output_path=ospj(self.tmpdir, "test-bag-extract-output-dir"),
+                                       temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_zip_no_parent_warning(self):
+        logger.info(self.getTestHeader('extract bag zip format with no parent dir archive root'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-no-parent.zip'), temp=True)
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages([
+                "Expecting single bag parent dir in archive but found files in the archive root"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_zip_multi_parent_warning(self):
+        logger.info(self.getTestHeader('extract bag zip format with multi parent archive root'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-multi-parent.zip'), temp=True)
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Expecting single bag parent dir but got:"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_extract_bag_archive_zip_with_relocate_existing(self):
         logger.info(self.getTestHeader('extract bag zip format, relocate existing'))
         try:
@@ -589,7 +631,25 @@ class TestAPI(BaseTest):
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
             output = self.stream.getvalue()
-            self.assertExpectedMessages(["moving existing directory"], output)
+            self.assertExpectedMessages(["Destination", "already exists, moving to"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_zip_with_relocate_existing_to_target(self):
+        logger.info(self.getTestHeader('extract bag zip format, relocate existing to target'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'),
+                                       output_path=ospj(self.tmpdir, "test-bag-extract-output-dir"),
+                                       temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'),
+                                       output_path=ospj(self.tmpdir, "test-bag-extract-output-dir"), temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Source", "and destination", "already exist, moving destination to"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -600,6 +660,27 @@ class TestAPI(BaseTest):
             self.assertTrue(ospe(bag_path))
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_tgz_no_parent_warning(self):
+        logger.info(self.getTestHeader('extract bag tgz format with no parent dir archive root'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-no-parent.tgz'), temp=True)
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages([
+                "Expecting single bag parent dir in archive but found files in the archive root"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_tgz_multi_parent_warning(self):
+        logger.info(self.getTestHeader('extract bag tgz format with multi parent archive root'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-multi-parent.tgz'), temp=True)
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Expecting single bag parent dir but got:"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -813,7 +894,7 @@ class TestAPI(BaseTest):
                 "folder": "../data/",
             },
             "mediatype": "text/plain",
-            "uri": "http://n2t.net/ark:/57799/b9dd5t"
+            "uri": "http://identifiers.org/ark:/57799/b9dd5t"
         },
         {
             "mediatype": "text/plain",
@@ -834,7 +915,8 @@ class TestAPI(BaseTest):
         try:
             bdb.make_bag(self.test_data_dir, algs=['md5', 'sha1', 'sha256', 'sha512'],
                          remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
-            bdb.generate_ro_manifest(self.test_data_dir, overwrite=True)
+            bdb.generate_ro_manifest(self.test_data_dir, config_file=ospj(self.test_config_dir, 'base-config.json'),
+                                     overwrite=True)
             ro = bdbro.read_bag_ro_metadata(self.test_data_dir)
             old_agg_dict = dict()
             for entry in ro.get("aggregates", []):
@@ -856,7 +938,8 @@ class TestAPI(BaseTest):
         try:
             bdb.make_bag(self.test_data_dir, algs=['md5', 'sha1', 'sha256', 'sha512'],
                          remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
-            bdb.generate_ro_manifest(self.test_data_dir, overwrite=True)
+            bdb.generate_ro_manifest(self.test_data_dir, config_file=ospj(self.test_config_dir, 'base-config.json'),
+                                     overwrite=True)
             ro = bdbro.read_bag_ro_metadata(self.test_data_dir)
             agg_dict = dict()
             for entry in ro.get("aggregates", []):

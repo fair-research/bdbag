@@ -59,10 +59,7 @@ def read_metadata(metadata_file):
 def cleanup_bag(bag_path, save=False):
     logger.info("Cleaning up bag dir: %s" % bag_path)
     if save:
-        saved_bag_path = ''.join([bag_path, '_', datetime.strftime(datetime.now(), "%Y-%m-%d_%H.%M.%S")])
-        logger.info("Moving bag %s to %s" % (bag_path, saved_bag_path))
-        shutil.move(bag_path, saved_bag_path)
-        return saved_bag_path
+        return safe_move(bag_path)
     else:
         shutil.rmtree(bag_path)
         return None
@@ -90,12 +87,15 @@ def revert_bag(bag_path):
                 os.remove(os.path.join(bag_path, path))
 
     data_path = os.path.join(bag_path, 'data')
-    for path in os.listdir(data_path):
-        old_path = os.path.join(data_path, path)
-        new_path = os.path.join(bag_path, path)
-        logger.debug("Bag revert: moving payload file %s to %s", old_path, new_path)
-        os.rename(old_path, new_path)
-    os.rmdir(data_path)
+    if os.path.isdir(data_path):
+        for path in os.listdir(data_path):
+            old_path = os.path.join(data_path, path)
+            new_path = os.path.join(bag_path, path)
+            logger.debug("Bag revert: moving payload file %s to %s", old_path, new_path)
+            os.rename(old_path, new_path)
+        os.rmdir(data_path)
+    else:
+        logger.warning("Bag directory %s does not contain a \"data\" directory to revert." % bag_path)
     logging.info("Bag directory %s has been reverted back to a normal directory." % bag_path)
 
 
@@ -358,34 +358,44 @@ def extract_bag(bag_path, output_path=None, temp=False):
     if not os.path.exists(bag_path):
         raise RuntimeError("Specified bag path not found: %s" % bag_path)
 
+    # determine output path for extraction
+    extracted_path = None
     bag_dir = os.path.splitext(os.path.basename(bag_path))[0]
     if os.path.isfile(bag_path):
         if temp:
             output_path = tempfile.mkdtemp(prefix='bag_')
+        elif output_path:
+            safe_move(output_path, output_path)
         elif not output_path:
             output_path = os.path.splitext(bag_path)[0]
-            if os.path.exists(output_path):
-                newpath = ''.join([output_path, '-', datetime.strftime(datetime.now(), "%Y-%m-%d_%H.%M.%S")])
-                logger.info("Specified output path %s already exists, moving existing directory to %s" %
-                            (output_path, newpath))
-                shutil.move(output_path, newpath)
+            safe_move(output_path)
             output_path = os.path.dirname(bag_path)
+
+        # perform the extraction
         if zipfile.is_zipfile(bag_path):
             logger.info("Extracting ZIP archived file: %s" % bag_path)
             with open(bag_path, 'rb') as bag_file:
                 zipped = zipfile.ZipFile(bag_file)
+                files = zipped.namelist()
+                extracted_path = bag_parent_dir_from_archive(files)
                 zipped.extractall(output_path)
                 zipped.close()
         elif tarfile.is_tarfile(bag_path):
             logger.info("Extracting TAR/GZ/BZ2 archived file: %s" % bag_path)
             tarred = tarfile.open(bag_path)
+            files = tarred.getnames()
+            extracted_path = bag_parent_dir_from_archive(files)
             tarred.extractall(output_path)
             tarred.close()
         else:
             raise RuntimeError("Archive format not supported for file: %s"
                                "\nSupported archive formats are ZIP or TAR/GZ/BZ2" % bag_path)
 
-    extracted_path = os.path.join(output_path, bag_dir)
+    if not extracted_path:
+        extracted_path = os.path.join(output_path, bag_dir)
+    else:
+        extracted_path = os.path.join(output_path, extracted_path)
+
     logger.info("File %s was successfully extracted to directory %s" % (bag_path, extracted_path))
 
     return extracted_path
@@ -598,7 +608,7 @@ def materialize(input_path,
             raise RuntimeError("Unable to retrieve bag from: %s" % input_path)
 
     if bag_file:
-        bag_path = extract_bag(bag_file)
+        bag_path = extract_bag(bag_file, output_path)
 
     if bag_path:
         if not is_bag(bag_path):

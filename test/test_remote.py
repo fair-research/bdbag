@@ -788,7 +788,7 @@ class TestRemoteAPI(BaseTest):
         curdir = os.getcwd()
         os.chdir(self.tmpdir)
         try:
-            bdb.materialize("ark:/57799/b91H6JHBS1u2FTG")
+            bdb.materialize("minid:b91H6JHBS1u2FTG")
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
         finally:
