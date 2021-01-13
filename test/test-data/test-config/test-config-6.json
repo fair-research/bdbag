@@ -13,7 +13,7 @@
     "bdbag_config_version": "1.5.0",
     "fetch_config": {
         "https": {
-            "allow_redirects": "False",
+            "allow_redirects": false,
             "session_config": {
                 "retry_backoff_factor": 1.0,
                 "retry_connect": 1,

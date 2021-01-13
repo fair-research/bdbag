@@ -66,7 +66,7 @@ Configure the usage of the external transport via the `fetch_config` object of t
 
   * There is a single _required_ top-level string parameter with the key name `handler` which maps to the fully-qualified class name implementing the required methods of the  `bdbag.fetch.transports.base_transport.BaseFetchTransport` base class. At runtime the __bdbag__ fetch framework code will attempt to load this class via `importlib.import_module` machinery and if successful, it will be instantiated and returned to the __bdbag__ fetch framework code and the class instance cached for the duration of the bag fetch operation. Subsequently, whenever a URL is encountered in `fetch.txt` with a protocol scheme matching that of the installed handler, that handler's `fetch` method will be invoked.
 
-  * There is also an _optional_ string parameter, `allow_keychain`, which must be present and set to "True" in order to toggle the propagation of the __bdbag__ `keychain` into the handler code during the `__init__` call. If the `allow_keychain` parameter is missing or set to any other value that cannot be evaluated as a Python boolean `True`, then the value of the `keychain` variable passed to the `__init__` call will be `None`. In general, if the custom handler code has its own mechanism for managing credentials, then this parameter may be omitted. If the handler intends to make use of the __bdbag__ `keychain` that is currently in context for the current user and fetch operation, then this parameter must be present and evaluate to `True`.
+  * There is also an _optional_ string parameter, `allow_keychain`, which must be present and evaluate to `true` in order to toggle the propagation of the __bdbag__ `keychain` into the handler code during the `__init__` call. If the `allow_keychain` parameter is missing or set to any other value that cannot be evaluated as a Python boolean `True`, then the value of the `keychain` variable passed to the `__init__` call will be `None`. In general, if the custom handler code has its own mechanism for managing credentials, then this parameter may be omitted. If the handler intends to make use of the __bdbag__ `keychain` that is currently in context for the current user and fetch operation, then this parameter must be present and evaluate to `True`.
 
   * The remainder of the protocol scheme handler configuration object can consist of any valid JSON; the entire object value assigned to the _scheme_ key will be passed as the `config` parameter to the `__init__` method of the custom handler. 
 
@@ -82,7 +82,7 @@ For example, given the following `fetch_config` section:
         },
 	    "foo": {
             "handler":"my.custom.FooTransport",
-            "allow_keychain": "True",
+            "allow_keychain": true,
             "my_foo_complex_config": {
                 "bar":[
                     "a","b","c"
@@ -99,7 +99,7 @@ For the scheme `foo`, the following object will be passed as the `config` parame
 ```
 {
     "handler":"my.custom.FooTransport",
-    "allow_keychain": "True",
+    "allow_keychain": true,
     "my_foo_complex_config": {
         "bar":[
             "a","b","c"
@@ -332,7 +332,7 @@ Below is a sample `keychain.json` file:
         "auth_type": "bearer-token",
         "auth_params": {
             "token": "<token>",
-            "allow_redirects_with_token": "True"
+            "allow_redirects_with_token": true
         }
     },
     {

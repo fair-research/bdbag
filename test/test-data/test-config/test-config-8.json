@@ -14,7 +14,7 @@
     "fetch_config": {
         "https": {
             "handler": "test.test_remote.CustomTestFetchTransport",
-            "allow_keychain": "True",
+            "allow_keychain": true,
             "session_config": {
                 "retry_backoff_factor": 1.0,
                 "retry_connect": 1,
