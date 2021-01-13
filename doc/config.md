@@ -41,8 +41,78 @@ This object contains all bag-related configuration parameters.
 |`bagit_spec_version`|The version of the `bagit` specification that created bags will conform to. Valid values are "0.97" or "1.0".
 
 ##### Object: `fetch_config`
-The `fetch_config` object contains a set of child objects each keyed by the scheme of the transport protocol that the object contains configuration parameters for.
-Currently, only the `http` and `s3` transports have configuration objects that control their behavior.
+The `fetch_config` object contains a set of child objects each keyed by the scheme of the transport protocol that contains the transport handler configuration parameters.
+
+###### Custom Transports
+There is a default set of transport handlers installed with `bdbag`. In addition, `bdbag` supports 
+externally implemented transport handlers that can be plugged-in (i.e., declared as run-time imports) via the `fetch_config` configuration object in the `bdbag.json` config file. 
+This requires developers to perform some integration tasks.
+
+###### Custom Transports: Implementation
+Developers should create a class deriving from `bdbag.fetch.transports.base_transport.BaseFetchTransport` 
+and implement three required functions:
+
+  * `__init__(self, config, keychain, **kwargs)`:
+     The class constructor.  Derived classes _should_ first call `super(<derived class name>, self).__init__(config, keychain, **kwargs)` which sets the `config`, `keychain`, and `kwargs` variables as class member variables with the same names. 
+
+  * `fetch(self, url, output_path, **kwargs)`: 
+    This method should implement the logic required to transfer a file referenced by `url` to the local path referenced by `output_path`.  The `**kwargs` argument is an extensible argument dictionary that the framework _may_ populate with extra data, for example: an integer argument `size` may present (if it can be found in `fetch.txt` for a given fetch entry), representing the expected size of the remote file in bytes.
+
+  * `cleanup(self)`:
+    This method should implement any transport-specific release of resources. Note this function will be called only once per-transport at the end of a entire bag fetch, and not once per-file.
+
+###### Custom Transports: Configuration
+Configure the usage of the external transport via the `fetch_config` object of the `bdbag.json` configuration file.  The `fetch_config` object is comprised of child configuration objects keyed by a lowercase string value representing the URL protocol scheme that is being configured. When configuring an external handler, the following applies:
+
+  * There is a single _required_ top-level string parameter with the key name `handler` which maps to the fully-qualified class name implementing the required methods of the  `bdbag.fetch.transports.base_transport.BaseFetchTransport` base class. At runtime the __bdbag__ fetch framework code will attempt to load this class via `importlib.import_module` machinery and if successful, it will be instantiated and returned to the __bdbag__ fetch framework code and the class instance cached for the duration of the bag fetch operation. Subsequently, whenever a URL is encountered in `fetch.txt` with a protocol scheme matching that of the installed handler, that handler's `fetch` method will be invoked.
+
+  * There is also an _optional_ string parameter, `allow_keychain`, which must be present and set to "True" in order to toggle the propagation of the __bdbag__ `keychain` into the handler code during the `__init__` call. If the `allow_keychain` parameter is missing or set to any other value that cannot be evaluated as a Python boolean `True`, then the value of the `keychain` variable passed to the `__init__` call will be `None`. In general, if the custom handler code has its own mechanism for managing credentials, then this parameter may be omitted. If the handler intends to make use of the __bdbag__ `keychain` that is currently in context for the current user and fetch operation, then this parameter must be present and evaluate to `True`.
+
+  * The remainder of the protocol scheme handler configuration object can consist of any valid JSON; the entire object value assigned to the _scheme_ key will be passed as the `config` parameter to the `__init__` method of the custom handler. 
+
+For example, given the following `fetch_config` section:
+```
+{
+    "fetch_config": {
+        "s3": {
+            "handler":"my.custom.S3Transport",
+            "max_read_retries": 5,
+            "read_chunk_size": 10485760,
+            "read_timeout_seconds": 120
+        },
+	    "foo": {
+            "handler":"my.custom.FooTransport",
+            "allow_keychain": "True",
+            "my_foo_complex_config": {
+                "bar":[
+                    "a","b","c"
+                ],
+                "baz":{
+                    "xyz":123
+                }
+            }
+        }
+    }
+}
+```
+For the scheme `foo`, the following object will be passed as the `config` parameter to the `__init__` method of `my.custom.FooTransport` upon class instantiation:
+```
+{
+    "handler":"my.custom.FooTransport",
+    "allow_keychain": "True",
+    "my_foo_complex_config": {
+        "bar":[
+            "a","b","c"
+         ],
+        "baz":{
+            "xyz":123
+        }
+    }
+}
+```
+
+###### Default Transports: Configuration
+Currently, only the default `http` and `s3` transport handlers have configuration objects that control their behavior.
 
 | Parameter | Description
 | --- | --- |
