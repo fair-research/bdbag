@@ -37,6 +37,7 @@ usage: bdbag
 [--quiet]
 [--debug]
 [--help]
+[--output-path]
 <path>
 ```
 
@@ -72,6 +73,10 @@ fetch transport handler, or a URI whose scheme can be interpreted as an identifi
 In order for a bag to be created in-place, the calling user must have write permissions for the specified directory.
 * If the target path is an archive file and no other conflicting arguments are specified, the archive file will be extracted.
 * If the target path is an actionable URL/URI, the target of the URL (or resolved URI, if the URI represents a supported identifier scheme) will be downloaded to the current directory.
+
+#### `--output-path`
+Optional output path parameter. Functions that may produce extracted directory output (such as `materialize`, `extract`, or `validate` when 
+operating on bag _archive_ files) can be configured to write such output to the specified `output-path`.
 
 ----
 #### `--update`
@@ -178,7 +183,7 @@ Validate a bag against the profile specified by the bag's `BagIt-Profile-Identif
 #### `--config-file <file>`
 Optional path to a *bdbag* configuration file. The configuration file format is described
 [here](./config.md#bdbag.json).
-If this argument is not specified, the configuration file defaults to: `~/.bdbag/bdbag.json`
+If this argument is not specified, the configuration file will be set to the value of the environment variable `BDBAG_CONFIG_FILE` (if present) or otherwise default to `~/.bdbag/bdbag.json`.
 
 ----
 #### `--keychain-file <file>`
@@ -226,6 +231,7 @@ This following table enumerates the various arguments and compatibility modes.
 | Argument | Context | Description |
 |---:| :---: | --- |
 |`<path>`|all|Required argument. When no other options are specified, creates a bag from the target path if that path is a directory and not already a bag; otherwise, if the path represents an archive file in a supported format, the file is extracted.
+|`--output-path`|bag archive only|For a certain set of functions that may extract bag archive files (currently only `materialize`, `extract`, or `validate`), this argument dictates the directory where the output results of the extraction should be placed.
 |`--update`|bag dir only|An existing bag archive cannot be updated in-place. The bag must first be extracted and then updated.
 |`--revert`|bag dir only|Only a bag directory may be reverted to a non-bag directory.
 |`--archiver`|bag dir only|A bag archive cannot be created from an existing bag archive.

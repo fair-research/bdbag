@@ -19,11 +19,13 @@ import sys
 import json
 import logging
 import mimetypes
+import shutil
+from datetime import datetime
 from requests.utils import requote_uri
 from distutils.util import strtobool
-from pkg_resources import get_distribution, DistributionNotFound
+from pkg_resources import parse_version, get_distribution, DistributionNotFound
 
-__version__ = "1.5.6"
+__version__ = "1.6.0-dev0"
 __bagit_version__ = "1.7.0"
 
 if sys.version_info > (3,):  # pragma: no cover
@@ -209,3 +211,43 @@ def inspect_path(path):
         is_dir = os.path.isdir(abs_path)
 
     return is_file, is_dir, is_uri
+
+
+def safe_move(old_path, new_path=None):
+    path_qualifier = '-' + datetime.strftime(datetime.now(), "%Y-%m-%d_%H.%M.%S")
+    if old_path and os.path.exists(old_path):
+        if not new_path:
+            new_path = ''.join([old_path, path_qualifier])
+            logging.info("Destination %s already exists, moving to %s" % (old_path, new_path))
+        elif new_path and os.path.exists(new_path):
+            override_path = ''.join([new_path, path_qualifier])
+            logging.info("Source %s and destination %s already exist, moving destination to %s" %
+                         (old_path, new_path, override_path))
+            new_path = override_path
+        shutil.move(old_path, new_path)
+    return new_path
+
+
+def bag_parent_dir_from_archive(file_list):
+    root_paths = set()
+    parent_paths = set()
+    child_paths = set()
+    if not isinstance(file_list, list):
+        return None
+    for path in file_list:
+        root = path.partition("/")
+        root_paths.add(root[0])
+        if root[1]:
+            parent_paths.add(root[0])
+        if "/" in root[2]:
+            child_paths.add(root[2].partition("/")[0])
+
+    if len(parent_paths - child_paths) > 1:
+        logging.warning("Unable to determine bag parent directory from archive file list. "
+                        "Expecting single bag parent dir but got: %s" % parent_paths)
+        return None
+    if len(root_paths - parent_paths) > 0:
+        logging.warning("Unable to determine bag parent directory from archive file list. "
+                        "Expecting single bag parent dir in archive but found files in the archive root")
+        return None
+    return parent_paths.pop()

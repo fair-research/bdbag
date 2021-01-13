@@ -23,7 +23,7 @@ from collections import OrderedDict
 # bagit-python fixes the underlying issue
 try:
     algorithms_guaranteed = hashlib.algorithms_guaranteed
-except AttributeError:
+except AttributeError:  # pragma: no cover
     # Python 2.7.0-2.7.8
     hashlib.algorithms_guaranteed = set(hashlib.algorithms)
 
@@ -41,7 +41,7 @@ SUPPORTED_BAGIT_SPECS = ["0.97", "1.0"]
 def parse_version(version):
     try:
         return tuple(int(i) for i in version.split(".", 1))
-    except ValueError:
+    except ValueError:  # pragma: no cover
         raise BagError(
             _("Bag version numbers must be MAJOR.MINOR numbers, not %s") % version
         )
@@ -587,7 +587,7 @@ class BDBag(Bag):
         except BaggingInterruptedError:
             raise
         # Any unhandled exceptions are probably fatal
-        except:
+        except:  # pragma: no cover
             LOGGER.error(_("Unable to calculate file hashes for %s"), self)
             raise
 

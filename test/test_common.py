@@ -16,6 +16,7 @@
 import os
 import gc
 import sys
+import json
 import shutil
 import tempfile
 import unittest
@@ -47,6 +48,8 @@ class BaseTest(unittest.TestCase):
 
         self.test_bag_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag')
         self.assertTrue(os.path.isdir(self.test_bag_dir))
+        self.test_bag_no_data_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-no-data')
+        self.assertTrue(os.path.isdir(self.test_bag_no_data_dir))
         self.test_bag_incomplete_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-incomplete')
         self.assertTrue(os.path.isdir(self.test_bag_incomplete_dir))
         self.test_bag_incomplete_fetch_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-incomplete-fetch')
@@ -59,6 +62,8 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ark_dir))
         self.test_bag_fetch_ark2_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ark2')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ark2_dir))
+        self.test_bag_fetch_ark_bad_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ark-bad')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_ark_bad_dir))
         self.test_bag_fetch_doi_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-doi')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_doi_dir))
         self.test_bag_fetch_dataguid_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-dataguid')
@@ -69,6 +74,8 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_bag_fetch_ftp_dir))
         self.test_bag_fetch_auth_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-ftp-auth')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_auth_dir))
+        self.test_bag_fetch_tag_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-fetch-tag')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_tag_dir))
         self.test_bag_invalid_structure_manifest_dir = os.path.join(
             self.tmpdir, 'test-data', 'test-bag-invalid-structure-manifest')
         self.assertTrue(os.path.isdir(self.test_bag_invalid_structure_manifest_dir))
@@ -93,6 +100,12 @@ class BaseTest(unittest.TestCase):
         self.test_bag_fetch_http_encoded_filename_dir = os.path.join(
             self.tmpdir, 'test-data', 'test-bag-fetch-http-encoded-filename')
         self.assertTrue(os.path.isdir(self.test_bag_fetch_http_encoded_filename_dir))
+        self.test_bag_fetch_http_unexpected_filesize_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-fetch-http-unexpected-filesize')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_http_unexpected_filesize_dir))
+        self.test_bag_fetch_http_no_redirect_dir = os.path.join(
+            self.tmpdir, 'test-data', 'test-bag-fetch-http-no-redirect')
+        self.assertTrue(os.path.isdir(self.test_bag_fetch_http_no_redirect_dir))
 
     def tearDown(self):
         if os.path.isdir(self.tmpdir):
@@ -120,6 +133,10 @@ class BaseTest(unittest.TestCase):
             self.json_data = json_data
             self.status_code = status_code
             self.headers = headers
+
+        @property
+        def text(self):
+            return json.dumps(self.json())
 
         def json(self):
             return self.json_data

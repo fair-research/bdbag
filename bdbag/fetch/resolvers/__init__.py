@@ -30,9 +30,13 @@ def find_resolver(identifier, resolver_config):
 
     resolver = None
     resolvers = resolver_config.get(scheme, [])
-    for resolver in resolvers:
-        prefix = resolver.get("prefix")
+    for entry in resolvers:
+        prefix = entry.get("prefix")
+        if not prefix:
+            resolver = entry
+            continue
         if prefix and prefix in path.lstrip("/"):
+            resolver = entry
             break
 
     if not resolver:
@@ -52,10 +56,10 @@ def find_resolver(identifier, resolver_config):
         except KeyError:
             module = import_module(module_name)
         clazz = getattr(module, class_name) if module else None
-    except (ImportError, AttributeError):
+    except (ImportError, AttributeError, ValueError):
         pass
     if not clazz:
-        raise RuntimeError("Unable to import specified resolver class %s" % resolver_class)
+        raise RuntimeError("Unable to import specified resolver class: [%s]" % resolver_class)
 
     return clazz(resolver.get(ID_RESOLVER_TAG, DEFAULT_ID_RESOLVERS), resolver_args)
 

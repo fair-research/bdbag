@@ -1,0 +1,31 @@
+{
+    "bag_config": {
+        "bag_algorithms": [
+            "md5",
+            "sha256"
+        ],
+        "bag_metadata": {
+            "BagIt-Profile-Identifier": "https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json"
+        },
+        "bag_processes": 1,
+        "bagit_spec_version": "0.97"
+    },
+    "bdbag_config_version": "1.5.0",
+    "fetch_config": {
+        "https": {
+            "handler": "test.test_remote.CustomTestFetchTransport",
+            "allow_keychain": true,
+            "session_config": {
+                "retry_backoff_factor": 1.0,
+                "retry_connect": 1,
+                "retry_read": 1,
+                "retry_status_forcelist": [
+                    500,
+                    502,
+                    503,
+                    504
+                ]
+            }
+        }
+    }
+}

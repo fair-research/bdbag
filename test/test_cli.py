@@ -13,13 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import sys
 import atexit
 import unittest
 import subprocess
 from os.path import join as ospj
 from test.test_common import BaseTest
 
-ARGS = ['python', 'bdbag/bdbag_cli.py']
+ARGS = [sys.executable, 'bdbag/bdbag_cli.py', '--debug']
 logfile = open('test_cli.log', mode='w')
 atexit.register(logfile.close)
 

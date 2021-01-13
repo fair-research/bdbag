@@ -35,14 +35,14 @@ class DOIResolverHandler(BaseResolverHandler):
         entries = list()
         try:
             content = response.json()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.warning(
                 "Unable to parse identifier resolution result: a valid JSON structure was not found. Exception: %s. "
                 "Server response: %s" % (get_typed_exception(e), response.content))
             return entries
 
         base_entry = dict()
-        locations = content.get('contentUrl')
+        locations = content.get('contentUrl', content.get('url'))
         if locations:
             length = content.get("contentSize")
             if length:
@@ -64,6 +64,5 @@ class DOIResolverHandler(BaseResolverHandler):
                     entry = dict(base_entry)
                     entry["url"] = location
                     entries.append(entry)
-
         return entries
 

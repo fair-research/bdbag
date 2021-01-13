@@ -12,7 +12,7 @@
     },
     "bdbag_config_version": "1.5.0",
     "fetch_config": {
-        "http": {
+        "https": {
             "session_config": {
                 "retry_backoff_factor": 1.0,
                 "retry_connect": 1,
@@ -42,7 +42,8 @@
                     "n2t.net",
                     "identifiers.org"
                 ],
-                "prefix": null
+                "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",
+                "args": {"allow_automatic_redirects": "True"}
             },
             {
                 "handler": "bdbag.fetch.resolvers.ark_resolver.MinidResolverHandler",

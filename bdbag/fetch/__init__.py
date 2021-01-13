@@ -14,10 +14,20 @@
 # limitations under the License.
 #
 import os
+import logging
 from bdbag import urlsplit, urlunquote
 
 Kilobyte = 1024
 Megabyte = Kilobyte ** 2
+
+SCHEME_HTTP = "http"
+SCHEME_HTTPS = "https"
+SCHEME_S3 = "s3"
+SCHEME_GS = "gs"
+SCHEME_GLOBUS = "globus"
+SCHEME_FTP = "ftp"
+SCHEME_SFTP = "sftp"
+SCHEME_TAG = "tag"
 
 
 def get_transfer_summary(total_bytes, elapsed_time):
@@ -29,6 +39,15 @@ def get_transfer_summary(total_bytes, elapsed_time):
     summary = "%.3f %s transferred%s. %s" % \
               (transferred, "KB" if total_bytes < Megabyte else "MB", throughput, elapsed)
     return summary
+
+
+def check_transfer_size_mismatch(path, expected, total):
+    if isinstance(expected, int) and isinstance(total, int):
+        if expected != total:
+            logging.warning("File [%s] transfer size mismatch. Expected %s bytes but received %s bytes." %
+                            (path, expected, total))
+            return True
+    return False
 
 
 def ensure_valid_output_path(url, output_path=None):

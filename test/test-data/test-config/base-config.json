@@ -10,7 +10,7 @@
         "bag_processes": 1
     },
     "identifier_resolvers": [
-        "n2t.net",
-        "identifiers.org"
+        "identifiers.org",
+        "n2t.net"
     ]
 }

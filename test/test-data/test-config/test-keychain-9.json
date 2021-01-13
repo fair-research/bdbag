@@ -1,0 +1,32 @@
+[
+  {
+    "uri": "https://foo.com/",
+    "tag": "unit test",
+    "auth_type": "http-basic",
+    "auth_params": {
+      "auth_method": "get",
+      "username": "fake",
+      "password": "fake!"
+    }
+  },
+  {
+    "uri": "https://example.com/",
+    "tag": "unit test",
+    "auth_type": "bearer-token",
+    "auth_params": {
+      "token": "bar",
+      "allow_redirects_with_token": "False",
+      "additional_request_headers": {
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    }
+  },
+  {
+    "uri": "ftp://ftp.nist.gov/",
+    "auth_type": "ftp-basic",
+    "auth_params": {
+      "username": "anonymous",
+      "password": "bdbag@users.noreply.github.com"
+    }
+  }
+]

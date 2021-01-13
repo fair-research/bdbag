@@ -95,7 +95,7 @@ def read_keychain(keychain_file=DEFAULT_KEYCHAIN_FILE, create_default=True):
         logger.debug("No keychain file specified and no default keychain file found, attempting to create one.")
         try:
             write_keychain(keychain_file=keychain_file)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.warning(
                 "Unable to create default keychain file. A keychain file is required for authentication when "
                 "retrieving files from protected remote resources. Either ensure that the default keychain "

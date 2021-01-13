@@ -24,7 +24,7 @@ from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg, bdbag_ro as bdbro, bdbagit as bdbagit, filter_dict, \
-    get_typed_exception
+    get_typed_exception, DEFAULT_CONFIG_PATH
 from bdbag.fetch.auth import keychain
 from test.test_common import BaseTest
 
@@ -72,6 +72,86 @@ class TestAPI(BaseTest):
             bdbcfg.read_config(config_file=config_file, auto_upgrade=True)
         except Exception as e:
             self.fail(get_typed_exception(e))
+
+    def test_read_with_default_config(self):
+        logger.info(self.getTestHeader('read config with explicit path'))
+        config_envar = os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR)
+        try:
+            if config_envar:
+                logging.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
+            self.assertIsNone(os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR))
+            bdbcfg.read_config()
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Loading configuration file from: %s" % bdbcfg.DEFAULT_CONFIG_FILE], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_explicit_config(self):
+        logger.info(self.getTestHeader('read config with explicit path'))
+        try:
+            config_file = ospj(self.test_config_dir, 'test-config.json')
+            bdbcfg.read_config(config_file=config_file, create_default=False)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Loading configuration file from: %s" % config_file], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_with_invalid_config(self):
+        logger.info(self.getTestHeader('read config with invalid path'))
+        try:
+            config_file = ospj(self.test_config_dir, 'bdbag-invalid.json')
+            bdbcfg.read_config(config_file=config_file, create_default=False)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Unable to read configuration file: [%s]. Using internal defaults." %
+                                         config_file], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_read_config_from_env(self):
+        logger.info(self.getTestHeader('read config from env'))
+        config_envar = os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR)
+        try:
+            if config_envar:
+                logging.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
+            self.assertIsNone(os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR))
+            config_file = ospj(self.test_config_dir, 'base-config.json')
+            os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR] = config_file
+            config = bdbcfg.read_config()
+            self.assertEqual("bdbag test", config["bag_config"]["bag_metadata"]["Contact-Name"],
+                             "Unexpected config value")
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+        finally:
+            if os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR):
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
+
+    def test_read_config_from_env_invalid(self):
+        logger.info(self.getTestHeader('read config from env invalid file path'))
+        config_envar = os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR)
+        try:
+            if config_envar:
+                logging.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
+            self.assertIsNone(os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR))
+            config_file = ospj(self.test_config_dir, 'bse-config.json')
+            os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR] = config_file
+            bdbcfg.DEFAULT_CONFIG_FILE = ospj(self.test_config_dir, 'base-config.json')
+            config = bdbcfg.read_config(create_default=False)
+            self.assertEqual("bdbag test", config["bag_config"]["bag_metadata"]["Contact-Name"],
+                             "Unexpected config value")
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Invalid configuration file path specified using environment variable %s: "
+                                         "[%s]. Falling back to default configuration file path: [%s]" %
+                                         (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_file, bdbcfg.DEFAULT_CONFIG_FILE)],
+                                        output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+        finally:
+            bdbcfg.DEFAULT_CONFIG_FILE = ospj(DEFAULT_CONFIG_PATH, 'bdbag.json')
+            if os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR):
+                del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
 
     def test_create_keychain(self):
         logger.info(self.getTestHeader('create keychain'))
@@ -197,11 +277,20 @@ class TestAPI(BaseTest):
             self.fail(get_typed_exception(e))
 
     def test_revert_non_bag(self):
-        logger.info(self.getTestHeader('revert bag'))
+        logger.info(self.getTestHeader('revert non-bag'))
         try:
             bdb.revert_bag(self.test_data_dir)
             output = self.stream.getvalue()
-            self.assertExpectedMessages(["Cannot revert the bag %s because it is not a bag directory!"], output)
+            self.assertExpectedMessages(["Cannot revert the bag", "because it is not a bag directory!"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_revert_no_payload(self):
+        logger.info(self.getTestHeader('revert no data directory'))
+        try:
+            bdb.revert_bag(self.test_bag_no_data_dir)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Bag directory", "does not contain a \"data\" directory to revert."], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -498,6 +587,39 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_extract_bag_archive_zip_to_target(self):
+        logger.info(self.getTestHeader('extract bag zip format to target'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'),
+                                       output_path=ospj(self.tmpdir, "test-bag-extract-output-dir"),
+                                       temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_zip_no_parent_warning(self):
+        logger.info(self.getTestHeader('extract bag zip format with no parent dir archive root'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-no-parent.zip'), temp=True)
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages([
+                "Expecting single bag parent dir in archive but found files in the archive root"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_zip_multi_parent_warning(self):
+        logger.info(self.getTestHeader('extract bag zip format with multi parent archive root'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-multi-parent.zip'), temp=True)
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Expecting single bag parent dir but got:"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_extract_bag_archive_zip_with_relocate_existing(self):
         logger.info(self.getTestHeader('extract bag zip format, relocate existing'))
         try:
@@ -509,7 +631,25 @@ class TestAPI(BaseTest):
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
             output = self.stream.getvalue()
-            self.assertExpectedMessages(["moving existing directory"], output)
+            self.assertExpectedMessages(["Destination", "already exists, moving to"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_zip_with_relocate_existing_to_target(self):
+        logger.info(self.getTestHeader('extract bag zip format, relocate existing to target'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'),
+                                       output_path=ospj(self.tmpdir, "test-bag-extract-output-dir"),
+                                       temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'),
+                                       output_path=ospj(self.tmpdir, "test-bag-extract-output-dir"), temp=False)
+            self.assertTrue(ospe(bag_path))
+            self.assertTrue(bdb.is_bag(bag_path))
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Source", "and destination", "already exist, moving destination to"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -520,6 +660,27 @@ class TestAPI(BaseTest):
             self.assertTrue(ospe(bag_path))
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_tgz_no_parent_warning(self):
+        logger.info(self.getTestHeader('extract bag tgz format with no parent dir archive root'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-no-parent.tgz'), temp=True)
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages([
+                "Expecting single bag parent dir in archive but found files in the archive root"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_extract_bag_archive_tgz_multi_parent_warning(self):
+        logger.info(self.getTestHeader('extract bag tgz format with multi parent archive root'))
+        try:
+            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-multi-parent.tgz'), temp=True)
+            bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Expecting single bag parent dir but got:"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -589,6 +750,15 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_validate_unexpected_bag_fetch(self):
+        logger.info(self.getTestHeader('test bag validation with unexpected entries bag in fetch.txt'))
+        try:
+            bdb.validate_bag(self.test_bag_invalid_structure_fetch_dir)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["exists in fetch.txt but is not in manifest"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_validate_incomplete_bag_fast(self):
         logger.info(self.getTestHeader('test fast validation incomplete bag'))
         try:
@@ -636,7 +806,8 @@ class TestAPI(BaseTest):
         try:
             self.assertRaises(bdbagit.BagValidationError,
                               bdb.validate_bag_structure,
-                              self.test_bag_invalid_structure_fetch_dir)
+                              self.test_bag_invalid_structure_fetch_dir,
+                              skip_remote=False)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -657,6 +828,10 @@ class TestAPI(BaseTest):
                               bdb.validate_bag_structure,
                               self.test_bag_invalid_state_fetch_filesize_dir,
                               skip_remote=False)
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["The size of the local file",
+                                         "does not match the size of the file",
+                                         "specified in fetch.txt"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -719,7 +894,7 @@ class TestAPI(BaseTest):
                 "folder": "../data/",
             },
             "mediatype": "text/plain",
-            "uri": "http://n2t.net/ark:/57799/b9dd5t"
+            "uri": "http://identifiers.org/ark:/57799/b9dd5t"
         },
         {
             "mediatype": "text/plain",
@@ -740,7 +915,8 @@ class TestAPI(BaseTest):
         try:
             bdb.make_bag(self.test_data_dir, algs=['md5', 'sha1', 'sha256', 'sha512'],
                          remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
-            bdb.generate_ro_manifest(self.test_data_dir, overwrite=True)
+            bdb.generate_ro_manifest(self.test_data_dir, config_file=ospj(self.test_config_dir, 'base-config.json'),
+                                     overwrite=True)
             ro = bdbro.read_bag_ro_metadata(self.test_data_dir)
             old_agg_dict = dict()
             for entry in ro.get("aggregates", []):
@@ -762,7 +938,8 @@ class TestAPI(BaseTest):
         try:
             bdb.make_bag(self.test_data_dir, algs=['md5', 'sha1', 'sha256', 'sha512'],
                          remote_file_manifest=ospj(self.test_config_dir, 'test-fetch-manifest.json'))
-            bdb.generate_ro_manifest(self.test_data_dir, overwrite=True)
+            bdb.generate_ro_manifest(self.test_data_dir, config_file=ospj(self.test_config_dir, 'base-config.json'),
+                                     overwrite=True)
             ro = bdbro.read_bag_ro_metadata(self.test_data_dir)
             agg_dict = dict()
             for entry in ro.get("aggregates", []):
