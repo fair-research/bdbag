@@ -1,6 +1,6 @@
 # bdbag
 [![Build Status](https://travis-ci.org/fair-research/bdbag.svg)](https://travis-ci.org/fair-research/bdbag)
-[![Coverage Status](https://img.shields.io/coveralls/github/fair-research/bdbag/master.svg)](https://coveralls.io/github/fair-research/bdbag?branch=master)
+[![Coverage Status](https://img.shields.io/coveralls/github/fair-research/bdbag/master.svg)](https://coveralls.io/github/fair-research/bdbag)
 [![PyPi Version](https://img.shields.io/pypi/v/bdbag.svg)](https://pypi.python.org/pypi/bdbag)
 [![PyPi Wheel](https://img.shields.io/pypi/wheel/bdbag.svg)](https://pypi.python.org/pypi/bdbag)
 [![Python Versions](https://img.shields.io/pypi/pyversions/bdbag.svg)](https://pypi.python.org/pypi/bdbag)
