@@ -69,7 +69,7 @@ setup(
         'boto': ["boto3>=1.9.5", "botocore", "awscli"],
         'globus': ["globus_sdk>=1.6.0"],
     },
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4',
     license='Apache 2.0',
     classifiers=[
         'Intended Audience :: Science/Research',
