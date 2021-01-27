@@ -3,8 +3,9 @@
 ## 1.6.0
 * Implement [#37](https://github.com/fair-research/bdbag/issues/37): Support external fetch transports via plug-in architecture.
 * Added `--output-path` CLI argument for specifying output path for extracted archives.
-* Added Python 3.8 and 3.9 support to `setup.py` metadata and travis builds.
 * Pinned `bagit-python` dependency version to `1.8.0`.
+* Added Python 3.8 and 3.9 support to `setup.py` metadata and travis builds.
+* Dropped Python 3.4 support.
 
 ## 1.5.6
 * Fix [#34](https://github.com/fair-research/bdbag/issues/34): New file hashes for existing manifest entries generated from remote-file-manifests don't get updated in bags.
