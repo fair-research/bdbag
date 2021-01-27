@@ -104,7 +104,7 @@ def prune_bag_manifests(bag):
     manifests = list(bag.manifest_files())
     manifests += list(bag.tagmanifest_files())
     for manifest in manifests:
-        if not manifest.find("tagmanifest-") is -1:
+        if manifest.find("tagmanifest-") != -1:
             search = "tagmanifest-"
         else:
             search = "manifest-"
