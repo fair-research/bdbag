@@ -5,7 +5,7 @@
   architecture.
 * Added `--output-path` CLI argument for specifying output path for extracted archives.
 * Fixed issue with `archive_bag` API function not including empty directories when creating `zip` format archives.
-* Modified `extract_bag` API function to accurately include the actual bag root directory path of the extracted bag 
+* Modified `extract_bag` API function to accurately include the bag root directory path of the extracted bag 
   archive in the return value. Previously, this value could have wound up being different from the file archive base 
   name; for example if the archive file was renamed or was created in such a way that the base file name never matched 
   the archived bag directory root. 

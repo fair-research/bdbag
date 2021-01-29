@@ -581,15 +581,17 @@ class TestAPI(BaseTest):
     def test_archive_bag_empty_dirs_zip(self):
         logger.info(self.getTestHeader('archive bag with empty dirs zip format'))
         archive = None
+        subdirs = ["data/", "data/test1/", "data/test2/", "metadata/etc/"]
         try:
+
+            [os.makedirs(ospj(self.test_bag_empty_dirs_dir, subdir)) for subdir in subdirs]
             archive_file = bdb.archive_bag(self.test_bag_empty_dirs_dir, 'zip')
             self.assertTrue(ospif(archive_file))
             self.assertTrue(zipfile.is_zipfile(archive_file))
             archive = zipfile.ZipFile(archive_file)
             files = archive.namelist()
             base_path = os.path.relpath(self.test_bag_empty_dirs_dir, os.path.dirname(self.test_bag_empty_dirs_dir))
-            [self.assertIn(entry, files) for entry in
-             [base_path + "/" + subdir for subdir in ["data/", "data/test1/", "data/test2/", "metadata/etc/"]]]
+            [self.assertIn(entry, files) for entry in [base_path + "/" + subdir for subdir in subdirs]]
         except Exception as e:
             self.fail(get_typed_exception(e))
         finally:
@@ -599,15 +601,16 @@ class TestAPI(BaseTest):
     def test_archive_bag_empty_dirs_tgz(self):
         logger.info(self.getTestHeader('archive bag with empty dirs tgz format'))
         archive = None
+        subdirs = ["data", "data/test1", "data/test2", "metadata/etc"]
         try:
+            [os.makedirs(ospj(self.test_bag_empty_dirs_dir, subdir)) for subdir in subdirs]
             archive_file = bdb.archive_bag(self.test_bag_empty_dirs_dir, 'tgz')
             self.assertTrue(ospif(archive_file))
             self.assertTrue(tarfile.is_tarfile(archive_file))
             archive = tarfile.open(archive_file)
             files = archive.getnames()
             base_path = os.path.relpath(self.test_bag_empty_dirs_dir, os.path.dirname(self.test_bag_empty_dirs_dir))
-            [self.assertIn(entry, files) for entry in
-             [base_path + "/" + subdir for subdir in ["data", "data/test1", "data/test2", "metadata/etc"]]]
+            [self.assertIn(entry, files) for entry in [base_path + "/" + subdir for subdir in subdirs]]
         except Exception as e:
             self.fail(get_typed_exception(e))
         finally:
