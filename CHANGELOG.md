@@ -1,15 +1,26 @@
 # CHANGE LOG
 
 ## 1.6.0
-* Implement [#37](https://github.com/fair-research/bdbag/issues/37): Support external fetch transports via plug-in architecture.
+* Implement [#37](https://github.com/fair-research/bdbag/issues/37): Support external fetch transports via plug-in 
+  architecture.
 * Added `--output-path` CLI argument for specifying output path for extracted archives.
+* Fixed issue with `archive_bag` API function not including empty directories when creating `zip` format archives.
+* Modified `extract_bag` API function to accurately include the actual bag root directory path of the extracted bag 
+  archive in the return value. Previously, this value could have wound up being different from the file archive base 
+  name; for example if the archive file was renamed or was created in such a way that the base file name never matched 
+  the archived bag directory root. 
+* Refactored `bagit-profile` support. This module is no longer "vendored" internally and is now a proper external 
+  dependency intended to be pulled from PyPi.  The `Profile` class is patched internally, as needed. It is currently 
+  pinned to `1.3.1`.
 * Pinned `bagit-python` dependency version to `1.8.0`.
 * Added Python 3.8 and 3.9 support to `setup.py` metadata and travis builds.
 * Dropped Python 3.4 support.
 
 ## 1.5.6
-* Fix [#34](https://github.com/fair-research/bdbag/issues/34): New file hashes for existing manifest entries generated from remote-file-manifests don't get updated in bags.
-* Fix [#36](https://github.com/fair-research/bdbag/issues/36): Directory paths with slash at the end during "archive_bag" results in a malformed archive name.
+* Fix [#34](https://github.com/fair-research/bdbag/issues/34): New file hashes for existing manifest entries generated 
+  from remote-file-manifests don't get updated in bags.
+* Fix [#36](https://github.com/fair-research/bdbag/issues/36): Directory paths with a slash at the end during 
+  "archive_bag" result in a malformed archive name.
 * Added `update_keychain` API function in `auth/keychain.py` for add/update/delete of keychain entries.
 * Added Python 3.7 support to `setup.py` metadata and travis builds.
 

@@ -1,0 +1,37 @@
+{
+    "@context": [
+        "https://w3id.org/bundle/context"
+    ],
+    "@id": "../",
+    "aggregates": [
+        {
+            "bundledAs": {
+                "filename": "test-fetch-http.txt",
+                "folder": "../data/",
+                "uri": "urn:uuid:c8a74f89-4e93-4e04-b4c6-47ceef88c235"
+            },
+            "mediatype": "text/plain",
+            "uri": "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt"
+        },
+        {
+            "bundledAs": {
+                "filename": "test-fetch-identifier.txt",
+                "folder": "../data/",
+                "uri": "urn:uuid:b8560209-b2b3-4e1b-b570-e8926856879b"
+            },
+            "mediatype": "text/plain",
+            "uri": "http://identifiers.org/ark:/57799/b9dd5t"
+        }
+    ],
+    "annotations": [],
+    "authoredBy": {
+        "name": "mdarcy",
+        "orcid": "http://orcid.org/0000-0003-2280-917X"
+    },
+    "authoredOn": "2021-01-28T13:55:06-08:00",
+    "createdBy": {
+        "name": "BDBag version: 1.6.0.dev3 (Bagit version: 1.8.0)",
+        "uri": "https://github.com/fair-research/bdbag"
+    },
+    "createdOn": "2021-01-28T13:55:06-08:00"
+}

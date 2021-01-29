@@ -11,20 +11,23 @@
 The `bdbag` utilities are a collection of software programs for working with
 [BagIt](https://datatracker.ietf.org/doc/draft-kunze-bagit/) packages that conform to the BDBag and Bagit/RO profiles.
 
-The `bdbag` [profiles](https://github.com/fair-research/bdbag/tree/master/profiles) specify the use of the fetch.txt file, require serialization, and specify what manifests must be provided with a *bdbag*.
+The `bdbag` [profiles](https://github.com/fair-research/bdbag/tree/master/profiles) specify the use of the `fetch.txt` 
+file, require serialization, and specify what manifests must be provided with a `bdbag`.
 
-These utilities combine various other components such as the
+The `bdbag` utilities incorporate functions from various other Python-based `bagit` components (such as the
 [Bagit-Python](https://github.com/LibraryOfCongress/bagit-python) bag creation utility and the
 [Bagit-Profiles-Validator](https://github.com/ruebot/bagit-profiles)
-utility into a single, easy to use software package.
+utility) and wraps them in a single, easy to use software package with additional features.
 
 Enhanced bag support includes:
 
 * Update-in-place functionality for existing bags.
 * Automatic archiving and extraction of bags using ZIP, TAR, and TGZ formats.
-* Automatic generation of remote file manifest entries and fetch.txt via configuration file.
-* Automatic file retrieval based on the contents of a bag's fetch.txt file with multiple protocol support.
-* Built-in profile validation.
+* Automatic generation of file manifest entries and `fetch.txt` for remote files via configuration file.
+* Automatic file retrieval based on the contents of a bag's `fetch.txt` file with multiple protocol support. Transport 
+  handlers for `http(s)`,`ftp`,`s3`,`gs`, and `globus` are provided, along with an extensibility mechanism for adding 
+  externally developed transports.  
+* Built-in `bagit-profile` validation.
 * Built-in support for creation of bags with [Bagit/RO profile](https://github.com/ResearchObject/bagit-ro) compatibility.
 
 An experimental Graphical User Interface (GUI) for `bdbag` can be found [here](https://github.com/fair-research/bdbag_gui).

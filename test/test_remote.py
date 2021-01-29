@@ -119,8 +119,8 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    def test_validate_profile_serialization(self):
-        logger.info(self.getTestHeader('validate profile serialization'))
+    def test_validate_profile_serialization_zip(self):
+        logger.info(self.getTestHeader('validate profile serialization zip'))
         try:
             bag_path = ospj(self.test_archive_dir, 'test-bag.zip')
             bdb.validate_bag_serialization(
@@ -130,10 +130,45 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
-    def test_validate_invalid_profile_serialization(self):
-        logger.info(self.getTestHeader('validate invalid profile serialization'))
+    def test_validate_profile_serialization_tar(self):
+        logger.info(self.getTestHeader('validate profile serialization tar'))
+        try:
+            bag_path = ospj(self.test_archive_dir, 'test-bag.tar')
+            bdb.validate_bag_serialization(
+                bag_path,
+                bag_profile_path=
+                'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json')
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_profile_serialization_tgz(self):
+        logger.info(self.getTestHeader('validate profile serialization tgz'))
+        try:
+            bag_path = ospj(self.test_archive_dir, 'test-bag.tgz')
+            bdb.validate_bag_serialization(
+                bag_path,
+                bag_profile_path=
+                'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json')
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_invalid_profile_serialization_bag_dir(self):
+        logger.info(self.getTestHeader('validate invalid profile serialization on a bag dir'))
         try:
             bag_path = ospj(self.test_bag_dir)
+            self.assertRaises(bdbagit_profile.ProfileValidationError,
+                              bdb.validate_bag_serialization,
+                              bag_path,
+                              bag_profile_path=
+                              'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/'
+                              'bdbag-profile.json')
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_validate_invalid_profile_serialization_unsupported_format(self):
+        logger.info(self.getTestHeader('validate invalid profile serialization on an unsupported archive format'))
+        try:
+            bag_path = ospj(self.test_archive_dir, 'test-bag.7z')
             self.assertRaises(bdbagit_profile.ProfileValidationError,
                               bdb.validate_bag_serialization,
                               bag_path,

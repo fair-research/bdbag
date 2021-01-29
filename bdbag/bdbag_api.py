@@ -336,6 +336,9 @@ def archive_bag(bag_path, bag_archiver):
                 relpath = os.path.relpath(filepath, os.path.dirname(bag_path))
                 if os.path.isfile(filepath):
                     zf.write(filepath, relpath)
+            if not filenames:  # include empty directories
+                relpath = os.path.relpath(dirpath, os.path.dirname(bag_path))
+                zf.write(dirpath, relpath)
         zf.close()
         archive = zf.filename
     else:
@@ -359,42 +362,35 @@ def extract_bag(bag_path, output_path=None, temp=False):
         raise RuntimeError("Specified bag path not found: %s" % bag_path)
 
     # determine output path for extraction
-    extracted_path = None
+    base_path = extracted_path = None
     bag_dir = os.path.splitext(os.path.basename(bag_path))[0]
     if os.path.isfile(bag_path):
         if temp:
-            output_path = tempfile.mkdtemp(prefix='bag_')
+            base_path = tempfile.mkdtemp(prefix='bag_')
         elif output_path:
-            safe_move(output_path, output_path)
+            base_path = os.path.realpath(output_path)
         elif not output_path:
-            output_path = os.path.splitext(bag_path)[0]
-            safe_move(output_path)
-            output_path = os.path.dirname(bag_path)
+            base_path = os.path.dirname(os.path.splitext(bag_path)[0])
 
-        # perform the extraction
+        # extraction preflight
         if zipfile.is_zipfile(bag_path):
             logger.info("Extracting ZIP archived file: %s" % bag_path)
-            with open(bag_path, 'rb') as bag_file:
-                zipped = zipfile.ZipFile(bag_file)
-                files = zipped.namelist()
-                extracted_path = bag_parent_dir_from_archive(files)
-                zipped.extractall(output_path)
-                zipped.close()
+            archive = zipfile.ZipFile(bag_path)
+            files = archive.namelist()
         elif tarfile.is_tarfile(bag_path):
             logger.info("Extracting TAR/GZ/BZ2 archived file: %s" % bag_path)
-            tarred = tarfile.open(bag_path)
-            files = tarred.getnames()
-            extracted_path = bag_parent_dir_from_archive(files)
-            tarred.extractall(output_path)
-            tarred.close()
+            archive = tarfile.open(bag_path)
+            files = archive.getnames()
         else:
             raise RuntimeError("Archive format not supported for file: %s"
                                "\nSupported archive formats are ZIP or TAR/GZ/BZ2" % bag_path)
-
-    if not extracted_path:
-        extracted_path = os.path.join(output_path, bag_dir)
-    else:
-        extracted_path = os.path.join(output_path, extracted_path)
+        archived_bag_dir = bag_parent_dir_from_archive(files)
+        extracted_path = os.path.join(base_path, archived_bag_dir or bag_dir)
+        output_path = os.path.join(output_path, extracted_path or bag_dir) if output_path else None
+        safe_move(extracted_path, output_path)
+        # perform the extraction
+        archive.extractall(base_path)
+        archive.close()
 
     logger.info("File %s was successfully extracted to directory %s" % (bag_path, extracted_path))
 
@@ -447,7 +443,7 @@ def validate_bag_profile(bag_path, profile_path=None):
             raise bdbp.ProfileValidationError("Bag does not contain a BagIt-Profile-Identifier")
 
     logger.info("Retrieving profile: %s" % profile_path)
-    profile = bdbp.Profile(profile_path)
+    profile = bdbp.BDBProfile(profile_path)
 
     # Validate the profile.
     if profile.validate(bag):
@@ -465,7 +461,7 @@ def validate_bag_serialization(bag_path, bag_profile=None, bag_profile_path=None
             raise bdbp.ProfileValidationError(
                 "Unable to instantiate profile, no bag profile or profile path found")
         logger.info("Retrieving profile: %s" % bag_profile_path)
-        bag_profile = bdbp.Profile(bag_profile_path)
+        bag_profile = bdbp.BDBProfile(bag_profile_path)
 
     # Validate 'Serialization' and 'Accept-Serialization'.
     logger.info("Validating bag serialization: %s" % bag_path)

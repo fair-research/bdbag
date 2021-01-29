@@ -25,11 +25,6 @@ __version__ = re.search(
     io.open('bdbag/__init__.py', encoding='utf_8_sig').read()
     ).group(1)
 
-__bagit_version__ = re.search(
-    r'__bagit_version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-    io.open('bdbag/__init__.py', encoding='utf_8_sig').read()
-    ).group(1)
-
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
@@ -57,14 +52,17 @@ setup(
         'tzlocal',
         'requests',
         'certifi',
-        'bagit'
+        'bagit',
+        'bagit_profile'
     ],
     install_requires=['pytz',
                       'tzlocal==2.1',
                       'certifi',
                       'requests>=2.7.0',
-                      'setuptools_scm',  # for bagit<=1.7.0 which does not properly include it in install_requires
-                      'bagit==%s' % __bagit_version__],
+                      'setuptools_scm',  # for bagit which does not properly include it in install_requires
+                      'bagit==1.8.0',
+                      'bagit-profile==1.3.1'
+                      ],
     extras_require={
         'boto': ["boto3>=1.9.5", "botocore", "awscli"],
         'globus': ["globus_sdk>=1.6.0"],

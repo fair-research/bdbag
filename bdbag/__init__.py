@@ -25,8 +25,9 @@ from requests.utils import requote_uri
 from distutils.util import strtobool
 from pkg_resources import parse_version, get_distribution, DistributionNotFound
 
-__version__ = "1.6.0.dev2"
+__version__ = "1.6.0.dev3"
 __bagit_version__ = "1.8.0"
+__bagit_profile_version__ = "1.3.1"
 
 if sys.version_info > (3,):  # pragma: no cover
     from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit, urlparse
@@ -45,6 +46,11 @@ try:
     BAGIT_VERSION = get_distribution("bagit").version
 except DistributionNotFound:  # pragma: no cover
     BAGIT_VERSION = 'unknown' if not getattr(sys, 'frozen', False) else __bagit_version__ + '-frozen'
+
+try:
+    BAGIT_PROFILE_VERSION = get_distribution("bagit_profile").version
+except DistributionNotFound:  # pragma: no cover
+    BAGIT_PROFILE_VERSION = 'unknown' if not getattr(sys, 'frozen', False) else __bagit_profile_version__ + '-frozen'
 
 BAG_PROFILE_TAG = 'BagIt-Profile-Identifier'
 BDBAG_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-profile.json'
@@ -214,18 +220,26 @@ def inspect_path(path):
 
 
 def safe_move(old_path, new_path=None):
+    old_path = os.path.realpath(old_path)
+    if new_path:
+        new_path = os.path.realpath(new_path)
+    if os.path.dirname(old_path) == old_path:
+        logging.debug("Ignore move of root filesystem path: %s" % old_path)
+        return old_path
+
     path_qualifier = '-' + datetime.strftime(datetime.now(), "%Y-%m-%d_%H.%M.%S")
-    if old_path and os.path.exists(old_path):
+    if os.path.exists(old_path):
         if not new_path:
             new_path = ''.join([old_path, path_qualifier])
-            logging.info("Destination %s already exists, moving to %s" % (old_path, new_path))
+            logging.info("Target path %s already exists, moving it to %s" %
+                         (old_path, new_path))
         elif new_path and os.path.exists(new_path):
             override_path = ''.join([new_path, path_qualifier])
-            logging.info("Source %s and destination %s already exist, moving destination to %s" %
-                         (old_path, new_path, override_path))
+            logging.info("Requested target path %s already exists, moving it to %s" % (new_path, override_path))
             new_path = override_path
         shutil.move(old_path, new_path)
-    return new_path
+        return new_path
+    return old_path
 
 
 def bag_parent_dir_from_archive(file_list):

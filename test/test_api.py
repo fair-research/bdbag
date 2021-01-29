@@ -20,6 +20,8 @@ import shutil
 import logging
 import mock
 import unittest
+import tarfile
+import zipfile
 from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
@@ -568,6 +570,50 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_archive_bag_bz2(self):
+        logger.info(self.getTestHeader('archive bag bz2 format'))
+        try:
+            archive_file = bdb.archive_bag(self.test_bag_dir, 'bz2')
+            self.assertTrue(ospif(archive_file))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_archive_bag_empty_dirs_zip(self):
+        logger.info(self.getTestHeader('archive bag with empty dirs zip format'))
+        archive = None
+        try:
+            archive_file = bdb.archive_bag(self.test_bag_empty_dirs_dir, 'zip')
+            self.assertTrue(ospif(archive_file))
+            self.assertTrue(zipfile.is_zipfile(archive_file))
+            archive = zipfile.ZipFile(archive_file)
+            files = archive.namelist()
+            base_path = os.path.relpath(self.test_bag_empty_dirs_dir, os.path.dirname(self.test_bag_empty_dirs_dir))
+            [self.assertIn(entry, files) for entry in
+             [base_path + "/" + subdir for subdir in ["data/", "data/test1/", "data/test2/", "metadata/etc/"]]]
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+        finally:
+            if archive:
+                archive.close()
+
+    def test_archive_bag_empty_dirs_tgz(self):
+        logger.info(self.getTestHeader('archive bag with empty dirs tgz format'))
+        archive = None
+        try:
+            archive_file = bdb.archive_bag(self.test_bag_empty_dirs_dir, 'tgz')
+            self.assertTrue(ospif(archive_file))
+            self.assertTrue(tarfile.is_tarfile(archive_file))
+            archive = tarfile.open(archive_file)
+            files = archive.getnames()
+            base_path = os.path.relpath(self.test_bag_empty_dirs_dir, os.path.dirname(self.test_bag_empty_dirs_dir))
+            [self.assertIn(entry, files) for entry in
+             [base_path + "/" + subdir for subdir in ["data", "data/test1", "data/test2", "metadata/etc"]]]
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+        finally:
+            if archive:
+                archive.close()
+
     def test_archive_bag_incomplete_structure(self):
         logger.info(self.getTestHeader('archive incomplete bag zip format'))
         try:
@@ -631,7 +677,7 @@ class TestAPI(BaseTest):
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
             output = self.stream.getvalue()
-            self.assertExpectedMessages(["Destination", "already exists, moving to"], output)
+            self.assertExpectedMessages(["Target path", "already exists, moving it to"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
@@ -644,12 +690,13 @@ class TestAPI(BaseTest):
             self.assertTrue(ospe(bag_path))
             self.assertTrue(bdb.is_bag(bag_path))
             bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.zip'),
-                                       output_path=ospj(self.tmpdir, "test-bag-extract-output-dir"), temp=False)
+                                       output_path=ospj(self.tmpdir, "test-bag-extract-output-dir"),
+                                       temp=False)
             self.assertTrue(ospe(bag_path))
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
             output = self.stream.getvalue()
-            self.assertExpectedMessages(["Source", "and destination", "already exist, moving destination to"], output)
+            self.assertExpectedMessages(["Requested target path", "already exists, moving it to"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
