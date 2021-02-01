@@ -9,3 +9,4 @@ bdbag = {path = ".", extras = ["boto","globus"], editable = true}
 [dev-packages]
 mock = "*"
 coverage = "*"
+flake8 = "*"

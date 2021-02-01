@@ -140,6 +140,12 @@ class TestCli(BaseTest):
         self._test_successful_invocation(
             args, ["Bag structure conforms to specified profile", "Bag serialization conforms to specified profile"])
 
+    def test_validate_profile_skip_serialization(self):
+        args = ARGS + [self.test_bag_dir, '--validate-profile', "bag-only"]
+        logfile.writelines(self.getTestHeader('validate-profile, bag only', args))
+        self._test_successful_invocation(
+            args, ["Bag structure conforms to specified profile"])
+
 
 class TestCliArgParsing(BaseTest):
 

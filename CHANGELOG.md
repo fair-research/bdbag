@@ -3,15 +3,20 @@
 ## 1.6.0
 * Implement [#37](https://github.com/fair-research/bdbag/issues/37): Support external fetch transports via plug-in 
   architecture.
-* Added `--output-path` CLI argument for specifying output path for extracted archives.
+* Added `--output-path` CLI (and corresponding API) argument for specifying output path for extracted archives.
+* Update the `--validate-profile` CLI argument so that it can take an optional keyword argument, `bag-only`, which 
+  can be used to bypass the otherwise automatic profile serialization validation, and therefore is suitable to use 
+  on extracted bag directories.
 * Fixed issue with `archive_bag` API function not including empty directories when creating `zip` format archives.
 * Modified `extract_bag` API function to accurately include the bag root directory path of the extracted bag 
   archive in the return value. Previously, this value could have wound up being different from the file archive base 
   name; for example if the archive file was renamed or was created in such a way that the base file name never matched 
   the archived bag directory root. 
 * Refactored `bagit-profile` support. This module is no longer "vendored" internally and is now a proper external 
-  dependency intended to be pulled from PyPi.  The `Profile` class is patched internally, as needed. It is currently 
-  pinned to `1.3.1`.
+  dependency intended to be pulled from PyPi.  The `Profile` class is patched internally, as needed. This dependency 
+  is currently pinned to `1.3.1`.
+* Updated `bdbag-profile.json` and `bdbag-ro-profile.json` to leverage newer features of `bagit-profile` version 
+  `1.3`. Loosened "Manifests-Required" to only require `md5` for both profiles.
 * Pinned `bagit-python` dependency version to `1.8.0`.
 * Added Python 3.8 and 3.9 support to `setup.py` metadata and travis builds.
 * Dropped Python 3.4 support.

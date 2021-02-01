@@ -50,6 +50,8 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.test_bag_dir))
         self.test_bag_empty_dirs_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-empty-dirs')
         self.assertTrue(os.path.isdir(self.test_bag_empty_dirs_dir))
+        self.test_bag_profile_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-profile')
+        self.assertTrue(os.path.isdir(self.test_bag_profile_dir))
         self.test_bag_no_data_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-no-data')
         self.assertTrue(os.path.isdir(self.test_bag_no_data_dir))
         self.test_bag_incomplete_dir = os.path.join(self.tmpdir, 'test-data', 'test-bag-incomplete')

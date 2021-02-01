@@ -1077,7 +1077,7 @@ class TestUtils(unittest.TestCase):
         if sys.version_info >= (3, ):
             self.unicode_class = str
         else:
-            self.unicode_class = unicode
+            self.unicode_class = unicode # NOQA
 
     def test_force_unicode_str_to_unicode(self):
         self.assertIsInstance(bagit.force_unicode('foobar'), self.unicode_class)

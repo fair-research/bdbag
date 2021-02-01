@@ -1,0 +1,3 @@
+64ed533554cc55b83c211b6c3e885702  data/README.txt
+dad6891eb4148dfed2d162370983d06f  data/test1/test1.txt
+11069c18ee13a990265cf944359dbca5  data/test2/test2.txt

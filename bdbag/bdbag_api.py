@@ -449,7 +449,7 @@ def validate_bag_profile(bag_path, profile_path=None):
     if profile.validate(bag):
         logger.info("Bag structure conforms to specified profile")
     else:
-        raise bdbp.ProfileValidationError("Bag structure does not conform to specified profile")
+        raise bdbp.ProfileValidationError("Bag structure does not conform to specified profile: %s" % profile.report)
 
     return profile
 

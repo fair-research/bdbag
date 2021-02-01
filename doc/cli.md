@@ -27,7 +27,7 @@ usage: bdbag
 [--resolve-fetch {all,missing}]
 [--fetch-filter <column><operator><value>]
 [--validate {fast,full,structure,completeness}]
-[--validate-profile]
+[--validate-profile {profile-only,full}]
 [--config-file <file>]
 [--keychain-file <file>]
 [--metadata-file <file>]
@@ -176,8 +176,10 @@ used to check that the payload files are present and accounted for.
 * If `completeness` is specified, the bag will be checked for both structural validity and completeness (presence) of files listed in all manifests.
 
 ----
-#### `--validate-profile`
-Validate a bag against the profile specified by the bag's `BagIt-Profile-Identifier` metadata field, if present.
+#### `--validate-profile {bag-only, full}`
+Validate a bag against the profile specified by the bag's `BagIt-Profile-Identifier` metadata field, if present. The 
+`bag-only` argument keyword can be used to bypass the otherwise automatic bag serialization validation 
+(implied by the default value, `full`), and therefore is suitable for use on bag directories.
 
 ----
 #### `--config-file <file>`

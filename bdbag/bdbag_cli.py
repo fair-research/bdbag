@@ -152,9 +152,9 @@ def parse_cli():
 
     validate_profile_arg = "--validate-profile"
     standard_args.add_argument(
-        validate_profile_arg, action="store_true",
-        help="Validate a bag against the profile specified by the bag's "
-             "\"BagIt-Profile-Identifier\" metadata field, if present.")
+        validate_profile_arg, const='full', nargs='?', choices=['bag-only', 'full'],
+        help="Validate a bag against the profile specified by the bag's \"BagIt-Profile-Identifier\" metadata field, "
+             "if present. If \"bag-only\" is specified, the bag's serialization method will not be validated.")
 
     config_file_arg = "--config-file"
     standard_args.add_argument(
@@ -338,8 +338,8 @@ def main():
 
         if not is_file:
             # do not try to create or update the bag if the user just wants to validate or complete an existing bag
-            if not ((args.validate or args.validate_profile or args.resolve_fetch) and
-                    not (args.update and bdb.is_bag(path))):
+            if not ((args.validate or args.validate_profile or args.resolve_fetch)
+                    and not (args.update and bdb.is_bag(path))):
                 if args.checksum and 'all' in args.checksum:
                     args.checksum = ['md5', 'sha1', 'sha256', 'sha512']
                 # create or update the bag depending on the input arguments
@@ -397,7 +397,8 @@ def main():
                 if not temp_path:
                     temp_path = bdb.extract_bag(path, args.output_path, temp=True if not args.output_path else False)
             profile = bdb.validate_bag_profile(temp_path if temp_path else path)
-            bdb.validate_bag_serialization(archive if archive else path, profile)
+            if not args.validate_profile == "bag-only":
+                bdb.validate_bag_serialization(archive if archive else path, profile)
 
         if args.revert:
             bdb.revert_bag(path)
