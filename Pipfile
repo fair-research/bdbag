@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-bdbag = {path = ".", extras = ["boto","globus"], editable = true}
+bdbag = {path = ".", extras = ["boto","globus"]}
 
 [dev-packages]
 mock = "*"

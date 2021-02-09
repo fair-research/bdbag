@@ -60,7 +60,7 @@ setup(
                       'certifi',
                       'requests>=2.7.0',
                       'setuptools_scm',  # for bagit which does not properly include it in install_requires
-                      'bagit==1.8.0',
+                      'bagit==1.8.1',
                       'bagit-profile==1.3.1'
                       ],
     extras_require={
