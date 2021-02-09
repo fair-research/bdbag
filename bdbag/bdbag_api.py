@@ -595,8 +595,11 @@ def materialize(input_path,
     elif is_dir:
         bag_path = input_path
     elif is_uri:
+        output_file_path = os.path.join(output_path,
+                                        urlunquote(os.path.basename(
+                                            urlsplit(input_path).path))) if output_path else None
         bag_file = fetch_single_file(input_path,
-                                     output_path,
+                                     output_file_path,
                                      config_file=config_file,
                                      keychain_file=keychain_file,
                                      **kwargs)

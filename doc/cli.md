@@ -112,10 +112,11 @@ The `materialize` function is a bag bootstrapper. When invoked,
 it will attempt to fully _reconstitute_ a bag by performing multiple
 possible actions depending on the context of the `<path>` argument.
 1. If `<path>` is a URL or a URI of a resolvable identifier scheme, the file
-referenced by this value will first be downloaded to the current directory.
+referenced by this value will first be downloaded to the current directory _or_ the directory specified by the optional 
+`--output-path` argument.
 2. If the `<path>` (or previously downloaded file) represents a
 local path to a supported archive format, the archive will be extracted
-to the current directory.
+to the directory containing the bag archive _or_ the directory specified by the optional `--output-path` argument.
 3. If the `<path>` (or previously extracted file) represents a valid
 bag directory, any remote file references contained within the bag's
 `fetch.txt` file will attempt to be resolved.

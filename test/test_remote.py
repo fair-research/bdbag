@@ -785,6 +785,14 @@ class TestRemoteAPI(BaseTest):
         finally:
             os.chdir(curdir)
 
+    def test_materialize_from_file_to_target_dir(self):
+        logger.info(self.getTestHeader('test materialize from file to target dir'))
+        try:
+            bag_path = bdb.materialize(ospj(self.test_archive_dir, 'test-bag-fetch-http.zip'), self.tmpdir)
+            self.assertTrue(bdb.is_bag(bag_path))
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def test_materialize_from_url(self):
         logger.info(self.getTestHeader('test materialize from URL'))
         curdir = os.getcwd()
@@ -797,6 +805,15 @@ class TestRemoteAPI(BaseTest):
             self.fail(bdbag.get_typed_exception(e))
         finally:
             os.chdir(curdir)
+
+    def test_materialize_from_url_to_target_dir(self):
+        logger.info(self.getTestHeader('test materialize from URL to target dir'))
+        try:
+            bag_path = bdb.materialize("https://github.com/fair-research/bdbag/raw/master/test/test-data/test-archives/"
+                                       "test-bag.zip", self.tmpdir)
+            self.assertTrue(bdb.is_bag(bag_path))
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
 
     def test_cookie_load_and_merge(self):
         logger.info(self.getTestHeader('test cookie load and merge'))
