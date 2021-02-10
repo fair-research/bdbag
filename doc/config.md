@@ -160,7 +160,7 @@ identical to the `http` fetch handler configuration, with the following exceptio
 | --- | --- |
 |`bypass_ssl_cert_verification`|Either the boolean value `true` or `false`, or an array of string values consisting of URL patterns to be used in a simple substring match against the target URLs found in a bag's `fetch.txt` file.  For example, `"bypass_ssl_cert_verification": ["https://raw.githubusercontent.com/fair-research/bdbag/"]` will match a `fetch.txt` entry with a URL of "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt". Defaults to `false`.
 
-######NOTE: 
+###### NOTE: 
 It is NOT RECOMMENDED setting `bypass_ssl_cert_verification: true` as it will bypass SSL certificate validation for 
 ALL HTTPS requests. This will accept any TLS certificate presented by a remote server and will ignore hostname mismatches 
 and/or expired certificates, which will make the application vulnerable to man-in-the-middle (MitM) attacks.
