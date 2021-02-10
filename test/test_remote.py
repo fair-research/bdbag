@@ -254,6 +254,31 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_resolve_fetch_http_bypass_ssl_cert_verify_global(self):
+        logger.info(self.getTestHeader('test resolve fetch http bypass ssl cert verify global'))
+        try:
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              config_file=ospj(self.test_config_dir, 'test-config-11.json'),
+                                              cookie_scan=False))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Bypassing SSL certificate verification due to global configuration setting."],
+                                        output)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_bypass_ssl_cert_verify_whitelisted_uri(self):
+        logger.info(self.getTestHeader('test resolve fetch http bypass ssl cert verify whitelisted uri'))
+        try:
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              config_file=ospj(self.test_config_dir, 'test-config-12.json'),
+                                              cookie_scan=False))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Bypassing SSL certificate validation for URL",
+                                         "due to matching whitelist entry"],
+                                        output)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def test_resolve_fetch_incomplete(self):
         logger.info(self.getTestHeader('test resolve fetch incomplete'))
         try:

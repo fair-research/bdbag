@@ -54,27 +54,24 @@ DEFAULT_COOKIE_JAR_SEARCH_CONFIG = {
 FETCH_CONFIG_TAG = "fetch_config"
 FETCH_HTTP_REDIRECT_STATUS_CODES_TAG = "redirect_status_codes"
 DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES = [301, 302, 303, 307, 308]
+DEFAULT_FETCH_HTTP_SESSION_CONFIG = {
+    "retry_connect": 2,
+    "retry_read": 4,
+    "retry_backoff_factor": 1.0,
+    "retry_status_forcelist": [500, 502, 503, 504]
+}
 DEFAULT_FETCH_CONFIG = {
     "http": {
-        "session_config": {
-            "retry_connect": 2,
-            "retry_read": 4,
-            "retry_backoff_factor": 1.0,
-            "retry_status_forcelist": [500, 502, 503, 504]
-        },
+        "session_config": DEFAULT_FETCH_HTTP_SESSION_CONFIG,
         "allow_redirects": True,
         "redirect_status_codes": DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES,
         COOKIE_JAR_TAG: DEFAULT_COOKIE_JAR_SEARCH_CONFIG
 
     },
     "https": {
-        "session_config": {
-            "retry_connect": 2,
-            "retry_read": 4,
-            "retry_backoff_factor": 1.0,
-            "retry_status_forcelist": [500, 502, 503, 504]
-        },
+        "session_config": DEFAULT_FETCH_HTTP_SESSION_CONFIG,
         "allow_redirects": True,
+        "bypass_ssl_cert_verification": False,
         "redirect_status_codes": DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES,
         COOKIE_JAR_TAG: DEFAULT_COOKIE_JAR_SEARCH_CONFIG
 

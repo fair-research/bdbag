@@ -4,6 +4,9 @@
 * Implement [#37](https://github.com/fair-research/bdbag/issues/37): Support external fetch transports via plug-in 
   architecture.
 * Added `--output-path` CLI (and corresponding API) argument for specifying output path for extracted archives.
+* Added a `bypass_ssl_cert_verification` configuration option for the `https` fetch handler so that SSL certificate verification could be disabled 
+  either globally (not recommended) or on a whitelisted set of URL paths used in simple substring matches against 
+  a bag's `fetch.txt` URLs.
 * Update the `--validate-profile` CLI argument so that it can take an optional keyword argument, `bag-only`, which 
   can be used to bypass the otherwise automatic profile serialization validation, and therefore is suitable to use 
   on extracted bag directories.
@@ -17,7 +20,7 @@
   is currently pinned to `1.3.1`.
 * Updated `bdbag-profile.json` and `bdbag-ro-profile.json` to leverage newer features of `bagit-profile` version 
   `1.3`. Loosened "Manifests-Required" to only require `md5` for both profiles.
-* Pinned `bagit-python` dependency version to `1.8.0`.
+* Pinned `bagit-python` dependency version to `1.8.1`.
 * Added Python 3.8 and 3.9 support to `setup.py` metadata and travis builds.
 * Dropped Python 3.4 support.
 

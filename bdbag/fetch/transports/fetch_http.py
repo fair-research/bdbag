@@ -22,7 +22,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from bdbag import urlsplit, stob, get_typed_exception
 from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG, \
-    FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES
+    FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_SESSION_CONFIG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES
 from bdbag.fetch import *
 from bdbag.fetch.transports.base_transport import BaseFetchTransport
 from bdbag.fetch.auth.cookies import get_request_cookies
@@ -57,6 +57,21 @@ class HTTPFetchTransport(BaseFetchTransport):
                 return auth
         return None
 
+    def bypass_cert_verify(self, url):
+        bypass = self.config.get("bypass_ssl_cert_verification", False)
+        if isinstance(bypass, bool) and bypass:
+            logger.warning("Bypassing SSL certificate verification due to global configuration setting. "
+                           "Disabling all SSL certificate verification in this way is NOT recommended.")
+            return True
+        elif isinstance(bypass, list):
+            for uri in bypass:
+                if uri in url:
+                    logger.warning(
+                        "Bypassing SSL certificate validation for URL %s due to matching whitelist entry: [%s]" %
+                        (url, uri))
+                    return True
+        return False
+
     @staticmethod
     def init_new_session(session_config):
         session = requests.session()
@@ -83,7 +98,8 @@ class HTTPFetchTransport(BaseFetchTransport):
                     session = self.sessions[uri]
                     break
                 else:
-                    session = self.init_new_session(self.config["session_config"])
+                    session = self.init_new_session(
+                        self.config.get("session_config", DEFAULT_FETCH_HTTP_SESSION_CONFIG))
 
                 auth_type = auth.get("auth_type")
                 auth_params = auth.get("auth_params", {})
@@ -155,7 +171,7 @@ class HTTPFetchTransport(BaseFetchTransport):
             base_url = str("%s://%s" % (url_parts.scheme, url_parts.netloc))
             session = self.sessions.get(base_url, None)
             if not session:
-                session = self.init_new_session(self.config["session_config"])
+                session = self.init_new_session(self.config.get("session_config", DEFAULT_FETCH_HTTP_SESSION_CONFIG))
                 self.sessions[base_url] = session
 
         return session
@@ -187,7 +203,7 @@ class HTTPFetchTransport(BaseFetchTransport):
                                 stream=True,
                                 headers=headers,
                                 allow_redirects=allow_redirects,
-                                verify=certifi.where(),
+                                verify=False if self.bypass_cert_verify(url) else certifi.where(),
                                 cookies=self.cookies)
                 if r.status_code in redirect_status_codes:
                     url = r.headers["Location"]

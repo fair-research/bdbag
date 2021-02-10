@@ -117,6 +117,7 @@ Currently, only the default `http` and `s3` transport handlers have configuratio
 | Parameter | Description
 | --- | --- |
 |`http`|Configuration for the `http` fetch handler.
+|`https`|Configuration for the `https` fetch handler.
 |`s3`|Configuration for the `s3` fetch handler.
 
 ##### Object: `fetch_config:http`
@@ -150,6 +151,18 @@ These cookie files must follow the Mozilla/Netscape/CURL/WGET format as describe
 |`search_paths`|An array of base directory paths from which to recursively search with `search_paths_filter` for `file_names` to use as input. Defaults to the system-dependent expansion of `~`.
 |`search_paths_filter`|An [`fnmatch.filter`](https://docs.python.org/3.5/library/fnmatch.html) pattern that can be used to filter specific subdirectories of each path specified in `search_paths`. Defaults to `.bdbag`.
 |`file_names`|An array of input cookie filenames or [`fnmatch.filter`](https://docs.python.org/3.5/library/fnmatch.html) patterns to match cookie filenames against. Defaults to `[*cookies.txt]`.
+
+##### Object: `fetch_config:https`
+This object contains configuration parameters for the `https` fetch handler. The `https` fetch handler configuration is 
+identical to the `http` fetch handler configuration, with the following exceptions:
+
+| Parameter | Description
+| --- | --- |
+|`bypass_ssl_cert_verification`|Either the boolean value `true` or `false`, or an array of string values consisting of URL patterns to be used in a simple substring match against the target URLs found in a bag's `fetch.txt` file.  For example, `"bypass_ssl_cert_verification": ["https://raw.githubusercontent.com/fair-research/bdbag/"]` will match a `fetch.txt` entry with a URL of "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt". Defaults to `false`.
+######NOTE: 
+It is NOT RECOMMENDED to set `bypass_ssl_cert_verification: true` as it will bypass SSL certificate validation for 
+ALL HTTPS requests. This will accept any TLS certificate presented by a remote server and will ignore hostname mismatches 
+and/or expired certificates, which will make the application vulnerable to man-in-the-middle (MitM) attacks.
 
 ##### Object: `fetch_config:s3`
 This object contains configuration parameters for the `s3` fetch handler.
