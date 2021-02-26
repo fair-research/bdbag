@@ -37,18 +37,21 @@ else:  # pragma: no cover
     from urlparse import urlsplit, urlunsplit, urlparse
 
 try:
-    VERSION = get_distribution("bdbag").version
+    version = get_distribution("bdbag").version
+    VERSION = version + '' if not getattr(sys, 'frozen', False) else version + '-frozen'
 except DistributionNotFound:  # pragma: no cover
     VERSION = __version__ + '-dev' if not getattr(sys, 'frozen', False) else __version__ + '-frozen'
 PROJECT_URL = 'https://github.com/fair-research/bdbag'
 
 try:
-    BAGIT_VERSION = get_distribution("bagit").version
+    version = get_distribution("bagit").version
+    BAGIT_VERSION = version + '' if not getattr(sys, 'frozen', False) else version + '-frozen'
 except DistributionNotFound:  # pragma: no cover
     BAGIT_VERSION = 'unknown' if not getattr(sys, 'frozen', False) else __bagit_version__ + '-frozen'
 
 try:
-    BAGIT_PROFILE_VERSION = get_distribution("bagit_profile").version
+    version = get_distribution("bagit_profile").version
+    BAGIT_PROFILE_VERSION = version + '' if not getattr(sys, 'frozen', False) else version + '-frozen'
 except DistributionNotFound:  # pragma: no cover
     BAGIT_PROFILE_VERSION = 'unknown' if not getattr(sys, 'frozen', False) else __bagit_profile_version__ + '-frozen'
 
