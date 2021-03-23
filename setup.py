@@ -59,7 +59,7 @@ setup(
                       'tzlocal==2.1',
                       'certifi',
                       'requests>=2.7.0',
-                      'setuptools_scm',  # for bagit which does not properly include it in install_requires
+                      'setuptools_scm<6.0',  # for bagit which does not properly include it in install_requires
                       'bagit==1.8.1',
                       'bagit-profile==1.3.1'
                       ],
