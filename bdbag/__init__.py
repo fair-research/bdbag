@@ -60,11 +60,12 @@ BDBAG_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master
 BDBAG_RO_PROFILE_ID = 'https://raw.githubusercontent.com/fair-research/bdbag/master/profiles/bdbag-ro-profile.json'
 
 CONTENT_DISP_REGEX = re.compile(r"^filename[*]=UTF-8''(?P<name>[-_.~A-Za-z0-9%]+)$")
-FILTER_REGEX = re.compile(r"(?P<column>^.*)(?P<operator>==|!=|=\*|!\*|\^\*|\$\*|>=|>|<=|<)(?P<value>.*$)")
+FILTER_REGEX = re.compile(r"(?P<column>^.*)(?P<operator>==|!=|=\*|!\*|=~|\^\*|\$\*|>=|>|<=|<)(?P<value>.*$)")
 FILTER_DOCSTRING = "\"==\" (equal), " \
                    "\"!=\" (not equal), " \
                    "\"=*\" (wildcard substring equal), " \
                    "\"!*\" (wildcard substring not equal), " \
+                   "\"=~\" (matches regular expression), " \
                    "\"^*\" (wildcard starts with), " \
                    "\"$*\" (wildcard ends with), " \
                    "or \">\", \">=\", \"<\", \"<=\""
@@ -153,13 +154,15 @@ def filter_dict(expr, entry):
     filter_val = expr_dict["value"]
     operator = expr_dict["operator"]
 
-    filter_neg = filter_substring = filter_relation = filter_startswith = filter_endswith = False
+    filter_neg = filter_substring = filter_re = filter_relation = filter_startswith = filter_endswith = False
     if "==" == operator:
         pass
     elif "!=" == operator:
         filter_neg = True
     elif "=*" == operator:
         filter_substring = True
+    elif "=~" == operator:
+        filter_re = True
     elif "^*" == operator:
         filter_startswith = True
     elif "$*" == operator:
@@ -185,6 +188,8 @@ def filter_dict(expr, entry):
         else:
             if filter_substring:
                 result = filter_val in str(value)
+            elif filter_re:
+                result = re.search(filter_val, str(value)) is not None
             elif filter_startswith:
                 result = str(value).startswith(filter_val)
             elif filter_endswith:
