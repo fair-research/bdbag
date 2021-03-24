@@ -302,9 +302,10 @@ With this mechanism you can do various string-based pattern matching on `filenam
 * `filter_expr="filename$*.txt"`
 * `filter_expr="filename^*README"`
 * `filter_expr="filename==data/change.log"`
+* `filter_expr="filename=~(?!foo).*\.json$"`  
 * `filter_expr="url=*/requirements/"`
 
-The above commands will get all files ending with ".txt", all files beginning with "README", the exact file "data/change.log", and all urls containing "/requirements/" in the url path.
+The above commands will get all files ending with ".txt", all files beginning with "README", the exact file "data/change.log", files ending with ".json" but do not contain "foo" on their path, and all urls containing "/requirements/" in the url path.
 
 You can also use `length` and the integer relation operators to easily limit the size of the files retrieved, for example:
 
@@ -527,6 +528,7 @@ The set of operators is syntactically limited. See syntax [below](#filter_dict_s
 	|!*| wildcard substring not equal
 	|^*| wildcard starts with
 	|$*| wildcard ends with
+    |=~| regexpression matches
 	|>| greater than
 	|>=| greater than or equal to
 	|<| less than

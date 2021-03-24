@@ -157,8 +157,8 @@ With this mechanism you can do various string-based pattern matching on `filenam
 * `bdbag --resolve-fetch missing --fetch-filter 'filename$*.txt' ./my-bag`
 * `bdbag --resolve-fetch missing --fetch-filter 'filename^*README' ./my-bag`
 * `bdbag --resolve-fetch missing --fetch-filter 'filename==data/change.log' ./my-bag`
-* `bdbag --resolve-fetch missing --fetch-filter 'url=*/requirements/' ./my-bag`
 * `bdbag --resolve-fetch missing --fetch-filter 'filename=~(?!foo).*\.json$' ./my-bag`
+* `bdbag --resolve-fetch missing --fetch-filter 'url=*/requirements/' ./my-bag`
 
 The above commands will get all files ending with ".txt", all files beginning with "README", the exact file "data/change.log", files ending with ".json" but do not contain "foo" on their path, and all urls containing "/requirements/" in the url path, respectively.
 
