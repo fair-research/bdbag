@@ -1,5 +1,11 @@
 # CHANGE LOG
 
+## 1.6.1
+* [#41](https://github.com/fair-research/bdbag/issues/41): Add support for regex patterns in `filter_dict`. 
+  See PR [#42](https://github.com/fair-research/bdbag/pull/42).
+* Add `-frozen` qualifier suffix (when applicable) to version strings returned by get_distribution.
+* Pinned `setuptools_scm<6.0` due to it dropping support for Python 2.7/3.5 which we will still support for a little while longer.
+
 ## 1.6.0
 * Implement [#37](https://github.com/fair-research/bdbag/issues/37): Support external fetch transports via plug-in 
   architecture.
