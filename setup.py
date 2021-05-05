@@ -34,6 +34,7 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     url='https://github.com/fair-research/bdbag/',
+    author="Mike D'Arcy",
     maintainer='USC Information Sciences Institute, Informatics Systems Research Division',
     maintainer_email='isrd-support@isi.edu',
     version=__version__,

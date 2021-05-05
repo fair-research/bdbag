@@ -18,9 +18,10 @@ import datetime
 import logging
 import certifi
 import requests
+from requests.utils import default_user_agent
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-from bdbag import urlsplit, stob, get_typed_exception
+from bdbag import urlsplit, stob, get_typed_exception, VERSION
 from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG, \
     FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_SESSION_CONFIG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES
 from bdbag.fetch import *
@@ -31,7 +32,7 @@ import bdbag.fetch.auth.keychain as kc
 logger = logging.getLogger(__name__)
 
 CHUNK_SIZE = 10 * Megabyte
-HEADERS = {"Connection": "keep-alive"}
+HEADERS = {"User-Agent": "bdbag/%s (%s)" % (VERSION, default_user_agent())}
 
 
 class HTTPFetchTransport(BaseFetchTransport):
@@ -178,7 +179,8 @@ class HTTPFetchTransport(BaseFetchTransport):
 
     def fetch(self, url, output_path, **kwargs):
         try:
-            headers = kwargs.get("headers", HEADERS)
+            headers = kwargs.get("headers", {"Connection": "keep-alive"})
+            headers.update(HEADERS)
             redirect_status_codes = self.config.get(
                 FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES)
 
