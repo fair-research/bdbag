@@ -26,8 +26,10 @@ from collections import namedtuple
 from csv import DictReader, Sniffer
 from bdbag import bdbag_api as bdb, parse_content_disposition, urlsplit, filter_dict, FILTER_DOCSTRING
 from bdbag import get_typed_exception as gte
-from bdbag.fetch.transports.fetch_http import get_session
+#from bdbag.fetch.transports.fetch_http import get_session
+from bdbag.fetch.transports.fetch_http import HTTPFetchTransport
 from bdbag.fetch.auth.keychain import read_keychain, DEFAULT_KEYCHAIN_FILE
+from bdbag.bdbag_config import DEFAULT_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -102,12 +104,27 @@ def create_rfm_from_url_list(args):
                 rfm_entry["sha256_base64"] = sha256
                 sha256 = decode_base64_to_hex(sha256)
                 rfm_entry["sha256"] = sha256
+            sha1_header = args.sha1_header if args.sha1_header else "Content-SHA1"
+            sha1 = headers.get(sha1_header)
+            sha1 = get_checksum_from_string_list("sha1", sha1)
+            if sha1:
+                sha1 = sha1.split()[0].strip(",").replace('SHA1:', '').replace('sha1:', '')
+                if not args.disable_hash_decode_base64:
+                    rfm_entry["sha1_base64"] = sha1
+                    sha1 = decode_base64_to_hex(sha1)
+                    rfm_entry["sha1"] = sha1
+                else:
+                    rfm_entry["sha1"] = sha1
+                    sha1 = binascii.hexlify(bytes(sha1, 'utf-8'))
+                    sha1 = encode_hex_to_base64(sha1)
+                    rfm_entry["sha1_base64"] = sha1
+            
 
             # if content length or both hash values are missing, there is a problem
             if not length:
                 logging.warning("Could not determine Content-Length for %s" % url)
-            if not (md5 or sha256):
-                logging.warning("Could not locate an MD5 or SHA256 hash for %s" % url)
+            if not (md5 or sha256 or sha1):
+                logging.warning("Could not locate an MD5 or SHA256 or SHA1 hash for %s" % url)
 
             # try to construct filename using content_disposition, if available, else fallback to the URL path fragment
             filepath = urlsplit(url).path
@@ -193,7 +210,10 @@ def deduplicate_rfm_entries(rfm):
 
 
 def head_for_headers(url, auth=None, raise_for_status=False):
-    session = get_session(url, auth)
+    logger.debug("[head_for_headers] url:{}, auth:{}".format(url, auth))
+    hft = HTTPFetchTransport(DEFAULT_CONFIG, auth)
+    session = hft.get_session(url)
+    logger.debug("session acquired, move forward")
     r = session.head(url, headers={'Connection': 'keep-alive'})
     if raise_for_status:
         r.raise_for_status()
@@ -468,6 +488,12 @@ def create_crfm_urls_subparser(subparsers):
     parser_crfm_urls.add_argument(
         crfm_urls_sha256_header_arg, metavar="<sha256 header name>", default="Content-SHA256",
         help="The name of the response header that contains the SHA256 hash value. Defaults to \"Content-SHA256\". ")
+
+    crfm_urls_sha1_header_arg = "--sha1-header"
+    parser_crfm_urls.add_argument(
+        crfm_urls_sha1_header_arg, metavar="<sha1 header name>", default="Content-SHA1",
+        help="The name of the response header that contains the SHA1 hash value. Defaults to \"Content-SHA1\". ")
+
 
     crfm_urls_input_filter_arg = "--filter"
     parser_crfm_urls.add_argument(
