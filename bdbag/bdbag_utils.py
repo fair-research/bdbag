@@ -16,6 +16,7 @@
 import base64
 import sys
 import os
+import io
 import argparse
 import hashlib
 import logging
@@ -26,16 +27,16 @@ from collections import namedtuple
 from csv import DictReader, Sniffer
 from bdbag import bdbag_api as bdb, parse_content_disposition, urlsplit, filter_dict, FILTER_DOCSTRING
 from bdbag import get_typed_exception as gte
-#from bdbag.fetch.transports.fetch_http import get_session
 from bdbag.fetch.transports.fetch_http import HTTPFetchTransport
 from bdbag.fetch.auth.keychain import read_keychain, DEFAULT_KEYCHAIN_FILE
 from bdbag.bdbag_config import DEFAULT_CONFIG
+from bdbag.bdbagit import force_unicode
 
 logger = logging.getLogger(__name__)
 
 
 def create_rfm_from_filesystem(args):
-    with open(args.output_file, 'w') as rfm_file:
+    with io.open(args.output_file, 'w', encoding='utf-8') as rfm_file:
         rfm = list()
         if not os.path.isdir(args.input_path):
             raise ValueError("The following path does not exist or is not a directory: [%s]" % args.input_path)
@@ -68,14 +69,15 @@ def create_rfm_from_filesystem(args):
                 else:
                     rfm.append(rfm_entry)
         if not args.streaming_json:
-            rfm_file.write(json.dumps(rfm, sort_keys=True, indent=2))
+            rfm_file.write(force_unicode(json.dumps(rfm, sort_keys=True, indent=2, ensure_ascii=False)))
         logger.info("Successfully created remote file manifest: %s" % args.output_file)
 
 
 def create_rfm_from_url_list(args):
     keychain_file = args.keychain_file if args.keychain_file else DEFAULT_KEYCHAIN_FILE
     auth = read_keychain(keychain_file)
-    with open(args.output_file, 'w') as rfm_file, open(args.input_file, 'r') as input_file:
+    with io.open(args.output_file, 'w', encoding='utf-8') as rfm_file, \
+            io.open(args.input_file, 'r', encoding='utf-8') as input_file:
         rfm = list()
         for url in input_file.readlines():
             rfm_entry = dict()
@@ -143,11 +145,13 @@ def create_rfm_from_url_list(args):
                 continue
 
             if args.streaming_json:
-                rfm_file.writelines(''.join([json.dumps(rfm_entry, sort_keys=True), '\n']))
+                rfm_file.writelines(''.join([
+                    force_unicode(json.dumps(rfm_entry, sort_keys=True, ensure_ascii=False)), '\n']))
             else:
                 rfm.append(rfm_entry)
         if not args.streaming_json:
-            rfm_file.write(json.dumps(deduplicate_rfm_entries(rfm), sort_keys=True, indent=2))
+            rfm_file.write(
+                force_unicode(json.dumps(deduplicate_rfm_entries(rfm), sort_keys=True, indent=2, ensure_ascii=False)))
         logger.info("Successfully created remote file manifest: %s" % args.output_file)
 
 
@@ -155,7 +159,8 @@ def create_rfm_from_file(args):
     if not (args.md5_col or args.sha1_col or args.sha256_col or args.sha512_col):
         raise ValueError("At least one checksum algorithm column mapping must be specified.")
 
-    with open(args.output_file, 'w') as rfm_file, open(args.input_file, 'r') as input_file:
+    with io.open(args.output_file, 'w', encoding='utf-8') as rfm_file, \
+            io.open(args.input_file, 'r', encoding='utf-8') as input_file:
         rfm = list()
         if not args.input_format == 'json':
             dialect = Sniffer().sniff(input_file.read(4096))
@@ -187,7 +192,7 @@ def create_rfm_from_file(args):
 
         entries = deduplicate_rfm_entries(rfm)
         logger.info("Writing %d entries to remote file manifest" % len(entries))
-        rfm_file.write(json.dumps(entries, sort_keys=True, indent=2))
+        rfm_file.write(force_unicode(json.dumps(entries, sort_keys=True, indent=2, ensure_ascii=False)))
         logger.info("Successfully created remote file manifest: %s" % args.output_file)
 
 

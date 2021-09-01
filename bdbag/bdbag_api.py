@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 import os
+import io
 import errno
 import logging
 import json
@@ -50,7 +51,7 @@ def read_metadata(metadata_file):
         metadata_file = os.path.abspath(metadata_file)
 
     logger.info("Reading bag metadata from file: %s" % metadata_file)
-    with open(metadata_file) as mf:
+    with io.open(metadata_file, encoding='utf-8') as mf:
         metadata = mf.read()
         mf.close()
         return json.loads(metadata, object_pairs_hook=OrderedDict)
@@ -476,7 +477,7 @@ def validate_bag_serialization(bag_path, bag_profile=None, bag_profile_path=None
 def generate_remote_files_from_manifest(remote_file_manifest, algs, strict=False):
     logger.info("Generating remote file references from %s" % remote_file_manifest)
     remote_files = dict()
-    with open(remote_file_manifest, "r") as rfm_in:
+    with io.open(remote_file_manifest, "r", encoding='utf-8') as rfm_in:
         line = rfm_in.readline().lstrip()
         rfm_in.seek(0)
         is_json_stream = False

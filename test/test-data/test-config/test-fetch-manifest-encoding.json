@@ -1,0 +1,29 @@
+[
+  {
+    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/test fetch%http®.txt",
+    "length":201,
+    "filename":"test fetch http®.txt",
+    "md5":"f3ad851f4213d41ce9690542010bffa0",
+    "sha1":"93656178967a53104eb30324d4e028a7a30eecb4",
+    "sha256":"861236468065b9b0ae369ae99bbc7df08b4db919438e288d923efc0e77775bbf",
+    "sha512":"1bdbb4fc33dbea55ee0e5473062cbd003221c571c6110e2b3d2ebe5288a95a74ccd60fbbbcbd42fcfa4cd320b980ca27d537e6d29e60f73822e301a7ba6c1bfa"
+  },
+  {
+    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/test fetch%http®.txt",
+    "length":201,
+    "filename":"test\nfetch\nhttp®.txt",
+    "md5":"f3ad851f4213d41ce9690542010bffa0",
+    "sha1":"93656178967a53104eb30324d4e028a7a30eecb4",
+    "sha256":"861236468065b9b0ae369ae99bbc7df08b4db919438e288d923efc0e77775bbf",
+    "sha512":"1bdbb4fc33dbea55ee0e5473062cbd003221c571c6110e2b3d2ebe5288a95a74ccd60fbbbcbd42fcfa4cd320b980ca27d537e6d29e60f73822e301a7ba6c1bfa"
+  },
+  {
+    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/test fetch%http®.txt",
+    "length":201,
+    "filename":"test%fetch http®\r\n.txt",
+    "md5":"f3ad851f4213d41ce9690542010bffa0",
+    "sha1":"93656178967a53104eb30324d4e028a7a30eecb4",
+    "sha256":"861236468065b9b0ae369ae99bbc7df08b4db919438e288d923efc0e77775bbf",
+    "sha512":"1bdbb4fc33dbea55ee0e5473062cbd003221c571c6110e2b3d2ebe5288a95a74ccd60fbbbcbd42fcfa4cd320b980ca27d537e6d29e60f73822e301a7ba6c1bfa"
+  }
+]

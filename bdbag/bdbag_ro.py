@@ -14,11 +14,13 @@
 # limitations under the License.
 #
 import os
+import io
 import json
 import copy
 import uuid
 from collections import OrderedDict
 from bdbag import guess_mime_type, add_mime_types, escape_uri, VERSION, BAGIT_VERSION
+from bdbag.bdbagit import force_unicode
 from datetime import datetime
 from tzlocal import get_localzone
 import logging
@@ -48,7 +50,7 @@ def check_input(obj):
 def read_bag_ro_metadata(bag_path, metadata_path="manifest.json"):
     bag_ro_metadata_path = os.path.abspath(os.path.join(bag_path, "metadata", metadata_path))
 
-    with open(bag_ro_metadata_path) as mf:
+    with io.open(bag_ro_metadata_path, encoding='utf-8') as mf:
         metadata = mf.read()
 
     return json.loads(metadata, object_pairs_hook=OrderedDict)
@@ -65,8 +67,8 @@ def write_bag_ro_metadata(obj, bag_path, metadata_path="manifest.json"):
     if not os.path.exists(ro_metadata_path_dir):
         os.makedirs(ro_metadata_path_dir)
 
-    with open(os.path.abspath(ro_metadata_path.strip()), 'w') as ro_metadata:
-        json.dump(obj, ro_metadata, sort_keys=True, indent=4)
+    with io.open(os.path.abspath(ro_metadata_path.strip()), 'w', encoding='utf-8') as ro_metadata:
+        ro_metadata.write(force_unicode(json.dumps(obj, sort_keys=True, indent=4, ensure_ascii=False)))
 
 
 def serialize_bag_ro_metadata(obj, bag_path):
@@ -144,7 +146,7 @@ def add_file_metadata(manifest,
     retrieved_from = None
 
     if local_path:
-        uri = escape_uri(ensure_payload_path_prefix(local_path))
+        uri = escape_uri(ensure_payload_path_prefix(local_path), encode_whitespace=False)
         if source_url:
             retrieved_from = dict(retrievedFrom=source_url)
 

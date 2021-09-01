@@ -243,7 +243,7 @@ class HTTPFetchTransport(BaseFetchTransport):
                         total += len(chunk)
                 elapsed_time = datetime.datetime.now() - start
                 check_transfer_size_mismatch(output_path, kwargs.get("size"), total)
-                logger.info("File [%s] transfer successful. %s" %
+                logger.info("File [%s] transfer complete. %s" %
                             (output_path, get_transfer_summary(total, elapsed_time)))
                 return output_path
 

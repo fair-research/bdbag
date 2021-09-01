@@ -73,7 +73,7 @@ class FTPFetchTransport(BaseFetchTransport):
             elapsed = datetime.datetime.now() - start
             total = os.path.getsize(output_path)
             check_transfer_size_mismatch(output_path, kwargs.get("size"), total)
-            logger.info("File [%s] transfer successful. %s" % (output_path, get_transfer_summary(total, elapsed)))
+            logger.info("File [%s] transfer complete. %s" % (output_path, get_transfer_summary(total, elapsed)))
             return output_path
 
         except Exception as e:

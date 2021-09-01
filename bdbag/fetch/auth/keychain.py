@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import io
 import os
 import errno
 import logging
@@ -21,6 +22,7 @@ import collections
 import stat
 import bdbag
 from bdbag import DEFAULT_CONFIG_PATH
+from bdbag.bdbagit import force_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +85,9 @@ def write_keychain(keychain=DEFAULT_KEYCHAIN, keychain_file=DEFAULT_KEYCHAIN_FIL
         except OSError as error:  # pragma: no cover
             if error.errno != errno.EEXIST:
                 raise
-    with open(keychain_file, 'w') as kf:
-        kf.write(json.dumps(keychain if keychain is not None else list(),
-                            sort_keys=True, indent=4, separators=(',', ': ')))
+    with io.open(keychain_file, 'w', encoding='utf-8') as kf:
+        kf.write(force_unicode(json.dumps(keychain if keychain is not None else list(),
+                                          ensure_ascii=False, sort_keys=True, indent=4, separators=(',', ': '))))
     os.chmod(keychain_file, stat.S_IRUSR | stat.S_IWUSR)
 
 
@@ -102,7 +104,7 @@ def read_keychain(keychain_file=DEFAULT_KEYCHAIN_FILE, create_default=True):
                 "file %s can be created or provide a different path to a valid keychain file. Error: %s" %
                 (keychain_file, bdbag.get_typed_exception(e)))
     if os.path.isfile(keychain_file):
-        with open(keychain_file) as kf:
+        with io.open(keychain_file, encoding='utf-8') as kf:
             keychain = kf.read()
 
     return json.loads(keychain, object_hook=collections.OrderedDict)
