@@ -29,7 +29,7 @@ from bdbag import bdbag_api as bdb, parse_content_disposition, urlsplit, filter_
 from bdbag import get_typed_exception as gte
 from bdbag.fetch.transports.fetch_http import get_session
 from bdbag.fetch.auth.keychain import read_keychain, DEFAULT_KEYCHAIN_FILE
-from bdbagit import force_unicode
+from bdbag.bdbagit import force_unicode
 
 logger = logging.getLogger(__name__)
 

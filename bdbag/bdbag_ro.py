@@ -20,7 +20,7 @@ import copy
 import uuid
 from collections import OrderedDict
 from bdbag import guess_mime_type, add_mime_types, escape_uri, VERSION, BAGIT_VERSION
-from bdbagit import force_unicode
+from bdbag.bdbagit import force_unicode
 from datetime import datetime
 from tzlocal import get_localzone
 import logging
