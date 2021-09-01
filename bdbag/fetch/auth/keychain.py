@@ -22,7 +22,7 @@ import collections
 import stat
 import bdbag
 from bdbag import DEFAULT_CONFIG_PATH
-from bdbagit import force_unicode
+from bdbag.bdbagit import force_unicode
 
 logger = logging.getLogger(__name__)
 
