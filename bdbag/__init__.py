@@ -128,18 +128,17 @@ def parse_content_disposition(value):  # pragma: no cover
     return n
 
 
-def escape_uri(uri, illegal_only=True, safe="/"):  # pragma: no cover
+# Per the bagit spec, we just want to replace (%,\r,\n,\t, ) for storage in fetch.txt, but this is also applicable
+# to URI/IRI storage in ro-metadata as well
+def escape_uri(uri, encode_whitespace=True):
     if not uri:
         return uri
 
-    if illegal_only:
-        return requote_uri(uri)
-    else:
-        urlparts = urlsplit(uri)
-        path = urlquote(urlunquote(urlparts.path), safe=safe)
-        query = urlquote(urlunquote(urlparts.query), safe=safe)
-        fragment = urlquote(urlunquote(urlparts.fragment), safe=safe)
-        return urlunsplit((urlparts.scheme, urlparts.netloc, path, query, fragment))
+    uri = uri.replace("%", "%25").replace("\n", "%0A").replace("\r", "%0D")
+    if encode_whitespace:
+        uri = uri.replace(" ", "%20").replace("\t", "%09")
+
+    return uri
 
 
 def filter_dict(expr, entry):

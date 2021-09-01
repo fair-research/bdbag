@@ -149,7 +149,7 @@ class BOTO3FetchTransport(BaseFetchTransport):
                 stream.close()
             elapsed_time = datetime.datetime.now() - start
             check_transfer_size_mismatch(output_path, kwargs.get("size"), total)
-            logger.info("File [%s] transfer successful. %s" % (output_path, get_transfer_summary(total, elapsed_time)))
+            logger.info("File [%s] transfer complete. %s" % (output_path, get_transfer_summary(total, elapsed_time)))
             success = True
         except BOTOCORE.exceptions.ClientError as e:
             logger.error("Boto3 Client Error: %s" % get_typed_exception(e))

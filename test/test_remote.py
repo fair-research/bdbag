@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 #
 # Copyright 2016 University of Southern California
 #
@@ -14,6 +16,7 @@
 # limitations under the License.
 #
 import os
+import io
 import sys
 import logging
 import mock
@@ -110,6 +113,33 @@ class TestRemoteAPI(BaseTest):
     def test_create_bag_from_remote_file_manifest_json_stream(self):
         logger.info(self.getTestHeader('create bag add remote file manifest with json stream format'))
         self._test_bag_with_remote_file_manifest(use_json_stream=True)
+
+    def test_bag_with_unencoded_utf8_remote_file_manifest(self):
+        try:
+            bag_dir = self.test_data_dir
+            filename = 'test-fetch-manifest-encoding.json'
+            bag = bdb.make_bag(bag_dir,
+                               algs=["md5", "sha1", "sha256", "sha512"],
+                               remote_file_manifest=ospj(self.test_config_dir, filename))
+            output = self.stream.getvalue()
+            self.assertIsInstance(bag, bdbagit.BDBag)
+            self.assertExpectedMessages(['Generating remote file references from', filename], output)
+            fetch_file = ospj(bag_dir, 'fetch.txt')
+            self.assertTrue(ospif(fetch_file))
+            with io.open(fetch_file, encoding='utf-8') as ff:
+                fetch_txt = ff.read()
+            self.assertIn(
+                u'https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/'
+                u'test%20fetch%25http®.txt\t201\tdata/test%0Afetch%0Ahttp®.txt', fetch_txt)
+            self.assertIn(
+                u'https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/'
+                u'test%20fetch%25http®.txt\t201\tdata/test fetch http®.txt', fetch_txt)
+            self.assertIn(
+                u'https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/'
+                u'test%20fetch%25http®.txt\t201\tdata/test%25fetch http®%0D%0A.txt', fetch_txt)
+            bdb.validate_bag_structure(bag_dir, True)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
 
     def test_validate_profile(self):
         logger.info(self.getTestHeader('validate profile'))
