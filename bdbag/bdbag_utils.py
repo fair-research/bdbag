@@ -29,7 +29,8 @@ from bdbag import bdbag_api as bdb, parse_content_disposition, urlsplit, filter_
 from bdbag import get_typed_exception as gte
 from bdbag.fetch.transports.fetch_http import HTTPFetchTransport
 from bdbag.fetch.auth.keychain import read_keychain, DEFAULT_KEYCHAIN_FILE
-from bdbag.bdbag_config import DEFAULT_CONFIG
+from bdbag.bdbag_config import DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_FILE_ENVAR, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG, \
+    read_config
 from bdbag.bdbagit import force_unicode
 
 logger = logging.getLogger(__name__)
@@ -65,7 +66,8 @@ def create_rfm_from_filesystem(args):
                     continue
 
                 if args.streaming_json:
-                    rfm_file.writelines(''.join([json.dumps(rfm_entry, sort_keys=True), '\n']))
+                    rfm_file.writelines(''.join(
+                        [force_unicode(json.dumps(rfm_entry, sort_keys=True, ensure_ascii=False)), '\n']))
                 else:
                     rfm.append(rfm_entry)
         if not args.streaming_json:
@@ -76,15 +78,20 @@ def create_rfm_from_filesystem(args):
 def create_rfm_from_url_list(args):
     keychain_file = args.keychain_file if args.keychain_file else DEFAULT_KEYCHAIN_FILE
     auth = read_keychain(keychain_file)
+    config_file = args.config_file if args.config_file else DEFAULT_CONFIG_FILE
+    config = read_config(config_file=config_file, create_default=False)
+    fetch_config = config.get(FETCH_CONFIG_TAG) or DEFAULT_FETCH_CONFIG
+    transport = HTTPFetchTransport(fetch_config, auth)
+
     with io.open(args.output_file, 'w', encoding='utf-8') as rfm_file, \
             io.open(args.input_file, 'r', encoding='utf-8') as input_file:
         rfm = list()
         for url in input_file.readlines():
             rfm_entry = dict()
             url = url.strip()
-            logger.debug("Processing input URL %s" % url)
             try:
-                headers = head_for_headers(url, auth, raise_for_status=True)
+                session = transport.get_session(url)
+                headers = head_for_headers(session, url, raise_for_status=True)
             except Exception as e:
                 logging.warning("HEAD request failed for URL [%s]: %s" % (url, gte(e)))
                 continue
@@ -120,7 +127,6 @@ def create_rfm_from_url_list(args):
                     sha1 = binascii.hexlify(bytes(sha1, 'utf-8'))
                     sha1 = encode_hex_to_base64(sha1)
                     rfm_entry["sha1_base64"] = sha1
-            
 
             # if content length or both hash values are missing, there is a problem
             if not length:
@@ -188,11 +194,16 @@ def create_rfm_from_file(args):
             if args.sha512_col:
                 rfm_entry["sha512"] = row[args.sha512_col]
                 rfm_entry["sha512_base64"] = encode_hex_to_base64(rfm_entry["sha512"])
-            rfm.append(rfm_entry)
 
-        entries = deduplicate_rfm_entries(rfm)
-        logger.info("Writing %d entries to remote file manifest" % len(entries))
-        rfm_file.write(force_unicode(json.dumps(entries, sort_keys=True, indent=2, ensure_ascii=False)))
+            if args.streaming_json:
+                rfm_file.writelines(''.join(
+                    [force_unicode(json.dumps(rfm_entry, sort_keys=True, ensure_ascii=False)), '\n']))
+            else:
+                rfm.append(rfm_entry)
+        if not args.streaming_json:
+            entries = deduplicate_rfm_entries(rfm)
+            rfm_file.write(force_unicode(json.dumps(entries, sort_keys=True, indent=2, ensure_ascii=False)))
+
         logger.info("Successfully created remote file manifest: %s" % args.output_file)
 
 
@@ -207,18 +218,15 @@ def deduplicate_rfm_entries(rfm):
         if current not in unique:
             unique.add(current)
     if len(unique) < len(rfm):
-        logger.info("Remove %d duplicate entries from generated remote file manifest." % (len(rfm) - len(unique)))
+        logger.info("Removing %d duplicate entries from generated remote file manifest." % (len(rfm) - len(unique)))
 
     del rfm
     result = [d._asdict() for d in unique]
     return result
 
 
-def head_for_headers(url, auth=None, raise_for_status=False):
-    logger.debug("[head_for_headers] url:{}, auth:{}".format(url, auth))
-    hft = HTTPFetchTransport(DEFAULT_CONFIG, auth)
-    session = hft.get_session(url)
-    logger.debug("session acquired, move forward")
+def head_for_headers(session, url, raise_for_status=False):
+    logger.debug("Fetching headers for url: %s" % url)
     r = session.head(url, headers={'Connection': 'keep-alive'})
     if raise_for_status:
         r.raise_for_status()
@@ -384,7 +392,7 @@ def create_crfm_fs_subparser(subparsers):
     parser_crfm_fs.add_argument(
         streaming_json_arg, action='store_true', default=False,
         help=str("If \'streaming-json\' is specified, one JSON tuple object per line will be output to the output file."
-                 "Enable this option if the default behavior produces a file that is prohibitively large to parse "
+                 " Enable this option if the default behavior produces a file that is prohibitively large to parse "
                  "entirely into system memory."))
 
     parser_crfm_fs.set_defaults(func=create_rfm_from_filesystem)
@@ -453,6 +461,13 @@ def create_crfm_file_subparser(subparsers):
         crfm_file_input_sha512_arg, metavar="<sha512 column>",
         help="The column or attribute in the input file which will be mapped to the \"sha512\" attribute of the RFM.")
 
+    streaming_json_arg = "--streaming-json"
+    parser_crfm_file.add_argument(
+        streaming_json_arg, action='store_true', default=False,
+        help=str("If \'streaming-json\' is specified, one JSON tuple object per line will be output to the output file."
+                 " Enable this option if the default behavior produces a file that is prohibitively large to parse "
+                 "entirely into system memory."))
+
     parser_crfm_file.set_defaults(func=create_rfm_from_file)
 
 
@@ -461,7 +476,8 @@ def create_crfm_urls_subparser(subparsers):
         subparsers.add_parser(
             'create-rfm-from-url-list',
             description="Create a remote file manifest from a list of HTTP(S) URLs by issuing HTTP HEAD requests "
-                        "for the Content-Length, Content-Disposition, and Content-MD5 headers for each URL",
+                        "for the Content-Length, Content-Disposition, and Content-MD5, Content-SHA256, or Content-SHA1 "
+                        "headers for each URL",
             help='create-rfm-from-url-list help')
 
     parser_crfm_urls.add_argument(
@@ -476,6 +492,12 @@ def create_crfm_urls_subparser(subparsers):
         '--keychain-file', default=DEFAULT_KEYCHAIN_FILE, metavar='<file>',
         help="Optional path to a keychain file. If this argument is not specified, the keychain file "
              "defaults to: %s " % DEFAULT_KEYCHAIN_FILE)
+
+    parser_crfm_urls.add_argument(
+        '--config-file', default=DEFAULT_CONFIG_FILE, metavar='<file>',
+        help="Optional path to a configuration file. If this argument is not specified, the configuration file "
+             "will be set to the value of the environment variable %s (if present) or otherwise default to: %s"
+             % (DEFAULT_CONFIG_FILE_ENVAR, DEFAULT_CONFIG_FILE))
 
     crfm_urls_base_payload_path_arg = "--base-payload-path"
     parser_crfm_urls.add_argument(
@@ -498,7 +520,6 @@ def create_crfm_urls_subparser(subparsers):
     parser_crfm_urls.add_argument(
         crfm_urls_sha1_header_arg, metavar="<sha1 header name>", default="Content-SHA1",
         help="The name of the response header that contains the SHA1 hash value. Defaults to \"Content-SHA1\". ")
-
 
     crfm_urls_input_filter_arg = "--filter"
     parser_crfm_urls.add_argument(
@@ -527,7 +548,7 @@ def create_crfm_urls_subparser(subparsers):
     parser_crfm_urls.add_argument(
         crfm_urls_streaming_json_arg, action='store_true', default=False,
         help=str("If \'streaming-json\' is specified, one JSON tuple object per line will be output to the output file."
-                 "Enable this option if the default behavior produces a file that is prohibitively large to parse "
+                 " Enable this option if the default behavior produces a file that is prohibitively large to parse "
                  "entirely into system memory."))
 
     parser_crfm_urls.set_defaults(func=create_rfm_from_url_list)

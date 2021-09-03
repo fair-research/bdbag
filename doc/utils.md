@@ -132,6 +132,7 @@ usage: bdbag-utils create-rfm-from-file [-h] [--input-format {csv,json}]
                                         [--sha1-col <sha1 column>]
                                         [--sha256-col <sha256 column>]
                                         [--sha512-col <sha512 column>]
+                                        [--streaming-json]
                                         <input file> <output file>
 ```
 
@@ -201,6 +202,14 @@ The column or key name in the input file which will be mapped to the `sha256` at
 The column or key name in the input file which will be mapped to the `sha512` attribute of the output manifest.
 
 ----
+##### `--streaming-json`
+*Optional*
+
+If `streaming-json` is specified, one JSON tuple object per line will be written to the output file.
+Enable this option if the default behavior produces a file that is prohibitively large for `bdbag` to parse
+entirely into system memory.
+
+----
 ##### `<input file>`
 *Required*
 
@@ -221,6 +230,7 @@ requests for the Content-Length, Content-Disposition, and Content-MD5, Content-S
 Note: only `md5` and `sha256` hash algorithms are supported with this function.
 ```
 usage: bdbag-utils create-rfm-from-url-list [-h] [--keychain-file <file>]
+                                            [--config-file <file>]
                                             [--base-payload-path <url>]
                                             [--md5-header <md5 header name>]
                                             [--sha256-header <sha256 header name>]
@@ -237,6 +247,13 @@ usage: bdbag-utils create-rfm-from-url-list [-h] [--keychain-file <file>]
 
 Optional path to a [`keychain`](config.md#keychain.json) file. If this argument is not specified, the keychain file
 defaults to: `~/.bdbag/keychain.json`.
+
+----
+##### `--config-file <file>`
+Optional path to a *bdbag* configuration file. The configuration file format is described
+[here](./config.md#bdbag.json).
+If this argument is not specified, the configuration file will be set to the value of the environment variable `BDBAG_CONFIG_FILE` (if present) or otherwise default to `~/.bdbag/bdbag.json`.
+
 
 ----
 ##### `--base-payload-path <url>`
