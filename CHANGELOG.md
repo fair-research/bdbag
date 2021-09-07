@@ -1,5 +1,12 @@
 # CHANGE LOG
 
+## 1.6.2
+* Set "User-Agent" header for http fetch handler (requests) to `"bdbag/{version} (requests/{version}"`.
+* Added `sha1` support for `bdbag_utils` function `create-rfm-from-url-list`. See PR [#46](https://github.com/fair-research/bdbag/pull/46).
+* Fix issues with unicode handling in `fetch.txt`, RO `metadata.json`, `keychain.json`, and `remote-file-manifest` JSON files.
+* Fix issues with over-escaping (urlencoding) of filenames and urls in `fetch.txt` and RO `metadata.json`. 
+  Per the spec, *only* CR,LF, whitespace, and literal percent should be encoded.
+
 ## 1.6.1
 * [#41](https://github.com/fair-research/bdbag/issues/41): Add support for regex patterns in `filter_dict`. 
   See PR [#42](https://github.com/fair-research/bdbag/pull/42).
