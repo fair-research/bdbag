@@ -59,6 +59,7 @@ setup(
     install_requires=['pytz',
                       'tzlocal==2.1',
                       'certifi',
+                      'requests>=2.7.0,<=2.25.1; python_version == "3.5"',
                       'requests>=2.7.0',
                       'setuptools_scm<6.0',  # for bagit which does not properly include it in install_requires
                       'bagit==1.8.1',

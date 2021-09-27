@@ -1,5 +1,12 @@
 # CHANGE LOG
 
+## 1.6.3
+* Fix bug in `bdbag_api.validate()` where underlying `BagError` exceptions were not being propagated correctly.
+* Add an environment marker to `setup.py` for the `python-requests` dependency. This marker specifies that no greater 
+than `requests-2.25.1` be used with `Python3.5` environments, due to underlying incompatibilities with `requests` dependency 
+chain and `Python3.5` after `requests-2.26.0`. Reported in issue [#47](https://github.com/fair-research/bdbag/issues/47).
+Note that `bdbag` support for `Python3.5` is planned to be dropped in the `1.7.0` release.
+
 ## 1.6.2
 * Set "User-Agent" header for HTTP fetch handler (via `python-requests`) to `"bdbag/{version} (requests/{version})"`.
 * Added `sha1` support for `bdbag_utils` function `create-rfm-from-url-list`. See PR [#46](https://github.com/fair-research/bdbag/pull/46).

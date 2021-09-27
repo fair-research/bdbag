@@ -413,7 +413,7 @@ def validate_bag(bag_path, fast=False, callback=None, config_file=None):
                        "remote file references from a fetch.txt file. In this case the bag is incomplete but not "
                        "necessarily invalid. Resolve remote file references (if any) and re-validate.")
         raise e
-    except bdbagit.BaggingInterruptedError as e:
+    except (bdbagit.BagError, bdbagit.BaggingInterruptedError) as e:
         logger.warning(get_typed_exception(e))
         raise e
     except Exception as e:  # pragma: no cover
