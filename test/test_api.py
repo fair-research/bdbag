@@ -816,6 +816,13 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_validate_non_bag(self):
+        logger.info(self.getTestHeader('test validation non-bag'))
+        try:
+            self.assertRaises(bdbagit.BagError, bdb.validate_bag, self.test_data_dir)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_validate_incomplete_bag_structure(self):
         logger.info(self.getTestHeader('test structure validation incomplete bag'))
         try:
