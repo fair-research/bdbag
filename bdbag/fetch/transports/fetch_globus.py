@@ -38,9 +38,9 @@ class GlobusTransferFetchTransport(BaseFetchTransport):
             return False
         if not kc.has_auth_attr(auth, "auth_params"):
             return False
-        if not kc.has_auth_attr(auth.auth_params, "transfer_token"):
+        if not kc.has_auth_attr(auth["auth_params"], "transfer_token"):
             return False
-        if not kc.has_auth_attr(auth.auth_params, "local_endpoint"):
+        if not kc.has_auth_attr(auth["auth_params"], "local_endpoint"):
             return False
 
         return True
