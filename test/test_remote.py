@@ -72,6 +72,7 @@ class TestRemoteAPI(BaseTest):
         self.stream = StringIO()
         self.handler = logging.StreamHandler(self.stream)
         logger.addHandler(self.handler)
+        logger.setLevel(logging.DEBUG)
 
     def tearDown(self):
         self.stream.close()
