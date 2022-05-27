@@ -36,12 +36,18 @@ from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE
 logger = logging.getLogger(__name__)
 
 
-def configure_logging(level=logging.INFO, logpath=None, filemode='a', log_format=DEFAULT_LOG_FORMAT):
+def configure_logging(level=logging.INFO, logpath=None, filemode='a', log_format=DEFAULT_LOG_FORMAT, force=False):
     logging.captureWarnings(True)
     if logpath:
-        logging.basicConfig(filename=logpath, filemode=filemode, level=level, format=log_format)
+        if sys.version_info > (3, 8):
+            logging.basicConfig(filename=logpath, filemode=filemode, level=level, format=log_format, force=force)
+        else:
+            logging.basicConfig(filename=logpath, filemode=filemode, level=level, format=log_format)
     else:
-        logging.basicConfig(level=level, format=log_format)
+        if sys.version_info > (3, 8):
+            logging.basicConfig(level=level, format=log_format, force=force)
+        else:
+            logging.basicConfig(level=level, format=log_format)
 
 
 def read_metadata(metadata_file):
@@ -71,7 +77,7 @@ def ensure_bag_path_exists(bag_path, save=True):
     if os.path.exists(bag_path):
         saved_bag_path = cleanup_bag(bag_path, save)
     if not os.path.exists(bag_path):
-        logging.info("Creating bag directory: %s" % bag_path)
+        logger.info("Creating bag directory: %s" % bag_path)
         os.makedirs(bag_path)
 
     return saved_bag_path
@@ -97,7 +103,7 @@ def revert_bag(bag_path):
         os.rmdir(data_path)
     else:
         logger.warning("Bag directory %s does not contain a \"data\" directory to revert." % bag_path)
-    logging.info("Bag directory %s has been reverted back to a normal directory." % bag_path)
+    logger.info("Bag directory %s has been reverted back to a normal directory." % bag_path)
 
 
 def prune_bag_manifests(bag):
@@ -588,7 +594,6 @@ def materialize(input_path,
                 force=False,
                 **kwargs):
 
-    configure_logging()
     bag_file = bag_path = None
     is_file, is_dir, is_uri = inspect_path(input_path)
     if is_file:
@@ -612,8 +617,8 @@ def materialize(input_path,
 
     if bag_path:
         if not is_bag(bag_path):
-            logging.info("The directory [%s] is not a valid bag directory. "
-                         "Only a properly structured bag directory can be fully materialized." % bag_path)
+            logger.info("The directory [%s] is not a valid bag directory. "
+                        "Only a properly structured bag directory can be fully materialized." % bag_path)
             return bag_path
 
         if not resolve_fetch(bag_path,
@@ -623,7 +628,7 @@ def materialize(input_path,
                              config_file=config_file,
                              filter_expr=filter_expr,
                              **kwargs):
-            logging.warning("One or more bag files were not fetched successfully.")
+            logger.warning("One or more bag files were not fetched successfully.")
 
         validate_bag(bag_path, fast=False, callback=validation_callback, config_file=config_file)
 

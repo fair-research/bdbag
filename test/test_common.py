@@ -24,7 +24,7 @@ import logging
 from bdbag.bdbag_api import configure_logging
 from bdbag.bdbagit import open_text_file
 
-configure_logging(logpath='test.log', filemode='w', level=logging.DEBUG)
+configure_logging(logpath='test.log', filemode='w', level=logging.DEBUG, force=True)
 
 
 class BaseTest(unittest.TestCase):

@@ -50,7 +50,7 @@ class CustomTestFetchTransport(HTTPFetchTransport):
     def __init__(self, config, keychain, **kwargs):
         super(CustomTestFetchTransport, self).__init__(config, keychain, **kwargs)
         if self.keychain:
-            logging.debug("Got propagated keychain: %s" % json.dumps(self.keychain))
+            logger.debug("Got propagated keychain: %s" % json.dumps(self.keychain))
 
     def fetch(self, url, output_path, **kwargs):
         return super(CustomTestFetchTransport, self).fetch(url, output_path, **kwargs)

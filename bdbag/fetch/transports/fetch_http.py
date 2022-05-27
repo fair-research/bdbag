@@ -124,8 +124,8 @@ class HTTPFetchTransport(BaseFetchTransport):
                         self.sessions[uri] = session
                         break
                     else:
-                        logging.warning("Missing required parameters [token] for auth_type [%s] for keychain entry [%s]"
-                                        % (auth_type, uri))
+                        logger.warning("Missing required parameters [token] for auth_type [%s] for keychain entry [%s]"
+                                       % (auth_type, uri))
 
                 # if we get here the assumption is that the auth_type is either http-basic or http-form and that an
                 # actual session "login" request is necessary
@@ -133,7 +133,7 @@ class HTTPFetchTransport(BaseFetchTransport):
                 username = auth_params.get("username")
                 password = auth_params.get("password")
                 if not (username and password):
-                    logging.warning(
+                    logger.warning(
                         "Missing required parameters [username, password] for auth_type [%s] for keychain entry [%s]" %
                         (auth_type, uri))
                     continue
@@ -150,8 +150,8 @@ class HTTPFetchTransport(BaseFetchTransport):
                     elif auth_method == "get":
                         response = session.get(auth_uri, auth=session.auth)
                     else:
-                        logging.warning("Unsupported auth_method [%s] for auth_type [%s] for keychain entry [%s]" %
-                                        (auth_method, auth_type, uri))
+                        logger.warning("Unsupported auth_method [%s] for auth_type [%s] for keychain entry [%s]" %
+                                       (auth_method, auth_type, uri))
                 elif auth_type == "http-form":
                     username_field = auth_params.get("username_field", "username")
                     password_field = auth_params.get("password_field", "password")

@@ -93,7 +93,7 @@ def create_rfm_from_url_list(args):
                 session = transport.get_session(url)
                 headers = head_for_headers(session, url, raise_for_status=True)
             except Exception as e:
-                logging.warning("HEAD request failed for URL [%s]: %s" % (url, gte(e)))
+                logger.warning("HEAD request failed for URL [%s]: %s" % (url, gte(e)))
                 continue
             logger.debug("Result headers: %s" % headers)
             length = headers.get("Content-Length")
@@ -130,9 +130,9 @@ def create_rfm_from_url_list(args):
 
             # if content length or both hash values are missing, there is a problem
             if not length:
-                logging.warning("Could not determine Content-Length for %s" % url)
+                logger.warning("Could not determine Content-Length for %s" % url)
             if not (md5 or sha256 or sha1):
-                logging.warning("Could not locate an MD5 or SHA256 or SHA1 hash for %s" % url)
+                logger.warning("Could not locate an MD5 or SHA256 or SHA1 hash for %s" % url)
 
             # try to construct filename using content_disposition, if available, else fallback to the URL path fragment
             filepath = urlsplit(url).path
@@ -265,7 +265,7 @@ def compute_hashes(obj, hashes=frozenset(['md5'])):
         try:
             hashers[alg] = hashlib.new(alg.lower())
         except ValueError:
-            logging.warning("Unable to validate file contents using unknown hash algorithm: %s", alg)
+            logger.warning("Unable to validate file contents using unknown hash algorithm: %s", alg)
 
     while True:
         if hasattr(obj, 'read'):
@@ -296,16 +296,16 @@ def compute_file_hashes(file_path, hashes=frozenset(['md5'])):
        Digests data read from file denoted by file_path.
     """
     if not os.path.exists(file_path):
-        logging.warning("%s does not exist" % file_path)
+        logger.warning("%s does not exist" % file_path)
         return
     else:
-        logging.debug("Computing [%s] hashes for file [%s]" % (','.join(hashes), file_path))
+        logger.debug("Computing [%s] hashes for file [%s]" % (','.join(hashes), file_path))
 
     try:
         with open(file_path, 'rb') as fd:
             return compute_hashes(fd, hashes)
     except (IOError, OSError) as e:
-        logging.warning("Error while calculating digest(s) for file %s: %s" % (file_path, str(e)))
+        logger.warning("Error while calculating digest(s) for file %s: %s" % (file_path, str(e)))
         raise
 
 

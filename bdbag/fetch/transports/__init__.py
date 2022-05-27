@@ -65,8 +65,8 @@ def find_fetcher(scheme, fetch_config, keychain, **kwargs):
 
         if not stob(config.get("allow_keychain", False)):
             keychain = None
-            logging.debug("Keychain will not be passed to fetch handler class [%s]. Set \"allow_keychain\":\"True\" in "
-                          "fetch config to enable keychain propagation." % handler)
+            logger.debug("Keychain will not be passed to fetch handler class [%s]. Set \"allow_keychain\":\"True\" in "
+                         "fetch config to enable keychain propagation." % handler)
 
     return clazz(config, keychain, **kwargs)
 

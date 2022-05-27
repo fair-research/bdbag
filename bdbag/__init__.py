@@ -25,7 +25,9 @@ from requests.utils import requote_uri
 from distutils.util import strtobool
 from pkg_resources import parse_version, get_distribution, DistributionNotFound
 
-__version__ = "1.6.3"
+logger = logging.getLogger(__name__)
+
+__version__ = "1.6.4-dev"
 __bagit_version__ = "1.8.1"
 __bagit_profile_version__ = "1.3.1"
 
@@ -198,12 +200,12 @@ def filter_dict(expr, entry):
                     statement = "%d%s%d" % (int(value), operator, int(filter_val))
                     result = eval(statement)
                 except Exception as e:
-                    logging.warning("Unable to evaluate filter expression [%s]: %s" %
-                                    (expr, get_typed_exception(e)))
+                    logger.warning("Unable to evaluate filter expression [%s]: %s" %
+                                   (expr, get_typed_exception(e)))
             else:
                 result = filter_val == value
     if not result:
-        logging.debug(
+        logger.debug(
             "Excluding %s because it does not match the filter expression: [%s]." %
             (json.dumps(entry), expr))
 
@@ -231,18 +233,18 @@ def safe_move(old_path, new_path=None):
     if new_path:
         new_path = os.path.realpath(new_path)
     if os.path.dirname(old_path) == old_path:
-        logging.debug("Ignore move of root filesystem path: %s" % old_path)
+        logger.debug("Ignore move of root filesystem path: %s" % old_path)
         return old_path
 
     path_qualifier = '-' + datetime.strftime(datetime.now(), "%Y-%m-%d_%H.%M.%S")
     if os.path.exists(old_path):
         if not new_path:
             new_path = ''.join([old_path, path_qualifier])
-            logging.info("Target path %s already exists, moving it to %s" %
-                         (old_path, new_path))
+            logger.info("Target path %s already exists, moving it to %s" %
+                        (old_path, new_path))
         elif new_path and os.path.exists(new_path):
             override_path = ''.join([new_path, path_qualifier])
-            logging.info("Requested target path %s already exists, moving it to %s" % (new_path, override_path))
+            logger.info("Requested target path %s already exists, moving it to %s" % (new_path, override_path))
             new_path = override_path
         shutil.move(old_path, new_path)
         return new_path
@@ -264,11 +266,11 @@ def bag_parent_dir_from_archive(file_list):
             child_paths.add(root[2].partition("/")[0])
 
     if len(parent_paths - child_paths) > 1:
-        logging.warning("Unable to determine bag parent directory from archive file list. "
-                        "Expecting single bag parent dir but got: %s" % parent_paths)
+        logger.warning("Unable to determine bag parent directory from archive file list. "
+                       "Expecting single bag parent dir but got: %s" % parent_paths)
         return None
     if len(root_paths - parent_paths) > 0:
-        logging.warning("Unable to determine bag parent directory from archive file list. "
-                        "Expecting single bag parent dir in archive but found files in the archive root")
+        logger.warning("Unable to determine bag parent directory from archive file list. "
+                       "Expecting single bag parent dir in archive but found files in the archive root")
         return None
     return parent_paths.pop()

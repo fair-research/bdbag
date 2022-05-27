@@ -80,7 +80,7 @@ class TestAPI(BaseTest):
         config_envar = os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR)
         try:
             if config_envar:
-                logging.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
+                logger.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
                 del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
             self.assertIsNone(os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR))
             bdbcfg.read_config()
@@ -115,7 +115,7 @@ class TestAPI(BaseTest):
         config_envar = os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR)
         try:
             if config_envar:
-                logging.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
+                logger.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
                 del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
             self.assertIsNone(os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR))
             config_file = ospj(self.test_config_dir, 'base-config.json')
@@ -134,7 +134,7 @@ class TestAPI(BaseTest):
         config_envar = os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR)
         try:
             if config_envar:
-                logging.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
+                logger.info("Ignoring already set envar %s: %s" % (bdbcfg.DEFAULT_CONFIG_FILE_ENVAR, config_envar))
                 del os.environ[bdbcfg.DEFAULT_CONFIG_FILE_ENVAR]
             self.assertIsNone(os.getenv(bdbcfg.DEFAULT_CONFIG_FILE_ENVAR))
             config_file = ospj(self.test_config_dir, 'bse-config.json')

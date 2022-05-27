@@ -21,6 +21,8 @@ from requests.cookies import RequestsCookieJar
 from bdbag import stob, get_typed_exception
 from bdbag.bdbag_config import *
 
+logger = logging.getLogger(__name__)
+
 if sys.version_info > (3,):
     from http.cookiejar import MozillaCookieJar
 else:
@@ -39,8 +41,8 @@ def find_cookie_jars(cookie_jar_config=None):
                         dirs, cookie_jar_config.get(COOKIE_JAR_PATH_FILTER_TAG, DEFAULT_COOKIE_JAR_SEARCH_PATH_FILTER))]
                     patterns = cookie_jar_config.get(COOKIE_JAR_FILE_TAG, DEFAULT_COOKIE_JAR_FILE_NAMES)
                     if dirs:
-                        logging.debug("Scanning directories %s in %s for cookie files named: %s" %
-                                      (dirs, root, patterns))
+                        logger.debug("Scanning directories %s in %s for cookie files named: %s" %
+                                     (dirs, root, patterns))
                     for pattern in patterns:
                         for f in fnmatch.filter(files, pattern):
                             found.append(os.path.join(root, f))
@@ -52,7 +54,7 @@ def load_and_merge_cookie_jars(cookie_jar_paths):
     if not cookie_jar_paths:
         return cookie_jar
 
-    logging.debug("Attempting to load and merge the following cookie files: %s" % cookie_jar_paths)
+    logger.debug("Attempting to load and merge the following cookie files: %s" % cookie_jar_paths)
     for f in cookie_jar_paths:
         if os.path.isfile(f):
             try:
@@ -60,7 +62,7 @@ def load_and_merge_cookie_jars(cookie_jar_paths):
                 cookies.load(ignore_expires=True, ignore_discard=True)
                 cookie_jar.update(cookies)
             except Exception as e:
-                logging.warning("Unable to load cookie file [%s]: %s" % (f, get_typed_exception(e)))
+                logger.warning("Unable to load cookie file [%s]: %s" % (f, get_typed_exception(e)))
 
     # Do not preserve expire values from cookies with expires=0 from the file, or requests will not use the cookie
     for cookie in iter(cookie_jar):

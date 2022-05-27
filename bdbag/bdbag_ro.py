@@ -72,7 +72,7 @@ def write_bag_ro_metadata(obj, bag_path, metadata_path="manifest.json"):
 
 
 def serialize_bag_ro_metadata(obj, bag_path):
-    logging.info("Serializing ro-metadata to: %s" % os.path.abspath(os.path.join(bag_path, "metadata")))
+    logger.info("Serializing ro-metadata to: %s" % os.path.abspath(os.path.join(bag_path, "metadata")))
     check_input(obj)
     for k, v in obj.items():
         write_bag_ro_metadata(v, bag_path, k)

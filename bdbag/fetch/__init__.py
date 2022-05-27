@@ -17,6 +17,8 @@ import os
 import logging
 from bdbag import urlsplit, urlunquote
 
+logger = logging.getLogger(__name__)
+
 Kilobyte = 1024
 Megabyte = Kilobyte ** 2
 
@@ -44,8 +46,8 @@ def get_transfer_summary(total_bytes, elapsed_time):
 def check_transfer_size_mismatch(path, expected, total):
     if isinstance(expected, int) and isinstance(total, int):
         if expected != total:
-            logging.warning("File [%s] transfer size mismatch. Expected %s bytes but received %s bytes." %
-                            (path, expected, total))
+            logger.warning("File [%s] transfer size mismatch. Expected %s bytes but received %s bytes." %
+                           (path, expected, total))
             return True
     return False
 

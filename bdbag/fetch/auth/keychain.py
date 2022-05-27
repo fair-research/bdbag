@@ -129,8 +129,8 @@ def update_keychain(keychain_entries, keychain_file=None, delete=False):
             update_auth_type = update_entry.get("auth_type")
             update_tag = update_entry.get("tag")
             if not ((update_uri and update_auth_type) or update_tag):
-                logging.warning("BDBag keychain entry update requires either a pair of valid \"uri\" and \"auth_type\" "
-                                "parameters or a \"tag\" parameter to match keychain entries against.")
+                logger.warning("BDBag keychain entry update requires either a pair of valid \"uri\" and \"auth_type\" "
+                               "parameters or a \"tag\" parameter to match keychain entries against.")
                 continue
             update_uri = update_uri.lower().strip() if update_uri else None
             uri = entry.get("uri", "").lower().strip()

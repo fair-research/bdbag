@@ -47,7 +47,7 @@ class BOTO3FetchTransport(BaseFetchTransport):
             except ImportError as e:
                 raise RuntimeError(
                     "Unable to find required module. Ensure that the Python package \"boto3\" is installed.", e)
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
+        if logger.isEnabledFor(logging.DEBUG):
             BOTO3.set_stream_logger("")
 
     @staticmethod
@@ -138,8 +138,8 @@ class BOTO3FetchTransport(BaseFetchTransport):
                             break
                         except BOTOCORE.exceptions.ReadTimeoutError as rt:
                             retry_count += 1
-                            logging.warning("Boto3 read timeout. Retrying attempt %s of %s" %
-                                            (retry_count, max_retries))
+                            logger.warning("Boto3 read timeout. Retrying attempt %s of %s" %
+                                           (retry_count, max_retries))
                             if retry_count == max_retries:
                                 raise rt
                     if chunk == b"" or chunk is None:

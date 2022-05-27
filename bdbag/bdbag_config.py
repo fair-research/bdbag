@@ -171,7 +171,7 @@ def write_config(config=DEFAULT_CONFIG, config_file=DEFAULT_CONFIG_FILE):
         with open(config_file, 'w') as cf:
             cf.write(json.dumps(config if config is not None else DEFAULT_CONFIG, indent=4, sort_keys=True))
             cf.close()
-            logging.info("Wrote configuration file: %s" % config_file)
+            logger.info("Wrote configuration file: %s" % config_file)
     except Exception as e:
         logger.warning("Unable to create configuration file %s. %s" % (config_file, get_typed_exception(e)))
 
@@ -180,9 +180,9 @@ def read_config(config_file=None, create_default=True, auto_upgrade=False):
     if not config_file:
         config_file = os.getenv(DEFAULT_CONFIG_FILE_ENVAR, DEFAULT_CONFIG_FILE)
         if not os.path.isfile(config_file) and (config_file != DEFAULT_CONFIG_FILE) and not create_default:
-            logging.warning("Invalid configuration file path specified using environment variable %s: [%s]. "
-                            "Falling back to default configuration file path: [%s]" %
-                            (DEFAULT_CONFIG_FILE_ENVAR, config_file, DEFAULT_CONFIG_FILE))
+            logger.warning("Invalid configuration file path specified using environment variable %s: [%s]. "
+                           "Falling back to default configuration file path: [%s]" %
+                           (DEFAULT_CONFIG_FILE_ENVAR, config_file, DEFAULT_CONFIG_FILE))
             config_file = DEFAULT_CONFIG_FILE
 
     if not os.path.isfile(config_file) and create_default:
@@ -192,7 +192,7 @@ def read_config(config_file=None, create_default=True, auto_upgrade=False):
         upgrade_config(config_file)
 
     if os.path.isfile(config_file):
-        logging.debug("Loading configuration file from: %s" % config_file)
+        logger.debug("Loading configuration file from: %s" % config_file)
         with open(config_file) as cf:
             config = cf.read()
     else:
