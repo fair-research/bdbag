@@ -11,6 +11,7 @@ os:
 #  - osx
 #  - windows
 install:
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then pip install --upgrade importlib_metadata; fi
   - pip install coveralls coverage flake8
   - python setup.py install
 before_script:
