@@ -75,7 +75,7 @@ class GCSFetchTransport(BaseFetchTransport):
         requester_pays_status = bucket.requester_pays
 
         if requester_pays_status:
-            logger.info(f"Requester Pays is enabled for {bucket_name}")
+            logger.info("Requester Pays is enabled for bucket: %s" % bucket_name)
 
         return requester_pays_status
 
