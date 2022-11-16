@@ -80,6 +80,9 @@ DEFAULT_FETCH_CONFIG = {
         "read_chunk_size": 10 * Megabyte,
         "read_timeout_seconds": 60,
         "max_read_retries": 3
+    },
+    "gs": {
+        "default_project_id": None
     }
 }
 

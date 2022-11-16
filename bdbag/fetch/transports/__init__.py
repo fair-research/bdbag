@@ -24,6 +24,7 @@ from bdbag.fetch.transports.fetch_http import HTTPFetchTransport
 from bdbag.fetch.transports.fetch_ftp import FTPFetchTransport
 from bdbag.fetch.transports.fetch_globus import GlobusTransferFetchTransport
 from bdbag.fetch.transports.fetch_boto3 import BOTO3FetchTransport
+from bdbag.fetch.transports.fetch_gcs import GCSFetchTransport
 from bdbag.fetch.transports.fetch_tag import TAGFetchTransport
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ DEFAULT_FETCH_TRANSPORTS = {
     SCHEME_HTTPS: HTTPFetchTransport,
     SCHEME_FTP: FTPFetchTransport,
     SCHEME_S3: BOTO3FetchTransport,
-    SCHEME_GS: BOTO3FetchTransport,
+    SCHEME_GS: GCSFetchTransport,
     SCHEME_GLOBUS: GlobusTransferFetchTransport,
     SCHEME_TAG: TAGFetchTransport
 }
