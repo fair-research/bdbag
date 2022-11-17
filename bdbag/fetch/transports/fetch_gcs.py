@@ -80,11 +80,11 @@ class GCSFetchTransport(BaseFetchTransport):
             except Exception as e:
                 raise RuntimeError("Unable to create GCS storage client: %s" % get_typed_exception(e))
 
-            logger.info("Attempting GET from URL: %s" % url)
             upr = urlsplit(url, allow_fragments=False)
             allow_requester_pays = credentials.get("allow_requester_pays", False)
             bucket = gcs_client.bucket(upr.netloc, user_project=project_id if allow_requester_pays else None)
-
+            logger.info("Attempting GET from URL: %s with project_id=%s and allow_requester_pays=%s" %
+                        (url, project_id, allow_requester_pays))
             logger.debug("Transferring file %s to %s" % (url, output_path))
             blob = bucket.blob(upr.path.lstrip("/"))
             start = datetime.datetime.now()
