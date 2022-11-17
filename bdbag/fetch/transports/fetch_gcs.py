@@ -67,18 +67,6 @@ class GCSFetchTransport(BaseFetchTransport):
 
         return credentials
 
-    @staticmethod
-    def get_requester_pays_status(client, bucket_name):
-        """Get a bucket's requester pays metadata"""
-
-        bucket = client.get_bucket(bucket_name)
-        requester_pays_status = bucket.requester_pays
-
-        if requester_pays_status:
-            logger.info("Requester Pays is enabled for bucket: %s" % bucket_name)
-
-        return requester_pays_status
-
     def fetch(self, url, output_path, **kwargs):
         success = False
         output_path = ensure_valid_output_path(url, output_path)
@@ -86,7 +74,7 @@ class GCSFetchTransport(BaseFetchTransport):
         self.import_gcs()
         try:
             credentials = self.get_credentials(url) or {}
-            project_id = credentials.get("project_id") or self.config["default_project_id"]
+            project_id = credentials.get("project_id") or self.config.get("default_project_id") or None
             try:
                 gcs_client = GCS.Client(project=project_id)
             except Exception as e:
@@ -94,8 +82,8 @@ class GCSFetchTransport(BaseFetchTransport):
 
             logger.info("Attempting GET from URL: %s" % url)
             upr = urlsplit(url, allow_fragments=False)
-            requester_pays = self.get_requester_pays_status(gcs_client, upr.netloc)
-            bucket = gcs_client.bucket(upr.netloc, user_project=project_id if requester_pays else None)
+            allow_requester_pays = credentials.get("allow_requester_pays", False)
+            bucket = gcs_client.bucket(upr.netloc, user_project=project_id if allow_requester_pays else None)
 
             logger.debug("Transferring file %s to %s" % (url, output_path))
             blob = bucket.blob(upr.path.lstrip("/"))
