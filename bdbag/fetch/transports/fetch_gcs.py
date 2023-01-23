@@ -26,6 +26,7 @@ from bdbag.fetch.auth import keychain as kc
 logger = logging.getLogger(__name__)
 
 GCS = None
+GSA = None
 
 
 class GCSFetchTransport(BaseFetchTransport):
@@ -40,12 +41,22 @@ class GCSFetchTransport(BaseFetchTransport):
         global GCS
         if GCS is None:
             gcs_module = "google.cloud.storage"
+            gsa_module = "google.oauth2.service_account"
             try:
                 GCS = import_module(gcs_module)
             except ImportError as e:
                 raise RuntimeError(
                     "Unable to find required module. Ensure that the Python module "
                     "\"%s\" is installed." % gcs_module, e)
+        global GSA
+        if GSA is None:
+            gsa_module = "google.oauth2.service_account"
+            try:
+                GSA = import_module(gsa_module)
+            except ImportError as e:
+                raise RuntimeError(
+                    "Unable to find required module. Ensure that the Python module "
+                    "\"%s\" is installed." % gsa_module, e)
 
     @staticmethod
     def validate_auth_config(auth):
@@ -75,16 +86,21 @@ class GCSFetchTransport(BaseFetchTransport):
         try:
             credentials = self.get_credentials(url) or {}
             project_id = credentials.get("project_id") or self.config.get("default_project_id") or None
+            service_account_creds_file = credentials.get("service_account_credentials_file")
+            storage_credentials = GSA.Credentials.from_service_account_file(service_account_creds_file) \
+                if (service_account_creds_file and os.path.isfile(service_account_creds_file)) else None
             try:
-                gcs_client = GCS.Client(project=project_id)
+                gcs_client = GCS.Client(project=project_id, credentials=storage_credentials)
             except Exception as e:
                 raise RuntimeError("Unable to create GCS storage client: %s" % get_typed_exception(e))
 
             upr = urlsplit(url, allow_fragments=False)
             allow_requester_pays = credentials.get("allow_requester_pays", False)
             bucket = gcs_client.bucket(upr.netloc, user_project=project_id if allow_requester_pays else None)
-            logger.info("Attempting GET from URL: %s with project_id=%s and allow_requester_pays=%s" %
-                        (url, project_id, allow_requester_pays))
+            logger.info("Attempting GET from URL: %s with project_id=%s and allow_requester_pays=%s%s" %
+                        (url, project_id, allow_requester_pays,
+                         ". Using service account credentials from file %s" % service_account_creds_file if
+                         service_account_creds_file else ""))
             logger.debug("Transferring file %s to %s" % (url, output_path))
             blob = bucket.blob(upr.path.lstrip("/"))
             start = datetime.datetime.now()
