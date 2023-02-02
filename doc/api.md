@@ -53,10 +53,10 @@ compliant, i.e., complies with the rules of **"Section 4: Serialization"** of th
 [BagIt Specification](https://datatracker.ietf.org/doc/draft-kunze-bagit/).
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
-|bag_archiver|`string`|One of the following case-insensitive string values: `zip`, `tar`, or `tgz`.
+| Param        | Type     | Description                                                                  |
+|--------------|----------|------------------------------------------------------------------------------|
+| bag_path     | `string` | A normalized, absolute path to a bag directory.                              |
+| bag_archiver | `string` | One of the following case-insensitive string values: `zip`, `tar`, or `tgz`. |
 
 **Returns**: `string` - The normalized, absolute path of the directory of the created archive file.
 
@@ -70,11 +70,11 @@ Checks if the payload files in the bag's `data` directory are consistent with th
 `fetch.txt` file, if any.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag|`bag`|a `bag` object such as that returned by `make_bag`
-|skip_remote|`boolean`|do not include any of the bag's remote file entries or `fetch.txt` entries in the check
-|quiet|`boolean`|do not emit any logging messages if inconsistencies are encountered
+| Param       | Type      | Description                                                                             |
+|-------------|-----------|-----------------------------------------------------------------------------------------|
+| bag         | `bag`     | a `bag` object such as that returned by `make_bag`                                      |
+| skip_remote | `boolean` | do not include any of the bag's remote file entries or `fetch.txt` entries in the check |
+| quiet       | `boolean` | do not emit any logging messages if inconsistencies are encountered                     |
 
 **Returns**: `boolean` - If all payload files can be accounted for either locally or as remote entries in `fetch.txt`,
 and that there are no additional files present that are not listed in either `fetch.txt` or the bag's file manifests.
@@ -88,9 +88,9 @@ cleanup_bag(bag_path)
 Deletes the directory tree denoted by `bag_path`.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
+| Param    | Type     | Description                                     |
+|----------|----------|-------------------------------------------------|
+| bag_path | `string` | A normalized, absolute path to a bag directory. |
 
 -----
 <a name="configure_logging"></a>
@@ -101,10 +101,10 @@ configure_logging(level=logging.INFO, logpath=None)
 Set the logging level and optional file output path for log statements.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|level|[Python logging module level constant](https://docs.python.org/2/library/logging.html#logging-levels)|The logging event filter level.
-|logpath|`string`|A path to a file to redirect logging statements to. Default is **stdout**.
+| Param   | Type                                                                                                  | Description                                                                |
+|---------|-------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| level   | [Python logging module level constant](https://docs.python.org/2/library/logging.html#logging-levels) | The logging event filter level.                                            |
+| logpath | `string`                                                                                              | A path to a file to redirect logging statements to. Default is **stdout**. |
 
 -----
 <a name="extract_bag"></a>
@@ -115,11 +115,11 @@ extract_bag(bag_path, output_path=None, temp=False)
 Extracts the bag specified by `bag_path` to the based directory specified by `output_path`, or, if the `temp` parameter is specified, an operating system dependent temporary path.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
-|output_path|`string`|A normalized, absolute path to a base directory where the bag should be extracted.
-|temp|`boolean`|A `boolean` value indicating whether to extract this bag to a temporary directory or not. If `True`, overrides the `output_path` variable, if specified.
+| Param       | Type      | Description                                                                                                                                              |
+|-------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| bag_path    | `string`  | A normalized, absolute path to a bag directory.                                                                                                          |
+| output_path | `string`  | A normalized, absolute path to a base directory where the bag should be extracted.                                                                       |
+| temp        | `boolean` | A `boolean` value indicating whether to extract this bag to a temporary directory or not. If `True`, overrides the `output_path` variable, if specified. |
 
 **Returns**: `string` - The normalized, absolute path of the directory where the bag was extracted.
 
@@ -136,10 +136,10 @@ Note: the contents of the `manifest.json` file output by this method are limited
 Currently, this includes only provenance members of the top-level RO object, and the list of aggregated resources (`aggregates`) contained within the bag.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
-|overwrite|`boolean`|A `boolean` value indicating whether to overwrite or update to any existing RO `metadata/manifest.json` file.
+| Param     | Type      | Description                                                                                                   |
+|-----------|-----------|---------------------------------------------------------------------------------------------------------------|
+| bag_path  | `string`  | A normalized, absolute path to a bag directory.                                                               |
+| overwrite | `boolean` | A `boolean` value indicating whether to overwrite or update to any existing RO `metadata/manifest.json` file. |
 
 -----
 <a name="is_bag"></a>
@@ -150,9 +150,9 @@ is_bag(bag_path)
 Checks if the path denoted by `bag_path` is a directory that contains a valid bag structure.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to the bag location.
+| Param    | Type     | Description                                      |
+|----------|----------|--------------------------------------------------|
+| bag_path | `string` | A normalized, absolute path to the bag location. |
 
 **Returns**: `boolean` - Whether the path specified by `bag_path` contains a valid bag structure.
 
@@ -166,9 +166,9 @@ For the given `bag` object, removes any file and tagfile manifests for checksums
 `algs` member variable.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag|`bag`|a `bag` object such as that returned by `make_bag`
+| Param | Type  | Description                                        |
+|-------|-------|----------------------------------------------------|
+| bag   | `bag` | a `bag` object such as that returned by `make_bag` |
 
 **Returns**: `boolean` - If any manifests were pruned or not.
 
@@ -190,19 +190,19 @@ make_bag(bag_path,
 Creates or updates the bag denoted by the `bag_path` argument.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
-|algs|`list`|A list of checksum algorithms to use for calculating file fixities. When creating a bag, only the checksums present in this variable will be used. When updating a bag, this function will take the union of any existing bag algorithms and what is specified by this parameter, ***except*** when the `prune_manifests` parameter is specified, in which case then only the algorithms specifed by this parameter will be used.
-|update|`boolean`|If `bag_path` represents an existing bag, update it. If this parameter is not specified when invoking this function on an existing bag, the function is essentially a NOOP and will emit a logging message to that effect.
-|save_manifests|`boolean`|Defaults to `True`. If true, saves all manifests, recalculating  all checksums and regenerating `fetch.txt`. If false, only tagfile manifest checksums are recalculated.  Use this flag as an optimization (to avoid recalculating payload file checksums) when only the bag metadata has been changed. This parameter is only meaningful during update operations, otherwise it is ignored.
-|prune_manifests|`boolean`|Removes any file and tagfile manifests for checksums that are not listed in the `algs` variable.  This parameter is only meaningful during update operations, otherwise it is ignored.
-|metadata|`dict`|A dictionary of key-value pairs that will be written directly to the bag's 'bag-info.txt' file.
-|metadata_file|`string`|A JSON file representation of metadata that will be written directly to the bag's 'bag-info.txt' file. The format of this metadata is described [here](./config.md#metadata).
-|remote_file_manifest|`string`|A path to a JSON file representation of remote file entries that will be used to add remote files to the bag file manifest(s) and used to create the bag's `fetch.txt`. The format of this file is described [here](./config.md/#remote-file-manifest).
-|config_file|`string`|A JSON file representation of configuration data that is used during bag creation and update. The format of this file is described [here](./config.md#bdbag.json).
-|ro_metadata|`dict`|A dictionary that will be used to serialize data into one or more JSON files into the bag's `metadata` directory. The format of this metadata is described [here](./config.md#ro_metadata).
-|ro_metadata_file|`string`|A path to a JSON file representation of RO metadata that will be used to serialize data into one or more JSON files into the bag's `metadata` directory. The format of this metadata is described [here](./config.md#ro_metadata).
+| Param                | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|----------------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| bag_path             | `string`  | A normalized, absolute path to a bag directory.                                                                                                                                                                                                                                                                                                                                                                                   |
+| algs                 | `list`    | A list of checksum algorithms to use for calculating file fixities. When creating a bag, only the checksums present in this variable will be used. When updating a bag, this function will take the union of any existing bag algorithms and what is specified by this parameter, ***except*** when the `prune_manifests` parameter is specified, in which case then only the algorithms specifed by this parameter will be used. |
+| update               | `boolean` | If `bag_path` represents an existing bag, update it. If this parameter is not specified when invoking this function on an existing bag, the function is essentially a NOOP and will emit a logging message to that effect.                                                                                                                                                                                                        |
+| save_manifests       | `boolean` | Defaults to `True`. If true, saves all manifests, recalculating  all checksums and regenerating `fetch.txt`. If false, only tagfile manifest checksums are recalculated.  Use this flag as an optimization (to avoid recalculating payload file checksums) when only the bag metadata has been changed. This parameter is only meaningful during update operations, otherwise it is ignored.                                      |
+| prune_manifests      | `boolean` | Removes any file and tagfile manifests for checksums that are not listed in the `algs` variable.  This parameter is only meaningful during update operations, otherwise it is ignored.                                                                                                                                                                                                                                            |
+| metadata             | `dict`    | A dictionary of key-value pairs that will be written directly to the bag's 'bag-info.txt' file.                                                                                                                                                                                                                                                                                                                                   |
+| metadata_file        | `string`  | A JSON file representation of metadata that will be written directly to the bag's 'bag-info.txt' file. The format of this metadata is described [here](./config.md#metadata).                                                                                                                                                                                                                                                     |
+| remote_file_manifest | `string`  | A path to a JSON file representation of remote file entries that will be used to add remote files to the bag file manifest(s) and used to create the bag's `fetch.txt`. The format of this file is described [here](./config.md/#remote-file-manifest).                                                                                                                                                                           |
+| config_file          | `string`  | A JSON file representation of configuration data that is used during bag creation and update. The format of this file is described [here](./config.md#bdbag.json).                                                                                                                                                                                                                                                                |
+| ro_metadata          | `dict`    | A dictionary that will be used to serialize data into one or more JSON files into the bag's `metadata` directory. The format of this metadata is described [here](./config.md#ro_metadata).                                                                                                                                                                                                                                       |
+| ro_metadata_file     | `string`  | A path to a JSON file representation of RO metadata that will be used to serialize data into one or more JSON files into the bag's `metadata` directory. The format of this metadata is described [here](./config.md#ro_metadata).                                                                                                                                                                                                |
 
 **Returns**: `bag` - An instantiated [bagit-python](https://github.com/LibraryOfCongress/bagit-python/blob/master/bagit.py) `bag` compatible class object.
 
@@ -239,17 +239,17 @@ errors and emit a log message stating this fact.
 these steps fail, an error is raised.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|input_path|`string`|An input path that must evaluate to either a local file path, local directory path, or an actionable URL/URI.
-|output_path|`string`|The base output path for staging the materialization. Defaults to the current working directory.
-|fetch_callback|`function(current, total)`|A callback function where the `current` parameter is the current item being _fetched_ out of the `total` number of items to be _fetched_. The callback function should return a `boolean` indicating whether the calling function should continue processing or interrupt.
-|validation_callback|`function(current, total)`|A callback function where the `current` parameter is the current item being _validated_ out of the `total` number of items to be _validated_. The callback function should return a `boolean` indicating whether the calling function should continue processing or interrupt.
-|keychain_file|`string`|A normalized, absolute path to a keychain file. Defaults to the expansion of `~/.bdbag/keychain.json`.
-|config_file|`string`|A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.
-|filter_expr|`string`|A [selective fetch filter](#resolve_fetch_filter). NOTE: if a selective fetch filter is used to materialize an incomplete bag, a `BagValidationException` will be thrown during validation. This may be an acceptable error in some cases.
-|force|`boolean`|A boolean indicating that _all_ files listed in `fetch.txt` should be retrieved, regardless of whether they already exist in the payload directory or not. Otherwise, only missing or incomplete files will be retrieved.
-|**kwargs|`dict`|Unpacked keyword arguments in dictionary format.
+| Param               | Type                       | Description                                                                                                                                                                                                                                                                    |
+|---------------------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| input_path          | `string`                   | An input path that must evaluate to either a local file path, local directory path, or an actionable URL/URI.                                                                                                                                                                  |
+| output_path         | `string`                   | The base output path for staging the materialization. Defaults to the current working directory.                                                                                                                                                                               |
+| fetch_callback      | `function(current, total)` | A callback function where the `current` parameter is the current item being _fetched_ out of the `total` number of items to be _fetched_. The callback function should return a `boolean` indicating whether the calling function should continue processing or interrupt.     |
+| validation_callback | `function(current, total)` | A callback function where the `current` parameter is the current item being _validated_ out of the `total` number of items to be _validated_. The callback function should return a `boolean` indicating whether the calling function should continue processing or interrupt. |
+| keychain_file       | `string`                   | A normalized, absolute path to a keychain file. Defaults to the expansion of `~/.bdbag/keychain.json`.                                                                                                                                                                         |
+| config_file         | `string`                   | A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.                                                                                                                                                                       |
+| filter_expr         | `string`                   | A [selective fetch filter](#resolve_fetch_filter). NOTE: if a selective fetch filter is used to materialize an incomplete bag, a `BagValidationException` will be thrown during validation. This may be an acceptable error in some cases.                                     |
+| force               | `boolean`                  | A boolean indicating that _all_ files listed in `fetch.txt` should be retrieved, regardless of whether they already exist in the payload directory or not. Otherwise, only missing or incomplete files will be retrieved.                                                      |
+| **kwargs            | `dict`                     | Unpacked keyword arguments in dictionary format.                                                                                                                                                                                                                               |
 
 **Raises**: `BagValidationError`, `RuntimeError` if the bag could not be materialized and validated successfully.
 
@@ -265,9 +265,9 @@ Reads the configuration file specified by `metadata_file` into a dictionary obje
 described [here](./config.md#metadata).
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|metadata_file|`string`|A normalized, absolute path to a metadata file.
+| Param         | Type     | Description                                     |
+|---------------|----------|-------------------------------------------------|
+| metadata_file | `string` | A normalized, absolute path to a metadata file. |
 
 **Returns**: `dict` - The metadata.
 
@@ -312,14 +312,14 @@ You can also use `length` and the integer relation operators to easily limit the
 * `filter_expr="length<=1000000"`
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
-|force|`boolean`|A `boolean` value indicating whether to retrieve all listed files in `fetch.txt` or only those which are not currently found in the bag payload directory.
-|callback|`function(current, total)`|A callback function where the `current` parameter is the current item being _fetched_ out of the `total` number of items to be _fetched_. The callback function should return a `boolean` indicating whether the calling function should continue processing or interrupt.
-|keychain_file|`string`|A normalized, absolute path to a keychain file. Defaults to the expansion of `~/.bdbag/keychain.json`.
-|config_file|`string`|A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.
-|filter_expr|`string`|A string of the form: `<column><operator><value>`. See syntax [below](#filter_dict_syntax).
+| Param         | Type                       | Description                                                                                                                                                                                                                                                                |
+|---------------|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| bag_path      | `string`                   | A normalized, absolute path to a bag directory.                                                                                                                                                                                                                            |
+| force         | `boolean`                  | A `boolean` value indicating whether to retrieve all listed files in `fetch.txt` or only those which are not currently found in the bag payload directory.                                                                                                                 |
+| callback      | `function(current, total)` | A callback function where the `current` parameter is the current item being _fetched_ out of the `total` number of items to be _fetched_. The callback function should return a `boolean` indicating whether the calling function should continue processing or interrupt. |
+| keychain_file | `string`                   | A normalized, absolute path to a keychain file. Defaults to the expansion of `~/.bdbag/keychain.json`.                                                                                                                                                                     |
+| config_file   | `string`                   | A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.                                                                                                                                                                   |
+| filter_expr   | `string`                   | A string of the form: `<column><operator><value>`. See syntax [below](#filter_dict_syntax).                                                                                                                                                                                |
 
 **Returns**: `boolean` - If all remote files were resolved successfully or not. Also returns `True` if the function invocation resulted in a NOOP.
 
@@ -332,9 +332,9 @@ revert_bag(bag_path)
 Revert an existing bag directory back to a normal directory, deleting all bag metadata files. Payload files in the `data` directory will be moved back to the directory root, and the `data` directory will be deleted.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory.
+| Param    | Type     | Description                                     |
+|----------|----------|-------------------------------------------------|
+| bag_path | `string` | A normalized, absolute path to a bag directory. |
 
 -----
 <a name="validate_bag"></a>
@@ -350,11 +350,11 @@ If `fast` is `True`, then only the total count of payload files and the total by
 payload directory and compared against the checksum values in the file manifest(s).
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory or bag archive file.
-|fast|`boolean`|If `True` only check payload contents against `Payload-Oxum`, otherwise re-calculate checksums for all payload files.
-|config_file|`string`|A normalized, absolute path to a *bdbag* configuration file. Uses the default configuration file if  not specified.
+| Param       | Type      | Description                                                                                                           |
+|-------------|-----------|-----------------------------------------------------------------------------------------------------------------------|
+| bag_path    | `string`  | A normalized, absolute path to a bag directory or bag archive file.                                                   |
+| fast        | `boolean` | If `True` only check payload contents against `Payload-Oxum`, otherwise re-calculate checksums for all payload files. |
+| config_file | `string`  | A normalized, absolute path to a *bdbag* configuration file. Uses the default configuration file if  not specified.   |
 
 **Raises**: `BagValidationError`, `BaggingInterruptedError`, or `RuntimeError` if the bag fails to validate successfully.
 
@@ -370,10 +370,10 @@ before profile validation and then the temporary directory is deleted after prof
 If a `profile_path` is specified, the bag is validated against that profile. Otherwise, this function checks the bag's `bag-info.txt` for a valid `BagIt-Profile-Identifier` metadata field and attemps to resolve that field's value as a URL link to the profile.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory or bag archive file.
-|bag_profile|`string`|A normalized, absolute path to a [BagIt-Profile](https://github.com/ruebot/bagit-profiles) file.
+| Param       | Type     | Description                                                                                      |
+|-------------|----------|--------------------------------------------------------------------------------------------------|
+| bag_path    | `string` | A normalized, absolute path to a bag directory or bag archive file.                              |
+| bag_profile | `string` | A normalized, absolute path to a [BagIt-Profile](https://github.com/ruebot/bagit-profiles) file. |
 
 **Raises**: `ProfileValidationError`
 
@@ -389,10 +389,10 @@ Validates a bag archive's serialization format against a bag profile's `Serializ
 constraints, if any.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag archive file.
-|bag_profile|`string`|A normalized, absolute path to a [BagIt-Profile](https://github.com/ruebot/bagit-profiles) file.
+| Param       | Type     | Description                                                                                      |
+|-------------|----------|--------------------------------------------------------------------------------------------------|
+| bag_path    | `string` | A normalized, absolute path to a bag archive file.                                               |
+| bag_profile | `string` | A normalized, absolute path to a [BagIt-Profile](https://github.com/ruebot/bagit-profiles) file. |
 
 **Raises**: `ProfileValidationError`
 
@@ -405,10 +405,10 @@ validate_bag_structure(bag_path, check_remote=False)
 Checks a bag's structural conformance as well as payload consistency between file manifests, the filesystem, and fetch.txt.
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|bag_path|`string`|A normalized, absolute path to a bag directory or bag archive file.
-|check_remote|`boolean`|A boolean value indicating if remote files should be included in the the consistency check.
+| Param        | Type      | Description                                                                                 |
+|--------------|-----------|---------------------------------------------------------------------------------------------|
+| bag_path     | `string`  | A normalized, absolute path to a bag directory or bag archive file.                         |
+| check_remote | `boolean` | A boolean value indicating if remote files should be included in the the consistency check. |
 
 **Throws**: `BagValidationError` - If the bag structure could not be validated.
 
@@ -431,11 +431,11 @@ If the `base_dir` argument is specified, it will be checked to ensure the direct
 If explicit locations via the declared parameters are not provided, the `base_dir` will be assumed to be the system dependent expansion of `~`,
 and `config_file` will be set to `~/.bdbag/bdbag.json` and `keychain_file` will be set to `~/.bdbag/keychain.json`.
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|config_file|`string`|A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.
-|keychain_file|`string`|A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/keychain.json`
-|base_dir|`string`|A directory path, assumed to be the base path where the files will be written. This path will be checked for access before attempting to write the files. If it is not specified, it defaults to the system-dependent expansion of `~`.
+| Param         | Type     | Description                                                                                                                                                                                                                             |
+|---------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| config_file   | `string` | A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.                                                                                                                                |
+| keychain_file | `string` | A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/keychain.json`                                                                                                                              |
+| base_dir      | `string` | A directory path, assumed to be the base path where the files will be written. This path will be checked for access before attempting to write the files. If it is not specified, it defaults to the system-dependent expansion of `~`. |
 
 -----
 <a name="read_config"></a>
@@ -448,11 +448,11 @@ the default configuration file location `~/.bdbag/bdbag.json`, and that file doe
 If `auto_upgrade=True` and an existing configuration file is found and is of an unknown or lesser version number than the current configuration file format, it will be upgraded to the latest version.
 Any existing settings found that are forward-compatible with the current version will be preserved during the upgrade process.
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|config_file|`string`|A normalized, absolute path to a configuration file.
-|create_default|`boolean`|Automatically create the file specified by `config_file` if it does not already exist.
-|auto_upgrade|`boolean`|Automatically upgrade the file specified by `config_file` if it already exists and is not the current version.
+| Param          | Type      | Description                                                                                                    |
+|----------------|-----------|----------------------------------------------------------------------------------------------------------------|
+| config_file    | `string`  | A normalized, absolute path to a configuration file.                                                           |
+| create_default | `boolean` | Automatically create the file specified by `config_file` if it does not already exist.                         |
+| auto_upgrade   | `boolean` | Automatically upgrade the file specified by `config_file` if it already exists and is not the current version. |
 
 **Returns**: `dict` - The configuration data.
 
@@ -465,9 +465,9 @@ write_config(config=DEFAULT_CONFIG, config_file=DEFAULT_CONFIG_FILE)
 Writes the configuration specified by `config` to the location specified by `config_file`.
 Without arguments, creates the default configuration file `bdbag.json` with the default configuration template, if it does not already exist.
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|config_file|`string`|A normalized, absolute path to a configuration file.
+| Param       | Type     | Description                                          |
+|-------------|----------|------------------------------------------------------|
+| config_file | `string` | A normalized, absolute path to a configuration file. |
 
 -----
 <a name="upgrade_config"></a>
@@ -478,9 +478,9 @@ upgrade_config(config_file)
 Upgrade an existing configuration file to the current format. If an existing configuration file is found and is of an unknown or lesser version number than the current configuration file format, it will be upgraded to the latest version.
 Any existing settings found that are forward-compatible with the current version will be preserved during the upgrade process.
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|config_file|`string`|A normalized, absolute path to a configuration file.
+| Param       | Type     | Description                                          |
+|-------------|----------|------------------------------------------------------|
+| config_file | `string` | A normalized, absolute path to a configuration file. |
 
 -----
 <a name="bdbag_module"></a>
@@ -510,10 +510,10 @@ where `expr` is a string of the form: `<column><operator><value>`.
 The set of operators is syntactically limited. See syntax [below](#filter_dict_syntax).
 
 ##### Parameters
-| Param | Type | Description |
-| --- | --- | --- |
-|expr|`string`|A string of the form: `<column><operator><value>`. See syntax [below](#filter_dict_syntax).
-|entry|`dict`|A dictionary containing the data to be filtered.
+| Param | Type     | Description                                                                                 |
+|-------|----------|---------------------------------------------------------------------------------------------|
+| expr  | `string` | A string of the form: `<column><operator><value>`. See syntax [below](#filter_dict_syntax). |
+| entry | `dict`   | A dictionary containing the data to be filtered.                                            |
 
 <a name="filter_dict_syntax"></a>
 ##### Filter Expression Syntax
@@ -522,17 +522,17 @@ The set of operators is syntactically limited. See syntax [below](#filter_dict_s
 
 	| Operator | Description |
 	| --- | --- |
-	|==| equal
-	|!=| not equal
-	|=*| wildcard substring equal
-	|!*| wildcard substring not equal
-	|^*| wildcard starts with
-	|$*| wildcard ends with
-    |=~| regexpression matches
-	|>| greater than
-	|>=| greater than or equal to
-	|<| less than
-	|<=| less than or equal to
+	|==| equal|
+    |!=| not equal|
+    |=*| wildcard substring equal|
+    |!*| wildcard substring not equal|
+    |^*| wildcard starts with|
+    |$*| wildcard ends with|
+    |=~| regexpression matches|
+    |>| greater than|
+    |>=| greater than or equal to|
+    |<| less than|
+    |<=| less than or equal to|
 * `value` is a string or integer
 
 **Returns**: `boolean` - A boolean value indicating whether the target `dict` contained a key-value pair that matched the input `expr`, or not.

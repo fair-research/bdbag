@@ -41,7 +41,6 @@ class GCSFetchTransport(BaseFetchTransport):
         global GCS
         if GCS is None:
             gcs_module = "google.cloud.storage"
-            gsa_module = "google.oauth2.service_account"
             try:
                 GCS = import_module(gcs_module)
             except ImportError as e:

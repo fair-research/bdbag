@@ -139,17 +139,18 @@ Selectively fetch files where entries in `fetch.txt` match the filter expression
 
 	| Operator | Description |
 	| --- | --- |
-	|==| equal
-	|!=| not equal
-	|=*| wildcard substring equal
-	|!*| wildcard substring not equal
-	|^*| wildcard starts with
-	|$*| wildcard ends with
-    |=~| regexpression matches
-	|>| greater than
-	|>=| greater than or equal to
-	|<| less than
-	|<=| less than or equal to
+	|==| equal |
+	|!=| not equal |
+	|=*| wildcard substring equal |
+	|!*| wildcard substring not equal |
+	|^*| wildcard starts with |
+	|$*| wildcard ends with |
+	|=~| regexpression matches |
+	|>| greater than |
+	|>=| greater than or equal to |
+	|<| less than |
+	|<=| less than or equal to |
+
 * `value` is a string or integer
 
 With this mechanism you can do various string-based pattern matching on `filename` and `url`. Using `missing` as the mode for `--resolve-fetch`,  you can invoke the command multiple times with a different filter to perform a effective disjunction. For example:
@@ -233,28 +234,28 @@ Print a detailed help message and exit.
 ### Argument compatibility
 This following table enumerates the various arguments and compatibility modes.
 
-| Argument | Context | Description |
-|---:| :---: | --- |
-|`<path>`|all|Required argument. When no other options are specified, creates a bag from the target path if that path is a directory and not already a bag; otherwise, if the path represents an archive file in a supported format, the file is extracted.
-|`--output-path`|bag archive only|For a certain set of functions that may extract bag archive files (currently only `materialize`, `extract`, or `validate`), this argument dictates the directory where the output results of the extraction should be placed.
-|`--update`|bag dir only|An existing bag archive cannot be updated in-place. The bag must first be extracted and then updated.
-|`--revert`|bag dir only|Only a bag directory may be reverted to a non-bag directory.
-|`--archiver`|bag dir only|A bag archive cannot be created from an existing bag archive.
-|`--checksum`|bag dir only|A checksum manifest cannot be added to an existing bag archive. The bag must be extracted, updated, and re-archived.
-|`--prune-manifests`|bag dir only, update only|Unused manifests may only be pruned from an existing bag during an update operation.
-|`--skip-manifests`|bag dir only, update only|Skipping the recalculation of payload checksums may only be performed on an existing bag during an update operation.
-|`--materialize`|bag archive, bag dir, or actionable bag URL/URI|The `--materialze` argument cannot be combined with any other arguments except for `--config-file`, `--keychain-file`, and `--fetch-filter`.
-|`--resolve-fetch`|bag dir only, no create or update|The resolution (download) of files listed in fetch.txt cannot be executed when creating or updating a bag.
-|`--fetch-filter`|bag dir only, fetch only|A fetch filter is only relevant during a `--resolve-fetch`.
-|`--validate`|all|A bag directory or a bag archive can be validated.  If a bag archive is to be validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.
-|`--validate-profile`|all|A bag directory or a bag archive can have its profile validated.  If a bag archive is to have its profile validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.
-|`--config-file`|bag dir only, create or update only|A config-file override can be specified whenever a bag is created or updated.
-|`--keychain-file`|bag dir only, used only when `--resolve-fetch` is specified|This argument is only meaningful in the context of remote file resolution.
-|`--metadata-file`|bag dir only, create or update only|A metadata config file can be specified whenever a bag is created or updated.
-|`--ro-metadata-file`|bag dir only, create or update only|A Research Object metadata config file can be specified whenever a bag is created or updated.
-|`--remote-file-manifest`|bag dir only, create or update only|A remote-file-manifest can be specified whenever a bag is created or updated.
-|`--ro-manifest-generate`|bag dir only|An RO manifest may be auto-generated on any valid bag directory.
-|any extended argument|bag dir only, create or update only|Any of the standard bag metadata extended arguments, e.g., `--source-organization` or `--contact-email` may be specified during create or update of a bag directory, but not a bag archive.
+|                 Argument |                           Context                           | Description                                                                                                                                                                                                                                   |
+|-------------------------:|:-----------------------------------------------------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|                 `<path>` |                             all                             | Required argument. When no other options are specified, creates a bag from the target path if that path is a directory and not already a bag; otherwise, if the path represents an archive file in a supported format, the file is extracted. |
+|          `--output-path` |                      bag archive only                       | For a certain set of functions that may extract bag archive files (currently only `materialize`, `extract`, or `validate`), this argument dictates the directory where the output results of the extraction should be placed.                 |
+|               `--update` |                        bag dir only                         | An existing bag archive cannot be updated in-place. The bag must first be extracted and then updated.                                                                                                                                         |
+|               `--revert` |                        bag dir only                         | Only a bag directory may be reverted to a non-bag directory.                                                                                                                                                                                  |
+|             `--archiver` |                        bag dir only                         | A bag archive cannot be created from an existing bag archive.                                                                                                                                                                                 |
+|             `--checksum` |                        bag dir only                         | A checksum manifest cannot be added to an existing bag archive. The bag must be extracted, updated, and re-archived.                                                                                                                          |
+|      `--prune-manifests` |                  bag dir only, update only                  | Unused manifests may only be pruned from an existing bag during an update operation.                                                                                                                                                          |
+|       `--skip-manifests` |                  bag dir only, update only                  | Skipping the recalculation of payload checksums may only be performed on an existing bag during an update operation.                                                                                                                          |
+|          `--materialize` |       bag archive, bag dir, or actionable bag URL/URI       | The `--materialze` argument cannot be combined with any other arguments except for `--config-file`, `--keychain-file`, and `--fetch-filter`.                                                                                                  |
+|        `--resolve-fetch` |              bag dir only, no create or update              | The resolution (download) of files listed in fetch.txt cannot be executed when creating or updating a bag.                                                                                                                                    |
+|         `--fetch-filter` |                  bag dir only, fetch only                   | A fetch filter is only relevant during a `--resolve-fetch`.                                                                                                                                                                                   |
+|             `--validate` |                             all                             | A bag directory or a bag archive can be validated.  If a bag archive is to be validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.                              |
+|     `--validate-profile` |                             all                             | A bag directory or a bag archive can have its profile validated.  If a bag archive is to have its profile validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.  |
+|          `--config-file` |             bag dir only, create or update only             | A config-file override can be specified whenever a bag is created or updated.                                                                                                                                                                 |
+|        `--keychain-file` | bag dir only, used only when `--resolve-fetch` is specified | This argument is only meaningful in the context of remote file resolution.                                                                                                                                                                    |
+|        `--metadata-file` |             bag dir only, create or update only             | A metadata config file can be specified whenever a bag is created or updated.                                                                                                                                                                 |
+|     `--ro-metadata-file` |             bag dir only, create or update only             | A Research Object metadata config file can be specified whenever a bag is created or updated.                                                                                                                                                 |
+| `--remote-file-manifest` |             bag dir only, create or update only             | A remote-file-manifest can be specified whenever a bag is created or updated.                                                                                                                                                                 |
+| `--ro-manifest-generate` |                        bag dir only                         | An RO manifest may be auto-generated on any valid bag directory.                                                                                                                                                                              |
+|    any extended argument |             bag dir only, create or update only             | Any of the standard bag metadata extended arguments, e.g., `--source-organization` or `--contact-email` may be specified during create or update of a bag directory, but not a bag archive.                                                   |
 
 ----
 ### Examples

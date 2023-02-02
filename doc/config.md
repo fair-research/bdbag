@@ -21,24 +21,24 @@ configuration sub-sections) which control various default behaviors of the softw
 ##### Object: `root`
 This is the parent object for the entire configuration.
 
-| Parameter | Description
-| --- | --- |
-|`bdbag_config_version`|The version number of the configuration file. In general, it matches the release version number of `bdbag`
-|`bag_config`|This object contains all bag-related configuration parameters.
-|`fetch_config`|This object contains all fetch-related configuration parameters.
-|`resolver_config`|This object contains all implementation-specific resolver configuration parameters.
-|`identifier_resolvers`|This is a global list of identifier "meta" resolvers. It can be overridden on a per-resolver basis via the individual configuration blocks for each resolver in `resolver_config`.
+| Parameter              | Description                                                                                                                                                                        |
+|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bdbag_config_version` | The version number of the configuration file. In general, it matches the release version number of `bdbag`                                                                         |
+| `bag_config`           | This object contains all bag-related configuration parameters.                                                                                                                     |
+| `fetch_config`         | This object contains all fetch-related configuration parameters.                                                                                                                   |
+| `resolver_config`      | This object contains all implementation-specific resolver configuration parameters.                                                                                                |
+| `identifier_resolvers` | This is a global list of identifier "meta" resolvers. It can be overridden on a per-resolver basis via the individual configuration blocks for each resolver in `resolver_config`. |
 
 ##### Object: `bag_config`
 This object contains all bag-related configuration parameters.
 
-| Parameter | Description
-| --- | --- |
-|`bag_algorithms`|This is an array of strings representing the default checksum algorithms to use for bag manifests, if not otherwise specified.  Valid values are "md5", "sha1", "sha256", and "sha512".
-|`bag_archiver`|This is a string representing the default archiving format to use if not otherwise specified.  Valid values are "zip", "tar", and "tgz".
-|`bag_metadata`|This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.
-|`bag_processes`|This is a numeric value representing the default number of concurrent processes to use when calculating checksums.
-|`bagit_spec_version`|The version of the `bagit` specification that created bags will conform to. Valid values are "0.97" or "1.0".
+| Parameter            | Description                                                                                                                                                                             |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bag_algorithms`     | This is an array of strings representing the default checksum algorithms to use for bag manifests, if not otherwise specified.  Valid values are "md5", "sha1", "sha256", and "sha512". |
+| `bag_archiver`       | This is a string representing the default archiving format to use if not otherwise specified.  Valid values are "zip", "tar", and "tgz".                                                |
+| `bag_metadata`       | This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.                                                                                               |
+| `bag_processes`      | This is a numeric value representing the default number of concurrent processes to use when calculating checksums.                                                                      |
+| `bagit_spec_version` | The version of the `bagit` specification that created bags will conform to. Valid values are "0.97" or "1.0".                                                                           |
 
 ##### Object: `fetch_config`
 The `fetch_config` object contains a set of child objects each keyed by the scheme of the transport protocol that contains the transport handler configuration parameters.
@@ -114,51 +114,51 @@ For the scheme `foo`, the following object will be passed as the `config` parame
 ###### Default Transports: Configuration
 Currently, only the default `http`, `https` and `s3` transport handlers have configuration objects that control their behavior.
 
-| Parameter | Description
-| --- | --- |
-|`http`|Configuration for the `http` fetch handler.
-|`https`|Configuration for the `https` fetch handler.
-|`s3`|Configuration for the `s3` fetch handler.
+| Parameter | Description                                  |
+|-----------|----------------------------------------------|
+| `http`    | Configuration for the `http` fetch handler.  |
+| `https`   | Configuration for the `https` fetch handler. |
+| `s3`      | Configuration for the `s3` fetch handler.    |
 
 ##### Object: `fetch_config:http`
 This object contains configuration parameters for the `http` fetch handler.
 
-| Parameter | Description
-| --- | --- |
-|`session_config`|Session configuration parameters for the `requests` HTTP client library. The parameters mainly control retry logic.
-|`http_cookies`|Configuration parameters for automatic loading and merging of HTTP cookie files.
-|`allow_redirects`|A boolean indicating that redirects should automatically be followed, or not.
-|`redirect_status_codes`|An array of integers representing the HTTP status codes used for determining redirection. Defaults to `[301, 302, 303, 307, 308]`.
+| Parameter               | Description                                                                                                                        |
+|-------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| `session_config`        | Session configuration parameters for the `requests` HTTP client library. The parameters mainly control retry logic.                |
+| `http_cookies`          | Configuration parameters for automatic loading and merging of HTTP cookie files.                                                   |
+| `allow_redirects`       | A boolean indicating that redirects should automatically be followed, or not.                                                      |
+| `redirect_status_codes` | An array of integers representing the HTTP status codes used for determining redirection. Defaults to `[301, 302, 303, 307, 308]`. |
 
 ##### Object: `fetch_config:http:session_config`
 Session configuration parameters for the `requests` HTTP client library. The parameters mainly control retry logic. The retry logic is provided via the `urllib3` library, wrapped by `requests`.
 For more infomation, see this external [documentation](https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#module-urllib3.util.retry).
 
-| Parameter | Description
-| --- | --- |
-|`retry_backoff_factor`|The exponential backoff factor for all retry attempts. Defaults to `1.0`.
-|`retry_connect`|The number of connect attempts to retry. Defaults to `5`.
-|`retry_read`| The number of read attempts to retry. Defaults to `5`.
-|`retry_status_forcelist`|A list of HTTP response codes that will force and automatic retry. Defaults to: `[500,502,503,504]`.
+| Parameter                | Description                                                                                          |
+|--------------------------|------------------------------------------------------------------------------------------------------|
+| `retry_backoff_factor`   | The exponential backoff factor for all retry attempts. Defaults to `1.0`.                            |
+| `retry_connect`          | The number of connect attempts to retry. Defaults to `5`.                                            |
+| `retry_read`             | The number of read attempts to retry. Defaults to `5`.                                               |
+| `retry_status_forcelist` | A list of HTTP response codes that will force and automatic retry. Defaults to: `[500,502,503,504]`. |
 
 ##### Object: `fetch_config:http:http_cookies`
 Configuration parameters for automatic loading and merging of HTTP cookie files.
 These cookie files must follow the Mozilla/Netscape/CURL/WGET format as described [here](https://unix.stackexchange.com/questions/36531/format-of-cookies-when-using-wget).
 
-| Parameter | Description
-| --- | --- |
-|`scan_for_cookie_files`|A boolean value that enables/disables the cookie scan feature globally. Defaults to `True` (enabled).
-|`search_paths`|An array of base directory paths from which to recursively search with `search_paths_filter` for `file_names` to use as input. Defaults to the system-dependent expansion of `~`.
-|`search_paths_filter`|An [`fnmatch.filter`](https://docs.python.org/3.5/library/fnmatch.html) pattern that can be used to filter specific subdirectories of each path specified in `search_paths`. Defaults to `.bdbag`.
-|`file_names`|An array of input cookie filenames or [`fnmatch.filter`](https://docs.python.org/3.5/library/fnmatch.html) patterns to match cookie filenames against. Defaults to `[*cookies.txt]`.
+| Parameter               | Description                                                                                                                                                                                        |
+|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `scan_for_cookie_files` | A boolean value that enables/disables the cookie scan feature globally. Defaults to `True` (enabled).                                                                                              |
+| `search_paths`          | An array of base directory paths from which to recursively search with `search_paths_filter` for `file_names` to use as input. Defaults to the system-dependent expansion of `~`.                  |
+| `search_paths_filter`   | An [`fnmatch.filter`](https://docs.python.org/3.5/library/fnmatch.html) pattern that can be used to filter specific subdirectories of each path specified in `search_paths`. Defaults to `.bdbag`. |
+| `file_names`            | An array of input cookie filenames or [`fnmatch.filter`](https://docs.python.org/3.5/library/fnmatch.html) patterns to match cookie filenames against. Defaults to `[*cookies.txt]`.               |
 
 ##### Object: `fetch_config:https`
 This object contains configuration parameters for the `https` fetch handler. The `https` fetch handler configuration is 
 identical to the `http` fetch handler configuration, with the following exceptions:
 
-| Parameter | Description
-| --- | --- |
-|`bypass_ssl_cert_verification`|Either the boolean value `true` or `false`, or an array of string values consisting of URL patterns to be used in a simple substring match against the target URLs found in a bag's `fetch.txt` file.  For example, `"bypass_ssl_cert_verification": ["https://raw.githubusercontent.com/fair-research/bdbag/"]` will match a `fetch.txt` entry with a URL of "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt". Defaults to `false`.
+| Parameter                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bypass_ssl_cert_verification` | Either the boolean value `true` or `false`, or an array of string values consisting of URL patterns to be used in a simple substring match against the target URLs found in a bag's `fetch.txt` file.  For example, `"bypass_ssl_cert_verification": ["https://raw.githubusercontent.com/fair-research/bdbag/"]` will match a `fetch.txt` entry with a URL of "https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http/test-fetch-http.txt". Defaults to `false`. |
 
 ###### NOTE: 
 It is NOT RECOMMENDED setting `bypass_ssl_cert_verification: true` as it will bypass SSL certificate validation for 
@@ -168,21 +168,21 @@ and/or expired certificates, which will make the application vulnerable to man-i
 ##### Object: `fetch_config:s3`
 This object contains configuration parameters for the `s3` fetch handler.
 
-| Parameter | Description
-| --- | --- |
-|`max_read_retries`| Maximum number of socket read retries. Defaults to `5`.
-|`read_chunk_size`| Number of bytes to consume per read attempt. Defaults to `10485760` bytes (10MB).
-|`read_timeout_seconds`|Timeout in seconds per read attempt. Defaults to `120`.
+| Parameter              | Description                                                                       |
+|------------------------|-----------------------------------------------------------------------------------|
+| `max_read_retries`     | Maximum number of socket read retries. Defaults to `5`.                           |
+| `read_chunk_size`      | Number of bytes to consume per read attempt. Defaults to `10485760` bytes (10MB). |
+| `read_timeout_seconds` | Timeout in seconds per read attempt. Defaults to `120`.                           |
 
 ##### Object: `resolver_config`
 This object contains all implementation-specific resolver configuration parameters, keyed by resolver scheme. The current default handlers schemes are: `[ark, minid, doi, and ga4ghdos`].
 Each scheme can have multiple resolver configuration blocks in an array, where each block can be mapped to a different resolver namespace prefix.
 
-| Parameter | Description
-| --- | --- |
-|`handler`|This is the fully-qualified Python class name of a class derived from `bdbag.fetch.resolvers.base_resolver.BaseResolverHandler` and implementing the required functions. The `bdbag` resolver code will attempt to locate and instantiate this class at runtime.
-|`prefix`|This is an optional parameter that maps the handler resolution to only instances that contain the specific `prefix` found in the identifier.
-|`identifier_resolvers`|This is the same parameter as the global `identifier_resolvers` array. If found at this level, it will override the global setting for this scheme/prefix combination.
+| Parameter              | Description                                                                                                                                                                                                                                                      |
+|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `handler`              | This is the fully-qualified Python class name of a class derived from `bdbag.fetch.resolvers.base_resolver.BaseResolverHandler` and implementing the required functions. The `bdbag` resolver code will attempt to locate and instantiate this class at runtime. |
+| `prefix`               | This is an optional parameter that maps the handler resolution to only instances that contain the specific `prefix` found in the identifier.                                                                                                                     |
+| `identifier_resolvers` | This is the same parameter as the global `identifier_resolvers` array. If found at this level, it will override the global setting for this scheme/prefix combination.                                                                                           |
 
 
 Below is a sample `bdbag.json` file:
@@ -224,7 +224,7 @@ Below is a sample `bdbag.json` file:
             "/home/mdarcy"
         ],
         "search_paths_filter": ".bdbag"
-      },
+      }
     },
     "s3": {
       "max_read_retries": 5,
@@ -303,12 +303,12 @@ The format of `keychain.json` is a JSON array containing a list of JSON objects,
 configure the authentication method and credentials to use for a specifed base URL.
 
 ##### Parameters
-| Parameter | Description |
-| --- | --- |
-|`uri`|This is the base URI used to specify when authentication should be used.  When a URI reference is encountered in fetch.txt, an attempt will be made to match it against all base URIs specified in `keychain.json` and if a match is found, the request will be authenticated before file retrieval is attempted.
-|`auth_uri`|This is the authentication URI used to establish an authenticated session for the specified `uri`.  This is currently assumed to be an HTTP(s) protocol URL.
-|`auth_type`|This is the authentication type used by the server specified by `uri` or `auth_uri` (if present).
-|`auth_params`|This is a child object containing authentication-type specific parameters used in session establishment.  It will generally contain credential information such as a username and password, a cookie value, or client certificate parameters. It can also contain other parameters required for authentication with the given `auth_type` mechanism; for example the HTTP method (i.e., `GET` or `POST`) to use with HTTP Basic Auth.
+| Parameter     | Description                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `uri`         | This is the base URI used to specify when authentication should be used.  When a URI reference is encountered in fetch.txt, an attempt will be made to match it against all base URIs specified in `keychain.json` and if a match is found, the request will be authenticated before file retrieval is attempted.                                                                                                                     |
+| `auth_uri`    | This is the authentication URI used to establish an authenticated session for the specified `uri`.  This is currently assumed to be an HTTP(s) protocol URL.                                                                                                                                                                                                                                                                          |
+| `auth_type`   | This is the authentication type used by the server specified by `uri` or `auth_uri` (if present).                                                                                                                                                                                                                                                                                                                                     |
+| `auth_params` | This is a child object containing authentication-type specific parameters used in session establishment.  It will generally contain credential information such as a username and password, a cookie value, or client certificate parameters. It can also contain other parameters required for authentication with the given `auth_type` mechanism; for example the HTTP method (i.e., `GET` or `POST`) to use with HTTP Basic Auth. |
 
 Below is a sample `keychain.json` file:
 ```json
@@ -363,6 +363,22 @@ Below is a sample `keychain.json` file:
         "auth_params": {
             "key": "foo",
             "secret": "bar"
+        }
+    }, 
+    {
+        "uri": "gs://gcs-bdbag-integration-testing/",
+        "auth_type": "gcs-credentials",
+        "auth_params": {
+            "project_id": "bdbag-204999", 
+            "allow_requester_pays": true
+        }
+    },
+    {
+        "uri": "gs://bdbag-dev/",
+        "auth_type": "gcs-credentials",
+        "auth_params": {
+            "project_id": "bdbag-204999",
+            "service_account_credentials_file": "/home/bdbag/bdbag-204400-41babdd46e24.json"
         }
     },
     {

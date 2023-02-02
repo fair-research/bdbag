@@ -1,5 +1,69 @@
 # CHANGE LOG
 
+## 1.6.4
+
+### Added Google Cloud Storage fetch handler for handling `gs://` URLs in _fetch.txt_. 
+Note that this is a soft dependency and you must install the [gcloud CLI](https://cloud.google.com/sdk/docs/install) on the system where you will be running 
+`bdbag` in order for this handler to function.
+
+### Enabling "requester pays":
+This handler supports the _requester pays_ usage pattern by allowing the billable `project_id` to be specified in the `auth_params` object for
+a corresponding `keychain.json` entry for a matching `gs://` URI pattern. 
+
+For example, to configure (and allow) _requester pays_ for a GS bucket, you would add a `keychain.json` entry similar 
+to the following:
+
+```json
+{
+    "uri": "gs://gcs-bdbag-integration-testing/",
+    "auth_type": "gcs-credentials",
+    "auth_params": {
+        "project_id": "bdbag-204999",
+        "allow_requester_pays": true
+    }
+}
+```
+You can also explicitly disallow _requester pays_ at the client-side in the following ways:
+* Set `allow_requester_pays` to `false`
+* Omit the `allow_requester_pays` field.
+* Omit the `project_id` field.
+* Omit the `auth_params` object entirely.
+
+Note that if you do any of the above, data retrieval requests to buckets which have _requester pays_ enabled will fail. 
+The use case for this configuration option is to ensure that you __don't__ pay for requests when _requester pays_
+is disabled on the bucket. Per the following GCS [documentation](https://cloud.google.com/storage/docs/requester-pays):
+
+```json
+Important: Buckets that have Requester Pays disabled still accept requests that include a billing project, 
+and charges are applied to the billing project supplied in the request. 
+Consider any billing implications prior to including a billing project in all of your requests.
+```
+
+IMPORTANT NOTE: 
+
+At the time of this writing, when using `gcloud-CLI` from `Google Cloud SDK 416.0.0` and previous, it is
+possible to still be billed for bucket usage _even if_ you've disallowed _requester pays_ for a given bucket in 
+`keychain.json`. This is because the `gcloud init` process requires that you specify a default `project_id` and this 
+project id is subsequently stored in the `application_default_credentials.json` file used by the GCS APIs 
+(which the `bdbag` fetch handler uses) as `quota_project_id`. If this value is present it will be passed on all GCS API
+calls as a fallback regardless even if explicitly not passed to the API call. 
+This can be worked around by removing the `quota_project_id` from `application_default_credentials.json`.
+
+### Using service account credentials:
+
+It is also possible to specify a `service_account_credentials_file` which is a file path referencing a service account 
+credentials JSON file provided by Google Cloud Storage. For example:
+```json
+{
+    "uri": "gs://bdbag-dev/",
+    "auth_type": "gcs-credentials",
+    "auth_params": {
+        "project_id": "bdbag-204400",
+        "service_account_credentials_file": "/home/bdbag/bdbag-204400-41babdd46e24.json"
+    }
+}
+```
+
 ## 1.6.3
 * Fix bug in `bdbag_api.validate()` where underlying `BagError` exceptions were not being propagated correctly.
 * Add an environment marker to `setup.py` for the `python-requests` dependency. This marker specifies that no greater 
