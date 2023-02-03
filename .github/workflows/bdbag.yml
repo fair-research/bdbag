@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8 mock pytest-cov
+        python -m pip install flake8 mock pytest-cov 'coverage>6.2'
         pip install .
     - name: Lint with flake8
       run: |
@@ -41,8 +41,8 @@ jobs:
     - name: Diagnosis after failure
       if: ${{ failure() }}
       run: |
-        cat test.log
-        cat test_cli.log
+        cat ./test.log
+        cat ./test_cli.log
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
