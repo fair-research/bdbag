@@ -11,9 +11,6 @@ on:
 
 jobs:
   build:
-
-    env:
-      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   
     runs-on: ubuntu-20.04
     strategy:
@@ -41,12 +38,12 @@ jobs:
     - name: Test with pytest
       run: |
         pytest --cov
-    - name: Coveralls
-      if: ${{ success() }}
-      run: |
-        coveralls
     - name: Diagnosis after failure
       if: ${{ failure() }}
       run: |
         cat test.log
         cat test_cli.log
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
