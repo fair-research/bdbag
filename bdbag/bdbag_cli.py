@@ -156,6 +156,14 @@ def parse_cli():
         help="Validate a bag against the profile specified by the bag's \"BagIt-Profile-Identifier\" metadata field, "
              "if present. If \"bag-only\" is specified, the bag's serialization method will not be validated.")
 
+    profile_path_arg = "--profile-path"
+    standard_args.add_argument(
+        profile_path_arg, metavar='<file>',
+        help="Optional path to local profile JSON to use for"
+            "profile validation. If not specified the profile"
+            "referenced in the bag info file will be fetched and used."
+    )
+
     config_file_arg = "--config-file"
     standard_args.add_argument(
         config_file_arg, metavar='<file>',
@@ -362,28 +370,36 @@ def main():
             return result
 
         if args.ro_manifest_generate:
-            bdb.generate_ro_manifest(path, True if args.ro_manifest_generate == "overwrite" else False,
-                                     config_file=args.config_file)
+            bdb.generate_ro_manifest(path, args.ro_manifest_generate == "overwrite", config_file=args.config_file)
 
         if args.resolve_fetch:
             if args.validate == 'full':
                 sys.stderr.write(ASYNC_TRANSFER_VALIDATION_WARNING)
             bdb.resolve_fetch(path,
-                              force=True if args.resolve_fetch == 'all' else False,
+                              force=args.resolve_fetch == 'all',
                               keychain_file=args.keychain_file,
                               config_file=args.config_file,
                               filter_expr=args.fetch_filter)
 
+        if args.validate_profile:
+            if is_file:
+                temp_path = bdb.extract_bag(path, args.output_path, temp=args.output_path is None)
+            profile = bdb.validate_bag_profile(temp_path if temp_path else path, profile_path=args.profile_path)
+            if not args.validate_profile == "bag-only":
+                bdb.validate_bag_serialization(archive if archive else path, profile)
+
+
         if args.validate:
             if is_file:
-                temp_path = bdb.extract_bag(path, args.output_path, temp=True if not args.output_path else False)
+                if not temp_path:
+                    temp_path = bdb.extract_bag(path, args.output_path, temp=args.output_path is None)
             if args.validate == 'structure':
                 bdb.validate_bag_structure(temp_path if temp_path else path)
             elif args.validate == 'completeness':
                 bdb.validate_bag_structure(temp_path if temp_path else path, skip_remote=False)
             else:
                 bdb.validate_bag(temp_path if temp_path else path,
-                                 fast=True if args.validate == 'fast' else False,
+                                 fast=args.validate == 'fast',
                                  config_file=args.config_file)
 
         if args.archiver:
@@ -391,14 +407,6 @@ def main():
 
         if archive is None and is_file:
             archive = path
-
-        if args.validate_profile:
-            if is_file:
-                if not temp_path:
-                    temp_path = bdb.extract_bag(path, args.output_path, temp=True if not args.output_path else False)
-            profile = bdb.validate_bag_profile(temp_path if temp_path else path)
-            if not args.validate_profile == "bag-only":
-                bdb.validate_bag_serialization(archive if archive else path, profile)
 
         if args.revert:
             bdb.revert_bag(path)
