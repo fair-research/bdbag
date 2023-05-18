@@ -57,7 +57,8 @@ setup(
         'bagit_profile'
     ],
     install_requires=['pytz',
-                      'tzlocal==2.1',
+                      'tzlocal<3; python_version < "3"',
+                      'tzlocal<5',
                       'certifi',
                       'requests>=2.7.0,<=2.25.1; python_version == "3.5"',
                       'requests>=2.7.0',
@@ -80,12 +81,12 @@ setup(
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9'
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+
     ]
 )
 

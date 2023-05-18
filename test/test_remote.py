@@ -145,7 +145,7 @@ class TestRemoteAPI(BaseTest):
     def test_validate_profile(self):
         logger.info(self.getTestHeader('validate profile'))
         try:
-            profile = bdb.validate_bag_profile(self.test_bag_dir)
+            profile = bdb.validate_bag_profile(self.test_bag_profile_dir)
             self.assertIsInstance(profile, bdbagit_profile.Profile)
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
