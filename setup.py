@@ -58,7 +58,7 @@ setup(
     ],
     install_requires=['pytz',
                       'tzlocal<3; python_version < "3"',
-                      'tzlocal<5',
+                      'tzlocal',
                       'certifi',
                       'requests>=2.7.0,<=2.25.1; python_version == "3.5"',
                       'requests>=2.7.0',
