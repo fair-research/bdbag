@@ -188,6 +188,7 @@ class HTTPFetchTransport(BaseFetchTransport):
             output_path = ensure_valid_output_path(url, output_path)
             allow_redirects = stob(self.config.get("allow_redirects", True))
             allow_redirects_with_token = False
+            authorization = None
             auth = self.get_auth(url) or {}
             auth_type = auth.get("auth_type")
             auth_params = auth.get("auth_params")
@@ -220,7 +221,8 @@ class HTTPFetchTransport(BaseFetchTransport):
                                     "Unable to locate Authorization header in requests session headers after redirect")
                         else:
                             logger.warning("Authorization bearer token propagation on redirect is disabled for "
-                                           "security reasons. Enable token propagation for this URL in keychain.json")
+                                           "security reasons. If necessary, you can enable token propagation for this "
+                                           "URL in keychain.json.")
                             if session.headers.get("Authorization"):
                                 del session.headers["Authorization"]
                     elif not allow_redirects:
@@ -228,6 +230,10 @@ class HTTPFetchTransport(BaseFetchTransport):
                         break
                 else:
                     break
+
+            # restore the bearer-token auth header back to the session if it exists got stripped due to redirect
+            if auth_type == "bearer-token" and authorization is not None and not session.headers.get("Authorization"):
+                session.headers.update({"Authorization": authorization})
 
             if r.status_code != 200:
                 logger.error("HTTP GET Failed for URL: %s" % url)
