@@ -53,6 +53,8 @@ setup(
         'tzlocal',
         'requests',
         'certifi',
+        'importlib_metadata',
+        'packaging',
         'bagit',
         'bagit_profile'
     ],
@@ -60,6 +62,8 @@ setup(
                       'tzlocal<3; python_version < "3"',
                       'tzlocal',
                       'certifi',
+                      'packaging',
+                      'importlib-metadata',
                       'requests>=2.7.0,<=2.25.1; python_version == "3.5"',
                       'requests>=2.7.0',
                       'setuptools_scm<6.0',  # for bagit which does not properly include it in install_requires

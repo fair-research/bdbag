@@ -23,11 +23,11 @@ import shutil
 from datetime import datetime
 from requests.utils import requote_uri
 from distutils.util import strtobool
-from pkg_resources import parse_version, get_distribution, DistributionNotFound
+from importlib.metadata import distribution, PackageNotFoundError
 
 logger = logging.getLogger(__name__)
 
-__version__ = "1.7.0dev2"
+__version__ = "1.7.0dev3"
 __bagit_version__ = "1.8.1"
 __bagit_profile_version__ = "1.3.1"
 
@@ -39,22 +39,22 @@ else:  # pragma: no cover
     from urlparse import urlsplit, urlunsplit, urlparse
 
 try:
-    version = get_distribution("bdbag").version
+    version = distribution("bdbag").version
     VERSION = version + '' if not getattr(sys, 'frozen', False) else version + '-frozen'
-except DistributionNotFound:  # pragma: no cover
+except PackageNotFoundError:  # pragma: no cover
     VERSION = __version__ + '-dev' if not getattr(sys, 'frozen', False) else __version__ + '-frozen'
 PROJECT_URL = 'https://github.com/fair-research/bdbag'
 
 try:
-    version = get_distribution("bagit").version
+    version = distribution("bagit").version
     BAGIT_VERSION = version + '' if not getattr(sys, 'frozen', False) else version + '-frozen'
-except DistributionNotFound:  # pragma: no cover
+except PackageNotFoundError:  # pragma: no cover
     BAGIT_VERSION = 'unknown' if not getattr(sys, 'frozen', False) else __bagit_version__ + '-frozen'
 
 try:
-    version = get_distribution("bagit_profile").version
+    version = distribution("bagit_profile").version
     BAGIT_PROFILE_VERSION = version + '' if not getattr(sys, 'frozen', False) else version + '-frozen'
-except DistributionNotFound:  # pragma: no cover
+except PackageNotFoundError:  # pragma: no cover
     BAGIT_PROFILE_VERSION = 'unknown' if not getattr(sys, 'frozen', False) else __bagit_profile_version__ + '-frozen'
 
 BAG_PROFILE_TAG = 'BagIt-Profile-Identifier'

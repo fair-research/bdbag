@@ -18,7 +18,8 @@ import errno
 import logging
 import json
 from collections import OrderedDict
-from bdbag import parse_version, get_typed_exception, safe_move, \
+from packaging.version import parse as parse_version
+from bdbag import get_typed_exception, safe_move, \
     DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION
 from bdbag.fetch import Megabyte
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE, write_keychain
