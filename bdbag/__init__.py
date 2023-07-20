@@ -23,7 +23,7 @@ import shutil
 from datetime import datetime
 from requests.utils import requote_uri
 from distutils.util import strtobool
-from importlib.metadata import distribution, PackageNotFoundError
+from importlib_metadata import distribution, PackageNotFoundError
 
 logger = logging.getLogger(__name__)
 
