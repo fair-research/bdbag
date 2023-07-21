@@ -25,8 +25,8 @@ import zipfile
 from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
-from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg, bdbag_ro as bdbro, bdbagit as bdbagit, filter_dict, \
-    get_typed_exception, DEFAULT_CONFIG_PATH
+from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg, bdbag_ro as bdbro, bdbagit as bdbagit, bdbagit_profile, \
+    filter_dict, get_typed_exception, DEFAULT_CONFIG_PATH
 from bdbag.fetch.auth import keychain
 from test.test_common import BaseTest
 
@@ -890,6 +890,24 @@ class TestAPI(BaseTest):
             self.assertExpectedMessages(["The size of the local file",
                                          "does not match the size of the file",
                                          "specified in fetch.txt"], output)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_validate_profile_with_local_profile(self):
+        logger.info(self.getTestHeader('validate local profile'))
+        try:
+            profile = bdb.validate_bag_profile(self.test_bag_profile_dir, "./profiles/bdbag-profile.json")
+            self.assertIsInstance(profile, bdbagit_profile.Profile)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_validate_profile_with_local_bad_path_profile(self):
+        logger.info(self.getTestHeader('validate bad path local profile'))
+        try:
+            self.assertRaises(bdbagit_profile.ProfileValidationError,
+                              bdb.validate_bag_profile,
+                              self.test_bag_profile_dir,
+                              "./profiles/missing-bdbag-profile.json")
         except Exception as e:
             self.fail(get_typed_exception(e))
 

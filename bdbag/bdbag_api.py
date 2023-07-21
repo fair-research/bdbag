@@ -439,18 +439,24 @@ def validate_bag_structure(bag_path, skip_remote=True):
 
 
 def validate_bag_profile(bag_path, profile_path=None):
-
-    logger.info("Validating bag profile: %s" % bag_path)
+    logger.info("Validating bag profile: %s", bag_path)
     bag = bdbagit.BDBag(bag_path)
 
     # Instantiate a profile, supplying its URI.
-    if not profile_path:
-        profile_path = bag.info.get(BAG_PROFILE_TAG, None)
-        if not profile_path:
-            raise bdbp.ProfileValidationError("Bag does not contain a BagIt-Profile-Identifier")
+    profile_url = bag.info.get(BAG_PROFILE_TAG, None)
+    if not profile_url:
+        raise bdbp.ProfileValidationError("Bag does not contain a BagIt-Profile-Identifier")
+    logger.info("Loading profile: %s" % profile_path if profile_path else profile_url)
 
-    logger.info("Retrieving profile: %s" % profile_path)
-    profile = bdbp.BDBProfile(profile_path)
+    profile = None
+    if profile_path:
+        try:
+            with open(profile_path, encoding="UTF-8") as profile_file:
+                profile = json.loads(profile_file.read())
+        except (OSError, IOError, json.JSONDecodeError) as exc:
+            raise bdbp.ProfileValidationError("Profile %s could not be read: %s" % (profile_path, exc))
+
+    profile = bdbp.BDBProfile(profile_url, profile)
 
     # Validate the profile.
     if profile.validate(bag):

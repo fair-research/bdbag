@@ -21,13 +21,12 @@ import logging
 import mimetypes
 import shutil
 from datetime import datetime
-from requests.utils import requote_uri
 from distutils.util import strtobool
 from importlib_metadata import distribution, PackageNotFoundError
 
 logger = logging.getLogger(__name__)
 
-__version__ = "1.7.0dev3"
+__version__ = "1.7.0dev4"
 __bagit_version__ = "1.8.1"
 __bagit_profile_version__ = "1.3.1"
 
