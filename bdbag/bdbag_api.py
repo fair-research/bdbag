@@ -451,7 +451,7 @@ def validate_bag_profile(bag_path, profile_path=None):
     profile = None
     if profile_path:
         try:
-            with open(profile_path, encoding="UTF-8") as profile_file:
+            with io.open(profile_path, encoding="UTF-8") as profile_file:
                 profile = json.loads(profile_file.read())
         except (OSError, IOError, ValueError) as exc:
             raise bdbp.ProfileValidationError("Profile %s could not be read: %s" % (profile_path, exc))
