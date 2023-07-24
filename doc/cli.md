@@ -28,6 +28,7 @@ usage: bdbag
 [--fetch-filter <column><operator><value>]
 [--validate {fast,full,structure,completeness}]
 [--validate-profile {profile-only,full}]
+[--profile-path <file>]
 [--config-file <file>]
 [--keychain-file <file>]
 [--metadata-file <file>]
@@ -184,6 +185,12 @@ used to check that the payload files are present and accounted for.
 Validate a bag against the profile specified by the bag's `BagIt-Profile-Identifier` metadata field, if present. The 
 `bag-only` argument keyword can be used to bypass the otherwise automatic bag serialization validation 
 (implied by the default value, `full`), and therefore is suitable for use on bag directories.
+
+----
+#### `--profile-path <file>`
+Optional path to a `Bagit-Profiles-Specification` JSON file. The file format is described
+[here](https://bagit-profiles.github.io/bagit-profiles-specification/).
+If this argument is not specified, the profile specified by the bag's `BagIt-Profile-Identifier` metadata field will be used, if present.
 
 ----
 #### `--config-file <file>`

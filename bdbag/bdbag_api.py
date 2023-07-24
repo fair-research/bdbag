@@ -446,7 +446,7 @@ def validate_bag_profile(bag_path, profile_path=None):
     profile_url = bag.info.get(BAG_PROFILE_TAG, None)
     if not profile_url:
         raise bdbp.ProfileValidationError("Bag does not contain a BagIt-Profile-Identifier")
-    logger.info("Loading profile: %s" % profile_path if profile_path else profile_url)
+    logger.info("Loading profile: %s" % (profile_path if profile_path else profile_url))
 
     profile = None
     if profile_path:

@@ -146,6 +146,13 @@ class TestCli(BaseTest):
         self._test_successful_invocation(
             args, ["Bag structure conforms to specified profile"])
 
+    def test_validate_local_profile(self):
+        args = ARGS + [self.test_bag_profile_dir, '--validate-profile', 'bag-only',
+                       '--profile-path', './profiles/bdbag-profile.json']
+        logfile.writelines(self.getTestHeader('validate-local-profile', args))
+        self._test_successful_invocation(
+            args, ["Loading profile: ./profiles/bdbag-profile.json", "Bag structure conforms to specified profile"])
+
 
 class TestCliArgParsing(BaseTest):
 
