@@ -1,5 +1,12 @@
 # CHANGE LOG
 
+## 1.7.0
+* PR: [#54](https://github.com/fair-research/bdbag/pull/54): Add support for passing a local profile path for profile validation. Thanks to [Bernhard Hampel-Waffenthal](https://github.com/prettybits) for the contribution.
+* [#40](https://github.com/fair-research/bdbag/issues/40): Replace deprecated use of `pkg_resources` with `importlib-metadata` and `packaging`.
+* Fix issue with HTTP fetch transport where bearer-token auth gets stripped from the session on a legitimate redirect but not restored for any potential new request on that same URL-bound session.
+* Unpin `tzlocal` unless Python<3.
+* Support for Python 3.5 and 3.6 has been dropped. Python 3.7 compatibility is deprecated but still officially supported in this release.
+
 ## 1.6.4
 
 ### Added Google Cloud Storage fetch handler for handling `gs://` URLs in _fetch.txt_. 

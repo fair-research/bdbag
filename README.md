@@ -41,10 +41,10 @@ An experimental Graphical User Interface (GUI) for `bdbag` can be found [here](h
 
 ["Reproducible big data science: A case study in continuous FAIRness"](https://www.biorxiv.org/content/early/2018/02/27/268755) presents a data analysis use case in which BDBags and Minids are used to capture a transcription factor binding site analysis.
 
-### Dependencies
+### Python Dependencies
 
-* [Python 2.7](https://www.python.org/downloads/release/python-27/) is the minimum Python version required.
-* The code and dependencies are also compatible with Python 3, versions 3.5 through 3.9.
+*  Python 2.7 is the minimum Python version required. Please note however that Python 2.7 is officially end-of-life and ongoing compatibility between Python 2.7 and `bdbag` (and its dependencies) is not officially supported and cannot be guaranteed.
+*  Python 3, versions 3.7 through 3.11 are the current officially supported releases.
 
 ### Installation
 The latest `bdbag` release is available on PyPi and can be installed using `pip`:
