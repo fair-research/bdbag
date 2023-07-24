@@ -74,7 +74,7 @@ setup(
         'globus': ["globus_sdk>=1.6.0"],
         'gcs': ["google_cloud_storage"]
     },
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.* <4',
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*, <4',
     license='Apache 2.0',
     classifiers=[
         'Intended Audience :: Science/Research',
