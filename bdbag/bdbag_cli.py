@@ -315,6 +315,7 @@ def main():
     args, path, is_bag, is_file, is_uri = parse_cli()
 
     archive = None
+    profile = None
     temp_path = None
     error = None
     result = 0
@@ -402,10 +403,12 @@ def main():
         if archive is None and is_file:
             archive = path
 
-        if args.validate_profile == "full" and is_file:
-            if not temp_path:
-                temp_path = bdb.extract_bag(path, args.output_path, temp=args.output_path is None)
-            profile = bdb.validate_bag_profile(temp_path if temp_path else path, profile_path=args.profile_path)
+        if args.validate_profile == "full":
+            if is_file:
+                if not temp_path:
+                    temp_path = bdb.extract_bag(path, args.output_path, temp=args.output_path is None)
+            if not profile:
+                profile = bdb.validate_bag_profile(temp_path if temp_path else path, profile_path=args.profile_path)
             bdb.validate_bag_serialization(archive if archive else path, profile)
 
         if args.revert:
