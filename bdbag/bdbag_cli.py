@@ -345,7 +345,7 @@ def main():
         if not is_file:
             # do not try to create or update the bag if the user just wants to validate or complete an existing bag
             if not ((args.validate or args.validate_profile or args.resolve_fetch)
-                    and not (args.update and bdb.is_bag(path))):
+                    and not (args.update and bdb.is_bag(path))) or not bdb.is_bag(path):
                 if args.checksum and 'all' in args.checksum:
                     args.checksum = ['md5', 'sha1', 'sha256', 'sha512']
                 # create or update the bag depending on the input arguments

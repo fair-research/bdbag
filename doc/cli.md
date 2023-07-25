@@ -190,7 +190,7 @@ Validate a bag against the profile specified by the bag's `BagIt-Profile-Identif
 #### `--profile-path <file>`
 Optional path to a `Bagit-Profiles-Specification` JSON file. The file format is described
 [here](https://bagit-profiles.github.io/bagit-profiles-specification/).
-If this argument is not specified, the profile specified by the bag's `BagIt-Profile-Identifier` metadata field will be used, if present.
+If this argument is not specified, the profile specified by the bag's `BagIt-Profile-Identifier` metadata field will be used.
 
 ----
 #### `--config-file <file>`
@@ -256,6 +256,7 @@ This following table enumerates the various arguments and compatibility modes.
 |         `--fetch-filter` |                  bag dir only, fetch only                   | A fetch filter is only relevant during a `--resolve-fetch`.                                                                                                                                                                                   |
 |             `--validate` |                             all                             | A bag directory or a bag archive can be validated.  If a bag archive is to be validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.                              |
 |     `--validate-profile` |                             all                             | A bag directory or a bag archive can have its profile validated.  If a bag archive is to have its profile validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.  |
+|         `--profile-path` |  bag dir or bag file, only used with `--validate-profile`   | A local profile path is only valid in the context of a `--validate-profile` operation.                                                                                                                                                        |
 |          `--config-file` |             bag dir only, create or update only             | A config-file override can be specified whenever a bag is created or updated.                                                                                                                                                                 |
 |        `--keychain-file` | bag dir only, used only when `--resolve-fetch` is specified | This argument is only meaningful in the context of remote file resolution.                                                                                                                                                                    |
 |        `--metadata-file` |             bag dir only, create or update only             | A metadata config file can be specified whenever a bag is created or updated.                                                                                                                                                                 |
