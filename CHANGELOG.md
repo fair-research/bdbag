@@ -6,7 +6,7 @@ informational version string `VERSION` set by `bdbag` when it is running in a "f
 In such cases, `VERSION` is set to something like `1.7.1-frozen`, which is not `PEP-440` compliant.
 This was not an issue in previous releases due to the fact that the implementation used `pkg_resources.parse_version` which was not as strict.
 
-The code in `upgrade_config()` has been changed to parse the `PEP-440` compliant version returned by `packaging.parse` 
+The code in `upgrade_config()` has been changed to parse the `PEP-440` compliant version returned by `distribution("bdbag").version` function from `importlib_metadata`, 
 rather than use the global string `VERSION`, which can still be (and is) used elsewhere for purely informational and descriptive purposes. 
 
 ## 1.7.0
