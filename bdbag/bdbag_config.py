@@ -19,8 +19,9 @@ import logging
 import json
 from collections import OrderedDict
 from packaging.version import parse as parse_version
+from importlib_metadata import distribution, PackageNotFoundError
 from bdbag import get_typed_exception, safe_move, \
-    DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION
+    DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION, __version__
 from bdbag.fetch import Megabyte
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE, write_keychain
 
@@ -132,7 +133,7 @@ DEFAULT_RESOLVER_CONFIG = {
 }
 
 DEFAULT_CONFIG = {
-    CONFIG_VERSION_TAG: VERSION,
+    CONFIG_VERSION_TAG: __version__,
     BAG_CONFIG_TAG:
         {
             BAG_SPEC_VERSION_TAG: DEFAULT_BAG_SPEC_VERSION,
@@ -215,7 +216,11 @@ def upgrade_config(config_file):
         config = json.loads(cf.read(), object_pairs_hook=OrderedDict)
 
     new_config = None
-    if parse_version(VERSION) > parse_version(config.get(CONFIG_VERSION_TAG, "0")):
+    try:
+        version = distribution("bdbag").version
+    except PackageNotFoundError:  # pragma: no cover
+        version = __version__
+    if parse_version(version) > parse_version(config.get(CONFIG_VERSION_TAG, "0")):
         new_config = DEFAULT_CONFIG.copy()
         config_items = [BAG_CONFIG_TAG, FETCH_CONFIG_TAG, RESOLVER_CONFIG_TAG, ID_RESOLVER_TAG]
         copy_config_items(config, new_config, config_items)
@@ -224,7 +229,7 @@ def upgrade_config(config_file):
     if updated and new_config:
         safe_move(config_file)
         write_config(new_config, config_file)
-        print("Updated configuration file [%s] to current version format: %s" % (config_file, str(VERSION)))
+        print("Updated configuration file [%s] to current version format: %s" % (config_file, str(version)))
 
 
 def copy_config_items(old_config, new_config, key_names):

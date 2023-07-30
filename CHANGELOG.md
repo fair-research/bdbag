@@ -1,5 +1,14 @@
 # CHANGE LOG
 
+## 1.7.1
+Fix issue with `packaging.parse` throwing `InvalidVersion` in the `upgrade_config()` function when trying to parse the 
+informational version string `VERSION` set by `bdbag` when it is running in a "frozen" (e.g., with `cx_Freeze`) environment.
+In such cases, `VERSION` is set to something like `1.7.1-frozen`, which is not `PEP-440` compliant.
+This was not an issue in previous releases due to the fact that the implementation used `pkg_resources.parse_version` which was not as strict.
+
+The code in `upgrade_config()` has been changed to parse the `PEP-440` compliant version returned by `packaging.parse` 
+rather than use the global string `VERSION`, which can still be (and is) used elsewhere for purely informational and descriptive purposes. 
+
 ## 1.7.0
 * PR: [#54](https://github.com/fair-research/bdbag/pull/54): Add support for passing a local profile path for profile validation. Thanks to [Bernhard Hampel-Waffenthal](https://github.com/prettybits) for the contribution.
 * [#40](https://github.com/fair-research/bdbag/issues/40): Replace deprecated use of `pkg_resources` with `importlib-metadata` and `packaging`.
