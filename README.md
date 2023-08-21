@@ -2,7 +2,7 @@
 [![Build Status](https://app.travis-ci.com/fair-research/bdbag.svg)](https://app.travis-ci.com/fair-research/bdbag)
 [![Coverage Status](https://coveralls.io/repos/github/fair-research/bdbag/badge.svg?branch=master)](https://coveralls.io/github/fair-research/bdbag?branch=master)
 [![PyPi Version](https://img.shields.io/pypi/v/bdbag.svg)](https://pypi.python.org/pypi/bdbag)
-[![PyPi Downloads](https://pepy.tech/badge/bdbag)](https://pepy.tech/project/bdbag)
+[![PyPi Downloads](https://static.pepy.tech/badge/bdbag)](https://pepy.tech/project/bdbag)
 [![PyPi Wheel](https://img.shields.io/pypi/wheel/bdbag.svg)](https://pypi.python.org/pypi/bdbag)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/bdbag/badges/version.svg)](https://anaconda.org/conda-forge/bdbag)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/bdbag/badges/downloads.svg)](https://anaconda.org/conda-forge/bdbag)
