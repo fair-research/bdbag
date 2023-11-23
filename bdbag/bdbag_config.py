@@ -14,12 +14,16 @@
 # limitations under the License.
 #
 import os
+import sys
 import errno
 import logging
 import json
 from collections import OrderedDict
 from packaging.version import parse as parse_version
-from importlib_metadata import distribution, PackageNotFoundError
+if sys.version_info >= (3,8):
+    from importlib.metadata import distribution, PackageNotFoundError
+else:
+    from importlib_metadata import distribution, PackageNotFoundError
 from bdbag import get_typed_exception, safe_move, \
     DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION, __version__
 from bdbag.fetch import Megabyte
