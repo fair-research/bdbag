@@ -22,7 +22,10 @@ import mimetypes
 import shutil
 from datetime import datetime
 from distutils.util import strtobool
-from importlib_metadata import distribution, PackageNotFoundError
+if sys.version_info >= (3,8):
+    from importlib.metadata import distribution, PackageNotFoundError
+else:
+    from importlib_metadata import distribution, PackageNotFoundError
 
 logger = logging.getLogger(__name__)
 
