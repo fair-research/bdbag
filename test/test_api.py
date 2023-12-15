@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import copy
 import os
 import sys
 import json
@@ -22,11 +23,14 @@ import mock
 import unittest
 import tarfile
 import zipfile
+from datetime import date, datetime
+from tzlocal import get_localzone
 from os.path import join as ospj
 from os.path import exists as ospe
 from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg, bdbag_ro as bdbro, bdbagit as bdbagit, bdbagit_profile, \
     filter_dict, get_typed_exception, DEFAULT_CONFIG_PATH
+from bdbag import bdbag_utils as bdbutils
 from bdbag.fetch.auth import keychain
 from test.test_common import BaseTest
 
@@ -209,6 +213,17 @@ class TestAPI(BaseTest):
         logger.info(self.getTestHeader('create bag'))
         try:
             bag = bdb.make_bag(self.test_data_dir)
+            self.assertIsInstance(bag, bdbagit.BDBag)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_create_bag_idempotent(self):
+        logger.info(self.getTestHeader('create bag idempotent'))
+        try:
+            bag_metadata = dict()
+            bag_metadata['Bagging-Date'] = date.strftime(date.today(), "%Y-%m-%d")
+            bag_metadata['Bagging-Time'] = datetime.strftime(datetime.now(tz=get_localzone()), "%H:%M:%S %Z")
+            bag = bdb.make_bag(self.test_data_dir, metadata=bag_metadata, idempotent=True)
             self.assertIsInstance(bag, bdbagit.BDBag)
         except Exception as e:
             self.fail(get_typed_exception(e))
@@ -579,6 +594,46 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_archive_bag_xz(self):
+        logger.info(self.getTestHeader('archive bag bz2 format'))
+        try:
+            archive_file = bdb.archive_bag(self.test_bag_dir, 'xz')
+            self.assertTrue(ospif(archive_file))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def _test_archive_bag_idempotent(self, archive_format, hash_function="sha256"):
+        logger.info(self.getTestHeader('archive bag idempotent %s format' % archive_format))
+        try:
+            archive_file = bdb.archive_bag(self.test_bag_dir, archive_format, idempotent=True)
+            archive_file1 = os.path.splitext(archive_file)[0] + "-1." + archive_format
+            os.rename(archive_file, archive_file1)
+            self.assertTrue(ospif(archive_file1))
+            archive_file = bdb.archive_bag(self.test_bag_dir, archive_format, idempotent=True)
+            archive_file2 = os.path.splitext(archive_file)[0] + "-2." + archive_format
+            os.rename(archive_file, archive_file2)
+            self.assertTrue(ospif(archive_file2))
+            archive1_hash = bdbutils.compute_file_hashes(archive_file1, [hash_function])[hash_function]
+            archive2_hash = bdbutils.compute_file_hashes(archive_file2, [hash_function])[hash_function]
+            self.assertEqual(archive1_hash, archive2_hash)
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
+    def test_archive_bag_idempotent_zip(self):
+        self._test_archive_bag_idempotent("zip")
+
+    def test_archive_bag_idempotent_tar(self):
+        self._test_archive_bag_idempotent("tar")
+
+    def test_archive_bag_idempotent_tgz(self):
+        self._test_archive_bag_idempotent("tgz")
+
+    def test_archive_bag_idempotent_bz2(self):
+        self._test_archive_bag_idempotent("bz2")
+
+    def test_archive_bag_idempotent_xz(self):
+        self._test_archive_bag_idempotent("xz")
+
     def test_archive_bag_empty_dirs_zip(self):
         logger.info(self.getTestHeader('archive bag with empty dirs zip format'))
         archive = None
@@ -704,22 +759,43 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_extract_bag_archive_tar(self):
+        self._test_extract_bag_archive_tar("tar")
+
     def test_extract_bag_archive_tgz(self):
-        logger.info(self.getTestHeader('extract bag tgz format'))
+        self._test_extract_bag_archive_tar("tgz")
+
+    def test_extract_bag_archive_bz2(self):
+        self._test_extract_bag_archive_tar("bz2")
+
+    def test_extract_bag_archive_xz(self):
+        self._test_extract_bag_archive_tar("xz")
+
+    def _test_extract_bag_archive_tar(self, archive_format):
+        logger.info(self.getTestHeader('extract bag %s format' % archive_format))
         try:
-            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.tgz'), temp=True)
+            config_file = ospj(self.test_config_dir, 'test-config-13.json') if sys.version_info < (3, 8) else None
+            bag_path = bdb.extract_bag(
+                ospj(self.test_archive_dir, 'test-bag' + "." + archive_format), temp=True, config_file=config_file)
             self.assertTrue(ospe(bag_path))
             self.assertTrue(bdb.is_bag(bag_path))
             bdb.cleanup_bag(os.path.dirname(bag_path))
+            output = self.stream.getvalue()
+            if sys.version_info < (3, 8):
+                self.assertExpectedMessages(["SECURITY WARNING: TAR extraction may be unsafe"], output)
         except Exception as e:
             self.fail(get_typed_exception(e))
 
     def test_extract_bag_archive_tgz_no_parent_warning(self):
         logger.info(self.getTestHeader('extract bag tgz format with no parent dir archive root'))
         try:
-            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-no-parent.tgz'), temp=True)
+            config_file = ospj(self.test_config_dir, 'test-config-13.json') if sys.version_info < (3, 8) else None
+            bag_path = bdb.extract_bag(
+                ospj(self.test_archive_dir, 'test-bag-no-parent.tgz'), temp=True, config_file=config_file)
             bdb.cleanup_bag(os.path.dirname(bag_path))
             output = self.stream.getvalue()
+            if sys.version_info < (3, 8):
+                self.assertExpectedMessages(["SECURITY WARNING: TAR extraction may be unsafe"], output)
             self.assertExpectedMessages([
                 "Expecting single bag parent dir in archive but found files in the archive root"], output)
         except Exception as e:
@@ -728,20 +804,14 @@ class TestAPI(BaseTest):
     def test_extract_bag_archive_tgz_multi_parent_warning(self):
         logger.info(self.getTestHeader('extract bag tgz format with multi parent archive root'))
         try:
-            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag-multi-parent.tgz'), temp=True)
+            config_file = ospj(self.test_config_dir, 'test-config-13.json') if sys.version_info < (3, 8) else None
+            bag_path = bdb.extract_bag(
+                ospj(self.test_archive_dir, 'test-bag-multi-parent.tgz'), temp=True, config_file=config_file)
             bdb.cleanup_bag(os.path.dirname(bag_path))
             output = self.stream.getvalue()
+            if sys.version_info < (3, 8):
+                self.assertExpectedMessages(["SECURITY WARNING: TAR extraction may be unsafe"], output)
             self.assertExpectedMessages(["Expecting single bag parent dir but got:"], output)
-        except Exception as e:
-            self.fail(get_typed_exception(e))
-
-    def test_extract_bag_archive_tar(self):
-        logger.info(self.getTestHeader('extract bag tar format'))
-        try:
-            bag_path = bdb.extract_bag(ospj(self.test_archive_dir, 'test-bag.tar'), temp=True)
-            self.assertTrue(ospe(bag_path))
-            self.assertTrue(bdb.is_bag(bag_path))
-            bdb.cleanup_bag(os.path.dirname(bag_path))
         except Exception as e:
             self.fail(get_typed_exception(e))
 

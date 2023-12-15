@@ -19,9 +19,12 @@ import errno
 import logging
 import json
 import shutil
+import stat
+import time
 import tempfile
 import tarfile
-import zipfile
+import gzip
+from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED, ZIP_STORED, is_zipfile
 import bdbag.bdbagit as bdbagit
 import bdbag.bdbagit_profile as bdbp
 import bdbag.bdbag_ro as bdbro
@@ -236,7 +239,8 @@ def make_bag(bag_path,
              remote_file_manifest=None,
              config_file=None,
              ro_metadata=None,
-             ro_metadata_file=None):
+             ro_metadata_file=None,
+             idempotent=None):
     bag = None
     try:
         bag = bdbagit.BDBag(bag_path)
@@ -248,6 +252,12 @@ def make_bag(bag_path,
     bag_version = bag_config.get(BAG_SPEC_VERSION_TAG, DEFAULT_BAG_SPEC_VERSION)
     bag_algorithms = algs if algs else bag_config.get(BAG_ALGORITHMS_TAG, ['md5', 'sha256'])
     bag_processes = bag_config.get(BAG_PROCESSES_TAG, 1)
+    idempotent_config = bag_config.get(BAG_ARCHIVE_IDEMPOTENT, False)
+    idempotent = idempotent_config if (idempotent_config and idempotent is None) else \
+        False if idempotent is None else idempotent
+
+    if idempotent and (ro_metadata or ro_metadata_file):
+        logger.warning("Bag idempotency cannot be guaranteed when ro-metadata is present.")
 
     # bag metadata merge order: config(if new, else if update use existing)->metadata_file->metadata
     if not update or (update and not os.path.isfile(os.path.join(bag_path, "bag-info.txt"))):
@@ -268,11 +278,21 @@ def make_bag(bag_path,
     if bag_ro_metadata:
         bag_metadata.update({BAG_PROFILE_TAG: BDBAG_RO_PROFILE_ID})
 
-    if 'Bagging-Date' not in bag_metadata:
-        bag_metadata['Bagging-Date'] = date.strftime(date.today(), "%Y-%m-%d")
+    if idempotent:
+        if 'Bagging-Date' in bag_metadata:
+            logger.warning(
+                "Bagging-Date metadata is not compatible with Bag idempotency. Removing Bagging-Date attribute.")
+            del bag_metadata["Bagging-Date"]
+        if 'Bagging-Time' in bag_metadata:
+            logger.warning(
+                "Bagging-Time metadata is not compatible with Bag idempotency. Removing Bagging-Time attribute.")
+            del bag_metadata["Bagging-Time"]
+    else:
+        if 'Bagging-Date' not in bag_metadata:
+            bag_metadata['Bagging-Date'] = date.strftime(date.today(), "%Y-%m-%d")
 
-    if 'Bagging-Time' not in bag_metadata:
-        bag_metadata['Bagging-Time'] = datetime.strftime(datetime.now(tz=get_localzone()), "%H:%M:%S %Z")
+        if 'Bagging-Time' not in bag_metadata:
+            bag_metadata['Bagging-Time'] = datetime.strftime(datetime.now(tz=get_localzone()), "%H:%M:%S %Z")
 
     if 'Bag-Software-Agent' not in bag_metadata:
         bag_metadata['Bag-Software-Agent'] = \
@@ -314,9 +334,14 @@ def make_bag(bag_path,
     return bag
 
 
-def archive_bag(bag_path, bag_archiver):
+def archive_bag(bag_path, bag_archiver, config_file=None, idempotent=None):
     bag_archiver = bag_archiver.lower()
     bag_path = bag_path.rstrip(os.path.sep)
+
+    config = read_config(config_file)
+    idempotent_config = config[BAG_CONFIG_TAG].get(BAG_ARCHIVE_IDEMPOTENT, False)
+    idempotent = idempotent_config if (idempotent_config and idempotent is None) else \
+        False if idempotent is None else idempotent
 
     try:
         validate_bag_structure(bag_path, skip_remote=True)
@@ -325,6 +350,8 @@ def archive_bag(bag_path, bag_archiver):
         raise e
 
     logger.info("Archiving bag (%s): %s" % (bag_archiver, bag_path))
+    if idempotent:
+        logger.debug("Creating idempotent (reproducible) %s formatted bag archive." % bag_archiver)
     tarmode = None
     archive = None
     fn = '.'.join([os.path.basename(bag_path), bag_archiver])
@@ -334,39 +361,115 @@ def archive_bag(bag_path, bag_archiver):
         tarmode = 'w:gz'
     elif bag_archiver == 'bz2':
         tarmode = 'w:bz2'
+    elif bag_archiver == 'xz':
+        tarmode = 'w:xz'
     elif bag_archiver == 'zip':
         zfp = os.path.join(os.path.dirname(bag_path), fn)
-        zf = zipfile.ZipFile(zfp, 'w', compression=zipfile.ZIP_DEFLATED, allowZip64=True)
-        for dirpath, dirnames, filenames in os.walk(bag_path):
-            for name in filenames:
-                filepath = os.path.normpath(os.path.join(dirpath, name))
-                relpath = os.path.relpath(filepath, os.path.dirname(bag_path))
-                if os.path.isfile(filepath):
-                    zf.write(filepath, relpath)
-            if not filenames:  # include empty directories
-                relpath = os.path.relpath(dirpath, os.path.dirname(bag_path))
-                zf.write(dirpath, relpath)
-        zf.close()
-        archive = zf.filename
+        archive = zip_bag_dir(bag_path, zfp, idempotent)
     else:
         raise RuntimeError("Archive format not supported for bag file: %s \n "
-                           "Supported archive formats are ZIP or TAR/GZ/BZ2" % bag_path)
+                           "Supported archive formats are ZIP or TAR/GZ/BZ2/XZ" % bag_path)
 
     if tarmode:
-        tfp = os.path.join(os.path.dirname(bag_path), fn)
-        t = tarfile.open(tfp, tarmode)
-        t.add(bag_path, os.path.relpath(bag_path, os.path.dirname(bag_path)), recursive=True)
-        t.close()
-        archive = t.name
+        archive = tar_bag_dir(bag_path, fn, tarmode, idempotent)
 
     logger.info('Created bag archive: %s' % archive)
 
     return archive
 
 
-def extract_bag(bag_path, output_path=None, temp=False):
+def tar_bag_dir(bag_path, tar_file_path, tarmode, idempotent=False):
+
+    def filter_mtime(tarinfo):
+        # a fixed mtime is a core requirement for a reproducible archive, but we should preserve payload file mtimes
+        if not (tarinfo.name.startswith(os.path.basename(bag_path) + "/data/") and
+                os.path.isfile(os.path.dirname(bag_path) + "/" + tarinfo.name)):
+            tarinfo.mtime = 0
+        return tarinfo
+
+    is_idempotent_tgz = False
+    if idempotent and tarmode == 'w:gz':
+        is_idempotent_tgz = True
+        tarmode = 'w'
+        tar_file_path = '.'.join([os.path.basename(bag_path), "tar"])
+
+    tfp = os.path.join(os.path.dirname(bag_path), tar_file_path)
+    t = tarfile.open(tfp, tarmode)
+    t.add(bag_path,
+          os.path.relpath(bag_path, os.path.dirname(bag_path)),
+          recursive=True,
+          filter=filter_mtime if idempotent else None)
+    t.close()
+    archive = t.name
+
+    # TGZ is a special case which we have to GZIP separately because we can't pass through the needed mtime=0 argument
+    # via the tarfile API - this is obviously less efficient than performing a tar|gzip in a single pass but oh well.
+    if is_idempotent_tgz:
+        archive = os.path.splitext(t.name)[0] + ".tgz"
+        with io.open(t.name, 'rb') as f_in, io.open(archive, 'wb') as f_out:
+            with gzip.GzipFile(filename=t.name, mode='wb', fileobj=f_out, mtime=0) as gzf:
+                while True:
+                    chunk = f_in.read(io.DEFAULT_BUFFER_SIZE)
+                    if not chunk:
+                        break
+                    gzf.write(chunk)
+                gzf.flush()
+        os.remove(t.name)
+
+    return archive
+
+
+def zip_bag_dir(bag_path, zip_file_path, idempotent=False):
+
+    zipfile = ZipFile(zip_file_path, 'w', ZIP_DEFLATED, allowZip64=True)
+    entries = []
+    for root, dirs, files in os.walk(bag_path):
+        for d in dirs:
+            entries.append(os.path.relpath(os.path.join(root, d), os.path.dirname(bag_path)) + os.path.sep)
+        for f in files:
+            entries.append(os.path.relpath(os.path.join(root, f), os.path.dirname(bag_path)))
+    entries.sort()
+    for e in entries:
+        filepath = os.path.join(os.path.dirname(bag_path), e)
+        payload_dir = os.path.join(os.path.basename(bag_path), "data", "")
+        # a fixed mtime is a core requirement for a reproducible archive, but we should preserve payload file mtimes
+        if idempotent and not (e.startswith(payload_dir) and os.path.isfile(filepath)):
+            date_time = (1980, 1, 1, 0, 0, 0)
+        else:
+            st = os.stat(filepath)
+            mtime = time.localtime(st.st_mtime)
+            date_time = mtime[0:6]
+        info = ZipInfo(
+            filename=e,
+            date_time=date_time
+        )
+        info.create_system = 3  # unix
+        if e.endswith(os.path.sep):
+            info.external_attr = 0o40755 << 16 | 0x010
+            info.compress_type = ZIP_STORED
+            info.CRC = 0  # unclear why necessary, maybe a bug?
+            zipfile.writestr(info, b'')
+        else:
+            info.external_attr = 0o100644 << 16
+            info.compress_type = ZIP_DEFLATED
+            with io.open(filepath, 'rb') as data, zipfile.open(info, 'w') as out:
+                while True:
+                    chunk = data.read(io.DEFAULT_BUFFER_SIZE)
+                    if not chunk:
+                        break
+                    out.write(chunk)
+                out.flush()
+    zipfile.close()
+    return zipfile.filename
+
+
+def extract_bag(bag_path, output_path=None, temp=False, config_file=None):
     if not os.path.exists(bag_path):
         raise RuntimeError("Specified bag path not found: %s" % bag_path)
+
+    # check for unfiltered TAR extraction override
+    config = read_config(config_file)
+    allow_unfiltered_tar_extraction = config.get(ENABLE_UNFILTERED_TAR_EXTRACTION_TAG, False)
 
     # determine output path for extraction
     base_path = extracted_path = None
@@ -380,9 +483,9 @@ def extract_bag(bag_path, output_path=None, temp=False):
             base_path = os.path.dirname(os.path.splitext(bag_path)[0])
 
         # extraction preflight
-        if zipfile.is_zipfile(bag_path):
+        if is_zipfile(bag_path):
             logger.info("Extracting ZIP archived file: %s" % bag_path)
-            archive = zipfile.ZipFile(bag_path)
+            archive = ZipFile(bag_path)
             files = archive.namelist()
         elif tarfile.is_tarfile(bag_path):
             logger.info("Extracting TAR/GZ/BZ2 archived file: %s" % bag_path)
@@ -390,14 +493,41 @@ def extract_bag(bag_path, output_path=None, temp=False):
             files = archive.getnames()
         else:
             raise RuntimeError("Archive format not supported for file: %s"
-                               "\nSupported archive formats are ZIP or TAR/GZ/BZ2" % bag_path)
+                               "\nSupported archive formats are ZIP or TAR/GZ/BZ2/XZ" % bag_path)
         archived_bag_dir = bag_parent_dir_from_archive(files)
         extracted_path = os.path.join(base_path, archived_bag_dir or bag_dir)
         output_path = os.path.join(output_path, extracted_path or bag_dir) if output_path else None
         safe_move(extracted_path, output_path)
-        # perform the extraction
-        archive.extractall(base_path)
-        archive.close()
+
+        # Perform the extraction - use "data" filter with tarfile, if available. See https://peps.python.org/pep-0706.
+        # If data filter not available, abort execution unless "allow_unfiltered_tar_extraction" is enabled in config.
+        try:
+            if isinstance(archive, tarfile.TarFile):
+                if hasattr(tarfile, 'data_filter'):
+                    archive.extractall(base_path, filter='data')
+                else:
+                    if isinstance(archive, tarfile.TarFile):
+                        logger.warning('SECURITY WARNING: TAR extraction may be unsafe; consider updating Python to a '
+                                       'version which has been patched to address this vulnerability. '
+                                       'See: https://nvd.nist.gov/vuln/detail/CVE-2007-4559')
+                        if allow_unfiltered_tar_extraction:
+                            archive.extractall(base_path)
+                        else:
+                            raise RuntimeError(
+                                "TAR archive extraction has been disabled because the TAR 'extraction filters' feature "
+                                "is not present in the current Python version. Python versions 3.8 through 3.11 "
+                                "require an update that contains a back-port of this feature: the minimum versions are "
+                                "3.8.17, 3.9.17, 3.10.12, and 3.11.4. Python versions 3.12 and above contain this "
+                                "feature by default. Earlier Python versions (3.7 and prior) are unsupported. To "
+                                "disable this security policy enforcement (not recommended), set "
+                                "'allow_unfiltered_tar_extraction: true' in your 'bdbag.json' configuration file. "
+                                "Please consider upgrading your Python to a newer version containing a back-port of "
+                                "this important security fix.")
+            else:
+                # zipfile - which already sanitizes path names and doesn't have the same vulnerabilities as tar
+                archive.extractall(base_path)
+        finally:
+            archive.close()
 
     logger.info("File %s was successfully extracted to directory %s" % (bag_path, extracted_path))
 

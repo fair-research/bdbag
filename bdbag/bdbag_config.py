@@ -20,15 +20,14 @@ import logging
 import json
 from collections import OrderedDict
 from packaging.version import parse as parse_version
-if sys.version_info >= (3,8):
-    from importlib.metadata import distribution, PackageNotFoundError
-else:
-    from importlib_metadata import distribution, PackageNotFoundError
 from bdbag import get_typed_exception, safe_move, \
     DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION, __version__
 from bdbag.fetch import Megabyte
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE, write_keychain
-
+if sys.version_info >= (3, 8):
+    from importlib.metadata import distribution, PackageNotFoundError
+else:
+    from importlib_metadata import distribution, PackageNotFoundError
 logger = logging.getLogger(__name__)
 
 BAG_CONFIG_TAG = "bag_config"
@@ -36,7 +35,9 @@ BAG_SPEC_VERSION_TAG = "bagit_spec_version"
 BAG_ALGORITHMS_TAG = "bag_algorithms"
 BAG_PROCESSES_TAG = "bag_processes"
 BAG_METADATA_TAG = "bag_metadata"
+BAG_ARCHIVE_IDEMPOTENT = "bag_archive_idempotent"
 CONFIG_VERSION_TAG = "bdbag_config_version"
+ENABLE_UNFILTERED_TAR_EXTRACTION_TAG = "enable_unfiltered_tar_extraction"
 DEFAULT_BAG_SPEC_VERSION = "0.97"
 DEFAULT_CONFIG_FILE_ENVAR = "BDBAG_CONFIG_FILE"
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_PATH, 'bdbag.json')

@@ -91,7 +91,15 @@ def parse_cli():
 
     archiver_arg = "--archiver"
     standard_args.add_argument(
-        archiver_arg, choices=['zip', 'tar', 'tgz'], help="Archive a bag using the specified format.")
+        archiver_arg, choices=['zip', 'tar', 'tgz', 'bz2', 'xz'],
+        help="Archive a bag using the specified format.")
+
+    idempotent_arg = "--idempotent"
+    standard_args.add_argument(
+        idempotent_arg, action="store_true",
+        help="Create an idempotent (reproducible) bag directory and/or bag archive by removing timestamp attributes "
+             "from bag metadata (bag-info.txt) and setting fixed modification times (unix epoch) to non-payload files "
+             "and directories contained within bag archive files.")
 
     checksum_arg = "--checksum"
     standard_args.add_argument(
@@ -359,7 +367,8 @@ def main():
                              metadata_file=args.metadata_file,
                              remote_file_manifest=args.remote_file_manifest,
                              config_file=args.config_file,
-                             ro_metadata_file=args.ro_metadata_file)
+                             ro_metadata_file=args.ro_metadata_file,
+                             idempotent=args.idempotent)
 
         # otherwise just extract the bag if it is an archive and no other conflicting options specified
         elif not (args.validate or args.validate_profile or args.resolve_fetch):
@@ -398,7 +407,7 @@ def main():
                                  config_file=args.config_file)
 
         if args.archiver:
-            archive = bdb.archive_bag(path, args.archiver)
+            archive = bdb.archive_bag(path, args.archiver, config_file=args.config_file, idempotent=args.idempotent)
 
         if archive is None and is_file:
             archive = path

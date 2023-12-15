@@ -58,6 +58,11 @@ class TestCli(BaseTest):
         logfile.writelines(self.getTestHeader('create bag', args))
         self._test_successful_invocation(args)
 
+    def test_create_idempotent(self):
+        args = ARGS + [self.test_data_dir, "--idempotent"]
+        logfile.writelines(self.getTestHeader('create bag idempotent', args))
+        self._test_successful_invocation(args)
+
     def test_create_with_metadata(self):
         args = ARGS + [self.test_data_dir,
                        '--metadata-file', ospj(self.test_config_dir, 'test-metadata.json'),
@@ -101,10 +106,43 @@ class TestCli(BaseTest):
                                                 "tagmanifest-sha512.txt"],
                                                ["Generating manifest lines for file"])
 
-    def test_archive(self):
-        args = ARGS + [self.test_bag_dir, '--archive', 'zip']
-        logfile.writelines(self.getTestHeader('archive bag', args))
+    def _test_archive(self, archive_format, idempotent=False):
+        args = ARGS + [self.test_bag_dir, '--archive', archive_format]
+        if idempotent:
+            args.append('--idempotent')
+        logfile.writelines(self.getTestHeader(
+            'archive bag %s%s' % ("idempotent " if idempotent else "", archive_format), args))
         self._test_successful_invocation(args, ["Created bag archive"])
+
+    def test_archive_zip(self):
+        self._test_archive("zip")
+
+    def test_archive_tar(self):
+        self._test_archive("tar")
+
+    def test_archive_tgz(self):
+        self._test_archive("tgz")
+
+    def test_archive_bz2(self):
+        self._test_archive("bz2")
+
+    def test_archive_xz(self):
+        self._test_archive("xz")
+
+    def test_archive_idempotent_zip(self):
+        self._test_archive("zip", True)
+
+    def test_archive_idempotent_tar(self):
+        self._test_archive("tar", True)
+
+    def test_archive_idempotent_tgz(self):
+        self._test_archive("tgz", True)
+
+    def test_archive_idempotent_bz2(self):
+        self._test_archive("bz2", True)
+
+    def test_archive_idempotent_xz(self):
+        self._test_archive("xz", True)
 
     def test_extract(self):
         args = ARGS + [ospj(self.test_archive_dir, 'test-bag.zip')]

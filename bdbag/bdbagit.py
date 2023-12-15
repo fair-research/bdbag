@@ -142,9 +142,7 @@ def make_bag(bag_dir,
             if bag_info is None:
                 bag_info = {}
 
-            # allow 'Bagging-Date' and 'Bag-Software-Agent' to be overidden
-            if 'Bagging-Date' not in bag_info:
-                bag_info['Bagging-Date'] = date.strftime(date.today(), "%Y-%m-%d")
+            # allow 'Bag-Software-Agent' to be overridden
             if 'Bag-Software-Agent' not in bag_info:
                 bag_info['Bag-Software-Agent'] = \
                     'BDBag version: %s (Bagit version: %s) <%s>' % (VERSION, BAGIT_VERSION, PROJECT_URL)

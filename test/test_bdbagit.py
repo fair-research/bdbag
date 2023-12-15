@@ -751,15 +751,6 @@ Tag-File-Character-Encoding: UTF-8
         self.assertTrue(bag.is_valid())
         self.assertEqual(bag.info['Test-Tag'], list(map(str, range(1, 7))))
 
-    def test_default_bagging_date(self):
-        logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
-        info = {'Contact-Email': 'ehs@pobox.com'}
-        bagit.make_bag(self.tmpdir, bag_info=info)
-        bag_info_txt = slurp_text_file(j(self.tmpdir, 'bag-info.txt'))
-        self.assertTrue('Contact-Email: ehs@pobox.com' in bag_info_txt)
-        today = datetime.date.strftime(datetime.date.today(), "%Y-%m-%d")
-        self.assertTrue('Bagging-Date: %s' % today in bag_info_txt)
-
     def test_missing_tagmanifest_valid(self):
         logger.info(self.getTestHeader(sys._getframe().f_code.co_name))
         info = {'Contact-Email': 'ehs@pobox.com'}

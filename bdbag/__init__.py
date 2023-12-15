@@ -29,7 +29,7 @@ else:
 
 logger = logging.getLogger(__name__)
 
-__version__ = "1.7.1"
+__version__ = "1.7.2"
 __bagit_version__ = "1.8.1"
 __bagit_profile_version__ = "1.3.1"
 
