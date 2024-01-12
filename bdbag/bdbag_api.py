@@ -420,7 +420,8 @@ def tar_bag_dir(bag_path, tar_file_path, tarmode, idempotent=False):
 
 
 def zip_bag_dir(bag_path, zip_file_path, idempotent=False):
-
+    # The majority of this code came from https://fekir.info/post/reproducible-zip-archives/ with the exception of the
+    # buffered writing of file entries (instead of ZipFile.writestr) which was added for scalability reasons.
     zipfile = ZipFile(zip_file_path, 'w', ZIP_DEFLATED, allowZip64=True)
     entries = []
     for root, dirs, files in os.walk(bag_path):
