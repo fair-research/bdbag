@@ -131,12 +131,13 @@ def is_bag(bag_path):
     bag = None
     try:
         bag = bdbagit.BDBag(bag_path)
-    except (bdbagit.BagError, bdbagit.BagValidationError):  # pragma: no cover
-        pass
+    except (bdbagit.BagError, bdbagit.BagValidationError) as e:  # pragma: no cover
+        logger.warning("Exception while checking if %s is a bag: %s" % (bag_path, e))
     return True if bag else False
 
 
 def check_payload_consistency(bag, skip_remote=False, quiet=False):
+    logger.info("Checking payload consistency. This can take some time for large bags with many payload files...")
 
     only_in_manifests, only_on_fs, only_in_fetch = bag.compare_manifests_with_fs_and_fetch()
     payload_consistent = not only_on_fs

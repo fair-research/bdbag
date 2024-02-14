@@ -210,10 +210,10 @@ class HTTPFetchTransport(BaseFetchTransport):
                                 cookies=self.cookies)
                 if r.status_code in redirect_status_codes:
                     url = r.headers["Location"]
-                    logger.info("Server responded with redirect to: %s" % url)
+                    logger.info("Server responded with redirect.")
                     if auth_type == "bearer-token":
+                        authorization = session.headers.get("Authorization")
                         if allow_redirects_with_token:
-                            authorization = session.headers.get("Authorization")
                             if authorization:
                                 headers.update({"Authorization": authorization})
                             else:
