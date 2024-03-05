@@ -130,9 +130,10 @@ def prune_bag_manifests(bag):
 def is_bag(bag_path):
     bag = None
     try:
-        bag = bdbagit.BDBag(bag_path)
+        if os.path.isdir(bag_path):
+            bag = bdbagit.BDBag(bag_path)
     except (bdbagit.BagError, bdbagit.BagValidationError) as e:  # pragma: no cover
-        logger.warning("Exception while checking if %s is a bag: %s" % (bag_path, e))
+        logger.warning("Exception while checking if directory %s is a bag: %s" % (bag_path, e))
     return True if bag else False
 
 
@@ -382,10 +383,8 @@ def archive_bag(bag_path, bag_archiver, config_file=None, idempotent=None):
 def tar_bag_dir(bag_path, tar_file_path, tarmode, idempotent=False):
 
     def filter_mtime(tarinfo):
-        # a fixed mtime is a core requirement for a reproducible archive, but we should preserve payload file mtimes
-        if not (tarinfo.name.startswith(os.path.basename(bag_path) + "/data/") and
-                os.path.isfile(os.path.dirname(bag_path) + "/" + tarinfo.name)):
-            tarinfo.mtime = 0
+        # a fixed mtime is a core requirement for a reproducible archive
+        tarinfo.mtime = 0
         return tarinfo
 
     is_idempotent_tgz = False
@@ -434,8 +433,8 @@ def zip_bag_dir(bag_path, zip_file_path, idempotent=False):
     for e in entries:
         filepath = os.path.join(os.path.dirname(bag_path), e)
         payload_dir = os.path.join(os.path.basename(bag_path), "data", "")
-        # a fixed mtime is a core requirement for a reproducible archive, but we should preserve payload file mtimes
-        if idempotent and not (e.startswith(payload_dir) and os.path.isfile(filepath)):
+        # a fixed mtime is a core requirement for a reproducible archive
+        if idempotent:
             date_time = (1980, 1, 1, 0, 0, 0)
         else:
             st = os.stat(filepath)
@@ -506,7 +505,13 @@ def extract_bag(bag_path, output_path=None, temp=False, config_file=None):
         try:
             if isinstance(archive, tarfile.TarFile):
                 if hasattr(tarfile, 'data_filter'):
-                    archive.extractall(base_path, filter='data')
+                    # customize tarfile 'data' filter: if we encounter a tarinfo entry with a mtime of 0 (epoch), then
+                    # set mtime to None which will cause tarfile to suppress preserving the mtime for the extracted file
+                    def tar_data_filter(entry, path):
+                        if entry.mtime == 0:
+                            entry.mtime = None
+                        return tarfile.data_filter(entry, path)
+                    archive.extractall(base_path, filter=tar_data_filter)
                 else:
                     if isinstance(archive, tarfile.TarFile):
                         logger.warning('SECURITY WARNING: TAR extraction may be unsafe; consider updating Python to a '
