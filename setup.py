@@ -59,19 +59,19 @@ setup(
         'bagit_profile'
     ],
     install_requires=['pytz',
-                      'tzlocal<3; python_version < "3"',
+                      'tzlocal<3; python_version<"3"',
                       'tzlocal',
                       'certifi',
                       'packaging',
                       'importlib_metadata;python_version<"3.8"',
-                      'requests>=2.7.0',
+                      'requests',
                       'setuptools_scm<6.0',  # for bagit which does not properly include it in install_requires
                       'bagit==1.8.1',
                       'bagit-profile==1.3.1'
                       ],
     extras_require={
         'boto': ["boto3>=1.9.5", "botocore", "awscli"],
-        'globus': ["globus_sdk>=1.6.0"],
+        'globus': ["globus_sdk>=2,<4"],
         'gcs': ["google_cloud_storage"]
     },
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*, <4',
@@ -84,6 +84,7 @@ setup(
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',

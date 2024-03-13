@@ -90,9 +90,11 @@ def parse_cli():
              "directory will be deleted.")
 
     archiver_arg = "--archiver"
+    choices = ['zip', 'tar', 'tgz', 'bz2']
+    if sys.version_info >= (3, 3):
+        choices.append("xz")
     standard_args.add_argument(
-        archiver_arg, choices=['zip', 'tar', 'tgz', 'bz2', 'xz'],
-        help="Archive a bag using the specified format.")
+        archiver_arg, choices=choices, help="Archive a bag using the specified format.")
 
     idempotent_arg = "--idempotent"
     standard_args.add_argument(

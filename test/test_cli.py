@@ -126,6 +126,7 @@ class TestCli(BaseTest):
     def test_archive_bz2(self):
         self._test_archive("bz2")
 
+    @unittest.skipIf(sys.version_info < (3, 3), 'Python version not supported')
     def test_archive_xz(self):
         self._test_archive("xz")
 
@@ -141,6 +142,7 @@ class TestCli(BaseTest):
     def test_archive_idempotent_bz2(self):
         self._test_archive("bz2", True)
 
+    @unittest.skipIf(sys.version_info < (3, 3), 'Python version not supported')
     def test_archive_idempotent_xz(self):
         self._test_archive("xz", True)
 

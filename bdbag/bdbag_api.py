@@ -363,14 +363,15 @@ def archive_bag(bag_path, bag_archiver, config_file=None, idempotent=None):
         tarmode = 'w:gz'
     elif bag_archiver == 'bz2':
         tarmode = 'w:bz2'
-    elif bag_archiver == 'xz':
+    elif bag_archiver == 'xz' and sys.version_info >= (3, 3):
         tarmode = 'w:xz'
     elif bag_archiver == 'zip':
         zfp = os.path.join(os.path.dirname(bag_path), fn)
         archive = zip_bag_dir(bag_path, zfp, idempotent)
     else:
         raise RuntimeError("Archive format not supported for bag file: %s \n "
-                           "Supported archive formats are ZIP or TAR/GZ/BZ2/XZ" % bag_path)
+                           "Supported archive formats are ZIP or TAR/GZ/BZ2%s" %
+                           (bag_path,  ("/XZ" if sys.version_info >= (3, 3) else "")))
 
     if tarmode:
         archive = tar_bag_dir(bag_path, fn, tarmode, idempotent)
@@ -432,34 +433,36 @@ def zip_bag_dir(bag_path, zip_file_path, idempotent=False):
     entries.sort()
     for e in entries:
         filepath = os.path.join(os.path.dirname(bag_path), e)
-        payload_dir = os.path.join(os.path.basename(bag_path), "data", "")
-        # a fixed mtime is a core requirement for a reproducible archive
-        if idempotent:
-            date_time = (1980, 1, 1, 0, 0, 0)
+        if sys.version_info < (3,):
+            zipfile.write(filepath, e)
         else:
-            st = os.stat(filepath)
-            mtime = time.localtime(st.st_mtime)
-            date_time = mtime[0:6]
-        info = ZipInfo(
-            filename=e,
-            date_time=date_time
-        )
-        info.create_system = 3  # unix
-        if e.endswith(os.path.sep):
-            info.external_attr = 0o40755 << 16 | 0x010
-            info.compress_type = ZIP_STORED
-            info.CRC = 0  # unclear why necessary, maybe a bug?
-            zipfile.writestr(info, b'')
-        else:
-            info.external_attr = 0o100644 << 16
-            info.compress_type = ZIP_DEFLATED
-            with io.open(filepath, 'rb') as data, zipfile.open(info, 'w') as out:
-                while True:
-                    chunk = data.read(io.DEFAULT_BUFFER_SIZE)
-                    if not chunk:
-                        break
-                    out.write(chunk)
-                out.flush()
+            if idempotent:
+                # a fixed mtime is a core requirement for a reproducible archive
+                date_time = (1980, 1, 1, 0, 0, 0)
+            else:
+                st = os.stat(filepath)
+                mtime = time.localtime(st.st_mtime)
+                date_time = mtime[0:6]
+            info = ZipInfo(
+                filename=e,
+                date_time=date_time
+            )
+            info.create_system = 3  # unix
+            if e.endswith(os.path.sep):
+                info.external_attr = 0o40755 << 16 | 0x010
+                info.compress_type = ZIP_STORED
+                info.CRC = 0  # unclear why necessary, maybe a bug?
+                zipfile.writestr(info, b'')
+            else:
+                info.external_attr = 0o100644 << 16
+                info.compress_type = ZIP_DEFLATED
+                with io.open(filepath, 'rb') as data, zipfile.open(info, 'w') as out:
+                    while True:
+                        chunk = data.read(io.DEFAULT_BUFFER_SIZE)
+                        if not chunk:
+                            break
+                        out.write(chunk)
+                    out.flush()
     zipfile.close()
     return zipfile.filename
 
@@ -489,12 +492,14 @@ def extract_bag(bag_path, output_path=None, temp=False, config_file=None):
             archive = ZipFile(bag_path)
             files = archive.namelist()
         elif tarfile.is_tarfile(bag_path):
-            logger.info("Extracting TAR/GZ/BZ2 archived file: %s" % bag_path)
+            logger.info("Extracting TAR/GZ/BZ2%s archived file: %s" %
+                        (bag_path,  ("/XZ" if sys.version_info >= (3, 3) else "")))
             archive = tarfile.open(bag_path)
             files = archive.getnames()
         else:
-            raise RuntimeError("Archive format not supported for file: %s"
-                               "\nSupported archive formats are ZIP or TAR/GZ/BZ2/XZ" % bag_path)
+            raise RuntimeError("Archive format not supported for file: %s\n"
+                               "Supported archive formats are ZIP or TAR/GZ/BZ2%s" %
+                               (bag_path,  ("/XZ" if sys.version_info >= (3, 3) else "")))
         archived_bag_dir = bag_parent_dir_from_archive(files)
         extracted_path = os.path.join(base_path, archived_bag_dir or bag_dir)
         output_path = os.path.join(output_path, extracted_path or bag_dir) if output_path else None

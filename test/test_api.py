@@ -594,6 +594,7 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    @unittest.skipIf(sys.version_info < (3, 3), 'Python version not supported')
     def test_archive_bag_xz(self):
         logger.info(self.getTestHeader('archive bag bz2 format'))
         try:
@@ -631,6 +632,7 @@ class TestAPI(BaseTest):
     def test_archive_bag_idempotent_bz2(self):
         self._test_archive_bag_idempotent("bz2")
 
+    @unittest.skipIf(sys.version_info < (3, 3), 'Python version not supported')
     def test_archive_bag_idempotent_xz(self):
         self._test_archive_bag_idempotent("xz")
 
@@ -768,6 +770,7 @@ class TestAPI(BaseTest):
     def test_extract_bag_archive_bz2(self):
         self._test_extract_bag_archive_tar("bz2")
 
+    @unittest.skipIf(sys.version_info < (3, 3), 'Python version not supported')
     def test_extract_bag_archive_xz(self):
         self._test_extract_bag_archive_tar("xz")
 

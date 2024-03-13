@@ -94,7 +94,7 @@ def stob(val):
     elif val in ('n', 'no', 'f', 'false', 'off', '0'):
         return False
     else:
-        raise ValueError(f"invalid truth value {val!r}")
+        raise ValueError("invalid truth value %r" % val)
 
 
 def get_typed_exception(e):

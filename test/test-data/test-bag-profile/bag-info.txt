@@ -1,5 +1,5 @@
 Bag-Software-Agent: BDBag version: 1.2.2 (Bagit version: 1.6.4) <https://github.com/fair-research/bdbag>
-BagIt-Profile-Identifier: file:./profiles/bdbag-profile.json
+BagIt-Profile-Identifier: file:profiles/bdbag-profile.json
 Bagging-Date: 2018-03-19
 Bagging-Time: 16:59:32 PST
 Contact-Name: mdarcy
