@@ -21,7 +21,6 @@ import logging
 import mimetypes
 import shutil
 from datetime import datetime
-from distutils.util import strtobool
 if sys.version_info >= (3,8):
     from importlib.metadata import distribution, PackageNotFoundError
 else:
@@ -81,8 +80,21 @@ if not mimetypes.inited:
     mimetypes.init()
 
 
-def stob(string):
-    return bool(strtobool(str(string)))
+# Based on strtobool function from distutils which is now deprecated.
+def stob(val):
+    """Convert a string representation of truth to boolean True or False
+
+    True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
+    are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
+    'val' is anything else.
+    """
+    val = str(val).lower()
+    if val in ('y', 'yes', 't', 'true', 'on', '1'):
+        return True
+    elif val in ('n', 'no', 'f', 'false', 'off', '0'):
+        return False
+    else:
+        raise ValueError(f"invalid truth value {val!r}")
 
 
 def get_typed_exception(e):
