@@ -1,5 +1,15 @@
 # CHANGE LOG
 
+## 1.7.2
+
+* Introducing support for _bag idempotentcy_, or reproducible bags. A reproducible bag is a bag that has content-equivalence (in both payload _and_ metadata, including manifests) 
+to another bag created a different time with the same content, structure, bagging tool, and profile (if used). When this bag creation and bag archive mode is enabled, 
+two separately created bags (or bag archive files) with content-equivalence will _hash equally_, whether the hash is calculated on the bytes of the resultant archive file or calculated on the equivalently ordered set of individual file hashes of the bag's contents. See the [API Guide](https://github.com/fair-research/bdbag/blob/master/doc/api.md) for additional information. 
+* PR: [#59](https://github.com/fair-research/bdbag/pull/59) Only require the external package `importlib_metadata` for Python < 3.8. This module is already included as `importlib.metadata` in Python versions 3.8 and above.  
+* Fix issue with HTTP fetch handler and auth header bearer-token stripping on redirects not getting restored to the cached `requests` session after redirect.
+* Remove dependency on deprecated `distutils` and `distutils.util.strtobool` function.
+* The `is_bag` API function will no longer attempt to instantiate a `Bag` object on non-directories.
+
 ## 1.7.1
 Fix issue with `packaging.parse` throwing `InvalidVersion` in the `upgrade_config()` function when trying to parse the 
 informational version string `VERSION` set by `bdbag` when it is running in a "frozen" (e.g., with `cx_Freeze`) environment.

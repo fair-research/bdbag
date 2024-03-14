@@ -100,7 +100,7 @@ def parse_cli():
     standard_args.add_argument(
         idempotent_arg, action="store_true",
         help="Create an idempotent (reproducible) bag directory and/or bag archive by removing timestamp attributes "
-             "from bag metadata (bag-info.txt) and setting fixed modification times (unix epoch) to non-payload files "
+             "from bag metadata (bag-info.txt) and setting fixed modification times (unix epoch) to files "
              "and directories contained within bag archive files.")
 
     checksum_arg = "--checksum"

@@ -32,13 +32,14 @@ This is the parent object for the entire configuration.
 ##### Object: `bag_config`
 This object contains all bag-related configuration parameters.
 
-| Parameter            | Description                                                                                                                                                                             |
-|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Parameter            | Description                                                                                                                                                                            |
+|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `bag_algorithms`     | This is an array of strings representing the default checksum algorithms to use for bag manifests, if not otherwise specified.  Valid values are "md5", "sha1", "sha256", and "sha512". |
-| `bag_archiver`       | This is a string representing the default archiving format to use if not otherwise specified.  Valid values are "zip", "tar", and "tgz".                                                |
-| `bag_metadata`       | This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.                                                                                               |
-| `bag_processes`      | This is a numeric value representing the default number of concurrent processes to use when calculating checksums.                                                                      |
-| `bagit_spec_version` | The version of the `bagit` specification that created bags will conform to. Valid values are "0.97" or "1.0".                                                                           |
+| `bag_archiver`       | This is a string representing the default archiving format to use if not otherwise specified.  Valid values are "zip", "tar", and "tgz".                                               |
+| `bag_metadata`       | This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.                                                                                              |
+| `bag_processes`      | This is a numeric value representing the default number of concurrent processes to use when calculating checksums.                                                                     |
+| `bagit_spec_version` | The version of the `bagit` specification that created bags will conform to. Valid values are "0.97" or "1.0".                                                                          |
+| `bag_archive_idempotent` | A boolean value indicating that `idempotent` mode should be used by default when creating and archiving new bags.                                                                  |
 
 ##### Object: `fetch_config`
 The `fetch_config` object contains a set of child objects each keyed by the scheme of the transport protocol that contains the transport handler configuration parameters.

@@ -19,7 +19,8 @@ usage: bdbag
 [--version]
 [--update]
 [--revert]
-[--archiver {zip,tar,tgz}]
+[--archiver {zip,tar,tgz,bz2,xz}]
+[--idempotent]
 [--checksum {md5,sha1,sha256,sha512,all}]
 [--skip-manifests]
 [--prune-manifests]
@@ -27,7 +28,7 @@ usage: bdbag
 [--resolve-fetch {all,missing}]
 [--fetch-filter <column><operator><value>]
 [--validate {fast,full,structure,completeness}]
-[--validate-profile {profile-only,full}]
+[--validate-profile [{bag-only,full}]]
 [--profile-path <file>]
 [--config-file <file>]
 [--keychain-file <file>]
@@ -35,10 +36,10 @@ usage: bdbag
 [--ro-metadata-file <file>]
 [--ro-manifest-generate {overwrite, update}]
 [--remote-file-manifest <file>]
+[--output-path]
 [--quiet]
 [--debug]
 [--help]
-[--output-path]
 <path>
 ```
 
@@ -88,8 +89,13 @@ Update an existing bag dir, recalculating tag-manifest checksums and regeneratin
 Revert an existing bag directory back to a normal directory, deleting all bag metadata files. Payload files in the `data` directory will be moved back to the directory root, and the `data` directory will be deleted.
 
 ----
-#### `--archiver {zip,tar,tgz}`
-Archive a bag using the specified format.
+#### `--archiver {zip,tar,tgz,bz2,xz}`
+Archive a bag using the specified format. Note that `xz` (LZMA) compression is not available on Python versions lower than `3.3`.
+
+----
+#### `--idempotent`
+Create an idempotent (reproducible) bag directory and/or bag archive by removing timestamp attributes from bag metadata (`bag-info.txt`) and setting fixed modification times (unix epoch) to files and directories contained within bag archive files.
+More information on bag idempotency can be found in the [make_bag](api.md#make_bag) and the [archive_bag](api.md#archive_bag) API functions.
 
 ----
 #### `--checksum {md5,sha1,sha256,sha512,all}`
