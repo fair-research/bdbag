@@ -44,7 +44,7 @@ An experimental Graphical User Interface (GUI) for `bdbag` can be found [here](h
 ### Python Dependencies
 
 *  Python 2.7 is the minimum Python version required. Please note however that Python 2.7 is officially end-of-life and ongoing compatibility between Python 2.7 and `bdbag` (and its dependencies) is not officially supported and cannot be guaranteed.
-*  Python 3, versions 3.7 through 3.11 are the current officially supported releases.
+*  Python 3, versions 3.8 through 3.12 are the current officially supported releases.
 
 ### Installation
 The latest `bdbag` release is available on PyPi and can be installed using `pip`:
