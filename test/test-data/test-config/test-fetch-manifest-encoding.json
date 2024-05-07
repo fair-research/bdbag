@@ -1,6 +1,6 @@
 [
   {
-    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/test fetch%http®.txt",
+    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/test fetch%25http®.txt",
     "length":201,
     "filename":"test fetch http®.txt",
     "md5":"f3ad851f4213d41ce9690542010bffa0",
@@ -9,7 +9,7 @@
     "sha512":"1bdbb4fc33dbea55ee0e5473062cbd003221c571c6110e2b3d2ebe5288a95a74ccd60fbbbcbd42fcfa4cd320b980ca27d537e6d29e60f73822e301a7ba6c1bfa"
   },
   {
-    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/test fetch%http®.txt",
+    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/test\tfetch%25http®.txt",
     "length":201,
     "filename":"test\nfetch\nhttp®.txt",
     "md5":"f3ad851f4213d41ce9690542010bffa0",
@@ -18,7 +18,7 @@
     "sha512":"1bdbb4fc33dbea55ee0e5473062cbd003221c571c6110e2b3d2ebe5288a95a74ccd60fbbbcbd42fcfa4cd320b980ca27d537e6d29e60f73822e301a7ba6c1bfa"
   },
   {
-    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/test fetch%http®.txt",
+    "url":"https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/test%20fetch%25http®.txt",
     "length":201,
     "filename":"test%fetch http®\r\n.txt",
     "md5":"f3ad851f4213d41ce9690542010bffa0",

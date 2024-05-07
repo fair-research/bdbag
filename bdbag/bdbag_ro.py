@@ -146,7 +146,7 @@ def add_file_metadata(manifest,
     retrieved_from = None
 
     if local_path:
-        uri = escape_uri(ensure_payload_path_prefix(local_path), encode_whitespace=False)
+        uri = escape_uri(ensure_payload_path_prefix(local_path), encode_whitespace=False, encode_other=True)
         if source_url:
             retrieved_from = dict(retrievedFrom=source_url)
 

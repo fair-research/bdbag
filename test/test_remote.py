@@ -131,7 +131,7 @@ class TestRemoteAPI(BaseTest):
                 fetch_txt = ff.read()
             self.assertIn(
                 u'https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/'
-                u'test%20fetch%25http®.txt\t201\tdata/test%0Afetch%0Ahttp®.txt', fetch_txt)
+                u'test%09fetch%25http®.txt\t201\tdata/test%0Afetch%0Ahttp®.txt', fetch_txt)
             self.assertIn(
                 u'https://raw.githubusercontent.com/fair-research/bdbag/master/test/test-data/test-http-encoded/'
                 u'test%20fetch%25http®.txt\t201\tdata/test fetch http®.txt', fetch_txt)

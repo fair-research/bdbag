@@ -28,7 +28,7 @@ else:
 
 logger = logging.getLogger(__name__)
 
-__version__ = "1.7.2"
+__version__ = "1.7.3"
 __bagit_version__ = "1.8.1"
 __bagit_profile_version__ = "1.3.1"
 
@@ -146,11 +146,11 @@ def parse_content_disposition(value):  # pragma: no cover
 
 # Per the bagit spec, we just want to replace (%,\r,\n,\t, ) for storage in fetch.txt, but this is also applicable
 # to URI/IRI storage in ro-metadata as well
-def escape_uri(uri, encode_whitespace=True):
+def escape_uri(uri, encode_whitespace=True, encode_other=False):
     if not uri:
         return uri
-
-    uri = uri.replace("%", "%25").replace("\n", "%0A").replace("\r", "%0D")
+    if encode_other:
+        uri = uri.replace("%", "%25").replace("\n", "%0A").replace("\r", "%0D")
     if encode_whitespace:
         uri = uri.replace(" ", "%20").replace("\t", "%09")
 

@@ -285,7 +285,7 @@ def _make_fetch_file(path, remote_entries):
             fetch_file.write("%s\t%s\t%s\n" %
                              (escape_uri(remote_entries[filename]['url']),
                               remote_entries[filename]['length'],
-                              escape_uri(_denormalize_filename(filename), encode_whitespace=False)))
+                              escape_uri(_denormalize_filename(filename), encode_whitespace=False, encode_other=True)))
 
 
 def _find_tag_files(bag_dir):
