@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
 import sys
 import atexit
 import unittest
@@ -57,6 +58,19 @@ class TestCli(BaseTest):
         args = ARGS + [self.test_data_dir]
         logfile.writelines(self.getTestHeader('create bag', args))
         self._test_successful_invocation(args)
+
+    def test_create_strict(self):
+        os.mkdir(self.test_data_dir_empty)
+        args = ARGS + [self.test_data_dir_empty, "--strict"]
+        logfile.writelines(self.getTestHeader('create bag strict', args))
+        output = ''
+        try:
+            output = subprocess.check_output(args, stderr=subprocess.STDOUT, universal_newlines=True)
+        except subprocess.CalledProcessError as e:
+            output = e.output
+        finally:
+            logfile.writelines(output)
+            self.assertExpectedMessages(["Exception: [BagValidationError] No manifest files found"], output)
 
     def test_create_idempotent(self):
         args = ARGS + [self.test_data_dir, "--idempotent"]

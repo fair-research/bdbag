@@ -39,6 +39,7 @@ class BaseTest(unittest.TestCase):
 
         self.test_data_dir = os.path.join(self.tmpdir, 'test-data', 'test-dir')
         self.assertTrue(os.path.isdir(self.test_data_dir))
+        self.test_data_dir_empty = os.path.join(self.tmpdir, 'test-data', 'test-dir-empty')
         self.test_archive_dir = os.path.join(self.tmpdir, 'test-data', 'test-archives')
         self.assertTrue(os.path.isdir(self.test_archive_dir))
         self.test_config_dir = os.path.join(self.tmpdir, 'test-data', 'test-config')

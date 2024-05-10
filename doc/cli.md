@@ -18,6 +18,7 @@ The only mandatory argument is a valid path to a local bag directory, a local ba
 usage: bdbag
 [--version]
 [--update]
+[--strict]
 [--revert]
 [--archiver {zip,tar,tgz,bz2,xz}]
 [--idempotent]
@@ -83,6 +84,13 @@ operating on bag _archive_ files) can be configured to write such output to the 
 ----
 #### `--update`
 Update an existing bag dir, recalculating tag-manifest checksums and regenerating manifests and fetch.txt if necessary.
+
+----
+#### `--strict`
+Automatically validate a newly created or updated bag for structural validity and fail if the resultant bag is invalid. 
+This can be used to ensure that a bag is not persisted without payload file manifests. If this flag is set and the 
+created or updated output bag is not structurally valid, the bag will subsequently be reverted back to a normal directory 
+and an error returned.
 
 ----
 #### `--revert`

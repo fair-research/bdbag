@@ -82,6 +82,14 @@ def parse_cli():
         update_arg, action="store_true",
         help="Update an existing bag dir, regenerating manifests and fetch.txt if necessary.")
 
+    strict_arg = "--strict"
+    standard_args.add_argument(
+        strict_arg, action="store_true",
+        help="Automatically validate a newly created or updated bag for structural validity and fail if the resultant "
+             "bag is invalid. This can be used to ensure that a bag is not persisted without payload file manifests. "
+             "If this flag is set and the created or updated output bag is not structurally valid, the bag will "
+             "subsequently be reverted back to a normal directory and an error returned.")
+
     revert_arg = "--revert"
     standard_args.add_argument(
         revert_arg, action="store_true",
@@ -370,7 +378,8 @@ def main():
                              remote_file_manifest=args.remote_file_manifest,
                              config_file=args.config_file,
                              ro_metadata_file=args.ro_metadata_file,
-                             idempotent=args.idempotent)
+                             idempotent=args.idempotent,
+                             strict=args.strict)
 
         # otherwise just extract the bag if it is an archive and no other conflicting options specified
         elif not (args.validate or args.validate_profile or args.resolve_fetch):

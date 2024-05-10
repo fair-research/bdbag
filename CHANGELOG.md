@@ -5,7 +5,11 @@
 * Fix erroneous encoding of `%` char in URL field of `fetch.txt` which could break already properly encoded URLs. 
 This was due to a misinterpretation of the spec which states that `%` (along with `CR` and `LF`) should _only_ be URL 
 encoded for the `filename` field and that whitespace (` ` and `\t`) should _only_ be encoded in the URL field.
-* NOTE: As a best practice, applications should always pre-encode URLs that are added to `fetch.txt` and not rely on `bdbag` to do so, since only whitespace will be encoded.
+  * NOTE: As a best practice, applications should always pre-encode URLs that are added to `fetch.txt` and not rely on `bdbag` to do so, since only whitespace will be encoded.
+* Added a new option `strict` to the `make_bag` API function, along with a corresponding CLI argument. If `strict` is enabled, 
+`make_bag` will automatically validate a newly created or updated bag for structural validity and fail if the resultant bag is invalid. 
+This can be used to ensure that a bag is not persisted without payload file manifests. Additionally, if the created or 
+updated output bag is not structurally valid, the bag will subsequently be reverted back to a normal directory and a BagValidationError exception will be thrown.
 
 ## 1.7.2
 

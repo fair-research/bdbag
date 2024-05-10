@@ -242,7 +242,8 @@ def make_bag(bag_path,
              config_file=None,
              ro_metadata=None,
              ro_metadata_file=None,
-             idempotent=None):
+             idempotent=None,
+             strict=False):
     bag = None
     try:
         bag = bdbagit.BDBag(bag_path)
@@ -333,6 +334,17 @@ def make_bag(bag_path,
         if bag_ro_metadata:
             bdbro.serialize_bag_ro_metadata(bag_ro_metadata, bag_path)
             bag.save(bag_processes)
+
+    if strict:
+        try:
+            bag._validate_structure()
+        except bdbagit.BagValidationError as e:
+            error = ("The newly created/updated bag is not structurally valid and strict checking has been requested. "
+                     "The bag will be reverted back to a normal directory. Exception: %s\n") % get_typed_exception(e)
+            logger.error(error)
+            revert_bag(bag_path)
+            raise bdbagit.BagValidationError(error)
+
     return bag
 
 
