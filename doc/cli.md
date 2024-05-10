@@ -88,9 +88,9 @@ Update an existing bag dir, recalculating tag-manifest checksums and regeneratin
 ----
 #### `--strict`
 Automatically validate a newly created or updated bag for structural validity and fail if the resultant bag is invalid. 
-This can be used to ensure that a bag is not persisted without payload file manifests. If this flag is set and the 
-created or updated output bag is not structurally valid, the bag will subsequently be reverted back to a normal directory 
-and an error returned.
+This can be used to ensure that a bag is not persisted without payload file manifests. If this flag is set and a 
+created output bag is not structurally valid, the bag will subsequently be reverted back to a normal directory. 
+An updated bag will _not_ be reverted. In either case, an error is returned.
 
 ----
 #### `--revert`
@@ -260,6 +260,7 @@ This following table enumerates the various arguments and compatibility modes.
 |                 `<path>` |                             all                             | Required argument. When no other options are specified, creates a bag from the target path if that path is a directory and not already a bag; otherwise, if the path represents an archive file in a supported format, the file is extracted. |
 |          `--output-path` |                      bag archive only                       | For a certain set of functions that may extract bag archive files (currently only `materialize`, `extract`, or `validate`), this argument dictates the directory where the output results of the extraction should be placed.                 |
 |               `--update` |                        bag dir only                         | An existing bag archive cannot be updated in-place. The bag must first be extracted and then updated.                                                                                                                                         |
+|               `--strict` |     regular dir or bag dir only, create or update only      | Strict checking is valid only when creating a new bag from a regular directory or updating an existing bag directory.                                                                                                                         |
 |               `--revert` |                        bag dir only                         | Only a bag directory may be reverted to a non-bag directory.                                                                                                                                                                                  |
 |             `--archiver` |                        bag dir only                         | A bag archive cannot be created from an existing bag archive.                                                                                                                                                                                 |
 |             `--checksum` |                        bag dir only                         | A checksum manifest cannot be added to an existing bag archive. The bag must be extracted, updated, and re-archived.                                                                                                                          |

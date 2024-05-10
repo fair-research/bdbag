@@ -8,8 +8,9 @@ encoded for the `filename` field and that whitespace (` ` and `\t`) should _only
   * NOTE: As a best practice, applications should always pre-encode URLs that are added to `fetch.txt` and not rely on `bdbag` to do so, since only whitespace will be encoded.
 * Added a new option `strict` to the `make_bag` API function, along with a corresponding CLI argument. If `strict` is enabled, 
 `make_bag` will automatically validate a newly created or updated bag for structural validity and fail if the resultant bag is invalid. 
-This can be used to ensure that a bag is not persisted without payload file manifests. Additionally, if the created or 
-updated output bag is not structurally valid, the bag will subsequently be reverted back to a normal directory and a BagValidationError exception will be thrown.
+This can be used to ensure that a bag is not persisted without payload file manifests. Additionally, if a created output 
+bag is not structurally valid, the bag will subsequently be reverted back to a normal directory. An updated bag will _not_ be reverted. 
+In either case, a BagValidationError exception will be thrown.
 
 ## 1.7.2
 

@@ -87,8 +87,9 @@ def parse_cli():
         strict_arg, action="store_true",
         help="Automatically validate a newly created or updated bag for structural validity and fail if the resultant "
              "bag is invalid. This can be used to ensure that a bag is not persisted without payload file manifests. "
-             "If this flag is set and the created or updated output bag is not structurally valid, the bag will "
-             "subsequently be reverted back to a normal directory and an error returned.")
+             "If this flag is set and a created output bag is not structurally valid, the bag will "
+             "subsequently be reverted back to a normal directory. An updated bag will not be reverted. "
+             "In either case, an error is returned.")
 
     revert_arg = "--revert"
     standard_args.add_argument(

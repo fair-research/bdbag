@@ -228,6 +228,18 @@ class TestAPI(BaseTest):
         except Exception as e:
             self.fail(get_typed_exception(e))
 
+    def test_update_bag_strict(self):
+        logger.info(self.getTestHeader('update bag strict'))
+        try:
+            os.mkdir(self.test_data_dir_empty)
+            bdb.make_bag(self.test_data_dir_empty)
+            with self.assertRaises(bdbagit.BagValidationError) as ar:
+                bdb.make_bag(self.test_data_dir_empty, update=True, strict=True)
+                self.assertTrue(bdb.is_bag(self.test_data_dir_empty))
+            logger.error(get_typed_exception(ar.exception))
+        except Exception as e:
+            self.fail(get_typed_exception(e))
+
     def test_create_bag_idempotent(self):
         logger.info(self.getTestHeader('create bag idempotent'))
         try:

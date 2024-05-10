@@ -339,10 +339,12 @@ def make_bag(bag_path,
         try:
             bag._validate_structure()
         except bdbagit.BagValidationError as e:
-            error = ("The newly created/updated bag is not structurally valid and strict checking has been requested. "
-                     "The bag will be reverted back to a normal directory. Exception: %s\n") % get_typed_exception(e)
+            error = ("The newly created/updated bag is not structurally valid and strict checking has been requested.%s"
+                     " Exception: %s\n" % (" The bag will be reverted back to a normal directory." if not update else "",
+                                           get_typed_exception(e)))
             logger.error(error)
-            revert_bag(bag_path)
+            if not update:
+                revert_bag(bag_path)
             raise bdbagit.BagValidationError(error)
 
     return bag
