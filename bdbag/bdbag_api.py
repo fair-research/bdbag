@@ -507,7 +507,7 @@ def extract_bag(bag_path, output_path=None, temp=False, config_file=None):
             files = archive.namelist()
         elif tarfile.is_tarfile(bag_path):
             logger.info("Extracting TAR/GZ/BZ2%s archived file: %s" %
-                        (bag_path,  ("/XZ" if sys.version_info >= (3, 3) else "")))
+                        (("/XZ" if sys.version_info >= (3, 3) else ""), bag_path))
             archive = tarfile.open(bag_path)
             files = archive.getnames()
         else:
