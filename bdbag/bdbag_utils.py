@@ -51,7 +51,7 @@ def create_rfm_from_filesystem(args):
                 rfm_entry = dict()
                 input_file = os.path.join(dirpath, fn)
                 logger.debug("Processing input file %s" % input_file)
-                input_rel_path = input_file.replace(args.input_path, '')
+                input_rel_path = input_file.replace(args.input_path, '', 1)
                 filepath = args.base_payload_path if args.base_payload_path else ""
                 filepath = "".join([filepath, input_rel_path])
                 rfm_entry["filename"] = filepath.replace("\\", "/").lstrip("/")
@@ -60,6 +60,8 @@ def create_rfm_from_filesystem(args):
                                               filepath=input_rel_path.replace("\\", "/").lstrip("/"),
                                               filename=fn)
                 rfm_entry["length"] = os.path.getsize(input_file)
+                if args.checksum and 'all' in args.checksum:
+                    args.checksum = frozenset(['md5', 'sha1', 'sha256', 'sha512'])
                 rfm_entry.update(compute_file_hashes(input_file, args.checksum))
 
                 if not filter_dict(args.filter, rfm_entry):
