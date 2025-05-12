@@ -65,7 +65,8 @@ setup(
                       'packaging',
                       'importlib_metadata;python_version<"3.8"',
                       'requests',
-                      'setuptools_scm<6.0',  # for bagit which does not properly include it in install_requires
+                      'setuptools_scm',
+                      'setuptools_scm<6.0; python_version<"3.9"',  # for bagit which does not properly include it in install_requires
                       'bagit==1.8.1',
                       'bagit-profile==1.3.1'
                       ],
