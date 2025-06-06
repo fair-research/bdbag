@@ -16,7 +16,6 @@
 import os
 import datetime
 import logging
-import certifi
 import requests
 from requests.utils import default_user_agent
 from requests.adapters import HTTPAdapter
@@ -206,7 +205,7 @@ class HTTPFetchTransport(BaseFetchTransport):
                                 stream=True,
                                 headers=headers,
                                 allow_redirects=allow_redirects,
-                                verify=False if self.bypass_cert_verify(url) else certifi.where(),
+                                verify=False if self.bypass_cert_verify(url) else True,
                                 cookies=self.cookies)
                 if r.status_code in redirect_status_codes:
                     url = r.headers["Location"]
