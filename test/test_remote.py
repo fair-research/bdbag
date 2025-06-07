@@ -378,6 +378,29 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_resolve_fetch_http_basic_auth_get_bad_method(self):
+        logger.info(self.getTestHeader('test resolve fetch http basic auth GET with bad method'))
+        try:
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              keychain_file=ospj(self.test_config_dir, 'test-keychain-bad-2.json'),
+                                              cookie_scan=False))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Unsupported auth_method [foo] for auth_type [http-basic]"], output)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_validate_auth_config(self):
+        logger.info(self.getTestHeader('test resolve fetch validate auth config'))
+        try:
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              keychain_file=ospj(self.test_config_dir, 'test-keychain-bad-3.json'),
+                                              cookie_scan=False))
+            output = self.stream.getvalue()
+            self.assertExpectedMessages(["Unable to locate attribute [auth_type] in keychain entry",
+                                         "Unable to locate attribute [auth_params] in keychain entry"], output)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def _test_resolve_fetch_http_auth_post(self, keychain_file):
         try:
             def mocked_request_auth_post_success(*args, **kwargs):

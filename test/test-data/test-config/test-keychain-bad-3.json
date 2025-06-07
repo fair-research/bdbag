@@ -1,0 +1,12 @@
+[
+  {
+    "uri": "https://raw.githubusercontent.com/",
+    "auth_params": {
+      "auth_method": "get"
+    }
+  },
+    {
+    "uri": "https://raw.githubusercontent.com/",
+    "auth_type": "http-basic"
+  }
+]
