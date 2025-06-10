@@ -1,5 +1,12 @@
 # CHANGE LOG
 
+## 1.7.5
+
+* Fixed transposed position in string substitution of logging statement during bag extraction.
+* Fixed a couple of bugs in `bdbag_utils.py` `create_rfm_from_filesystem` function.
+* Adjusted `setuptools_scm` pin to allow newer versions with newer pythons. 
+* Removed hardcoded use of certifi.where() for the `verify` parameter on `requests.get()` in `fetch_http.py`. This will allow the `REQUESTS_CA_BUNDLE` environment variable to take effect, if set. Otherwise, requests default behavior is to use `certifi.where()` as a fallback if the `certifi` package is installed.
+
 ## 1.7.3
 
 * Fix erroneous encoding of `%` char in URL field of `fetch.txt` which could break already properly encoded URLs. 
