@@ -1,5 +1,12 @@
 # CHANGE LOG
 
+## 1.8.0
+
+* Dropped support for `Python<3.8`, including Python 2.
+* Updated `bagit` dependency to `1.9.0`.
+* Converted `setup.py` and `setup.cfg` to `pyproject.toml`.
+* 1.7.x is the final series to support Python 2. It will receive critical fixes only; new 1.7.x releases will be issued solely for such fixes.
+
 ## 1.7.5
 
 * Fixed transposed position in string substitution of logging statement during bag extraction.
