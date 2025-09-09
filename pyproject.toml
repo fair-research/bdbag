@@ -1,0 +1,88 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bdbag"
+dynamic = ["version", "readme"]
+description = "Big Data Bag Utilities"
+authors = [
+  { name = "Mike D'Arcy" }
+]
+maintainers = [
+  { name = "USC Information Sciences Institute, Informatics Systems Research Division", email = "isrd-support@isi.edu" }
+]
+license = { text = "Apache-2.0" }
+requires-python = ">=3.8,<4"
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: POSIX",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+  "pytz",
+  "tzlocal",
+  "certifi",
+  "packaging",
+  "requests",
+  "bagit==1.9.0",
+  "bagit-profile==1.3.1",
+]
+
+[project.optional-dependencies]
+boto = ["boto3>=1.9.5", "botocore", "awscli"]
+globus = ["globus_sdk>=2,<4"]
+gcs = ["google_cloud_storage"]
+
+[project.scripts]
+bdbag = "bdbag.bdbag_cli:main"
+"bdbag-utils" = "bdbag.bdbag_utils:main"
+
+[tool.setuptools]
+packages = { find = { exclude = ["test"] } }
+license-files = ["LICENSE"]
+
+[tool.setuptools.package-data]
+bdbag = ["profiles/*.*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "bdbag.__version__" }
+readme = { file = ["README.md"], content-type = "text/markdown" }
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+
+[tool.flake8]
+select = ["E901","E203","E741","E999","F821","F822","F823","W504"]
+exclude = ["examples/*"]
+
+[tool.coverage.run]
+branch = true
+include = [
+  "bdbag/*",
+  "bdbag/fetch/*",
+]
+omit = [
+  "bdbag/bdbag_utils.py",
+  "bdbag/bdbag_cli.py",
+  "bdbag/bdbag_ro.py",
+  "bdbag/bdbagit_profile.py",
+  "bdbag/fetch/transports/fetch_globus.py",
+  "bdbag/fetch/transports/fetch_boto3.py",
+  "bdbag/fetch/transports/fetch_gcs.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+

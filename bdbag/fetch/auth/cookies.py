@@ -18,16 +18,11 @@ import sys
 import fnmatch
 import logging
 from requests.cookies import RequestsCookieJar
+from http.cookiejar import MozillaCookieJar
 from bdbag import stob, get_typed_exception
 from bdbag.bdbag_config import *
 
 logger = logging.getLogger(__name__)
-
-if sys.version_info > (3,):
-    from http.cookiejar import MozillaCookieJar
-else:
-    from cookielib import MozillaCookieJar
-
 
 def find_cookie_jars(cookie_jar_config=None):
     found = list()

@@ -17,18 +17,14 @@
 #
 import os
 import io
-import sys
 import logging
 import mock
 import json
 import unittest
-import requests
-import tempfile
 import bdbag
 import bdbag.bdbagit as bdbagit
 import bdbag.bdbagit_profile as bdbagit_profile
 from os.path import join as ospj
-from os.path import exists as ospe
 from os.path import isfile as ospif
 from bdbag import bdbag_api as bdb, bdbag_config as bdbcfg
 from bdbag.fetch import fetcher
@@ -37,13 +33,7 @@ from bdbag.fetch.auth import cookies
 from bdbag.fetch.auth.keychain import read_keychain, update_keychain, get_auth_entries
 from test.test_common import BaseTest
 
-if sys.version_info > (3,):
-    from io import StringIO
-else:
-    from StringIO import StringIO
-
 logger = logging.getLogger()
-
 
 class CustomTestFetchTransport(HTTPFetchTransport):
 
@@ -69,7 +59,7 @@ class TestRemoteAPI(BaseTest):
 
     def setUp(self):
         super(TestRemoteAPI, self).setUp()
-        self.stream = StringIO()
+        self.stream = io.StringIO()
         self.handler = logging.StreamHandler(self.stream)
         logger.addHandler(self.handler)
         logger.setLevel(logging.DEBUG)

@@ -21,23 +21,15 @@ import logging
 import mimetypes
 import shutil
 from datetime import datetime
-if sys.version_info >= (3,8):
-    from importlib.metadata import distribution, PackageNotFoundError
-else:
-    from importlib_metadata import distribution, PackageNotFoundError
+from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit, urlparse
+from urllib.request import urlretrieve, urlopen, urlcleanup
+from importlib.metadata import distribution, PackageNotFoundError
 
 logger = logging.getLogger(__name__)
 
-__version__ = "1.7.5"
-__bagit_version__ = "1.8.1"
+__version__ = "1.8.0"
+__bagit_version__ = "1.9.0"
 __bagit_profile_version__ = "1.3.1"
-
-if sys.version_info > (3,):  # pragma: no cover
-    from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit, urlparse
-    from urllib.request import urlretrieve, urlopen, urlcleanup
-else:  # pragma: no cover
-    from urllib import quote as urlquote, unquote as urlunquote, urlretrieve, urlopen, urlcleanup
-    from urlparse import urlsplit, urlunsplit, urlparse
 
 try:
     version = distribution("bdbag").version

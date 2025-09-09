@@ -22,7 +22,6 @@ import collections
 import stat
 import bdbag
 from bdbag import DEFAULT_CONFIG_PATH
-from bdbag.bdbagit import force_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +85,8 @@ def write_keychain(keychain=DEFAULT_KEYCHAIN, keychain_file=DEFAULT_KEYCHAIN_FIL
             if error.errno != errno.EEXIST:
                 raise
     with io.open(keychain_file, 'w', encoding='utf-8') as kf:
-        kf.write(force_unicode(json.dumps(keychain if keychain is not None else list(),
-                                          ensure_ascii=False, sort_keys=True, indent=4, separators=(',', ': '))))
+        kf.write(json.dumps(keychain if keychain is not None else list(),
+                                          ensure_ascii=False, sort_keys=True, indent=4, separators=(',', ': ')))
     os.chmod(keychain_file, stat.S_IRUSR | stat.S_IWUSR)
 
 

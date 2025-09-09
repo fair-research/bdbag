@@ -20,7 +20,6 @@ import copy
 import uuid
 from collections import OrderedDict
 from bdbag import guess_mime_type, add_mime_types, escape_uri, VERSION, BAGIT_VERSION
-from bdbag.bdbagit import force_unicode
 from datetime import datetime
 from tzlocal import get_localzone
 import logging
@@ -68,7 +67,7 @@ def write_bag_ro_metadata(obj, bag_path, metadata_path="manifest.json"):
         os.makedirs(ro_metadata_path_dir)
 
     with io.open(os.path.abspath(ro_metadata_path.strip()), 'w', encoding='utf-8') as ro_metadata:
-        ro_metadata.write(force_unicode(json.dumps(obj, sort_keys=True, indent=4, ensure_ascii=False)))
+        ro_metadata.write(json.dumps(obj, sort_keys=True, indent=4, ensure_ascii=False))
 
 
 def serialize_bag_ro_metadata(obj, bag_path):

@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import copy
+import io
 import os
 import sys
-import json
 import shutil
 import logging
 import mock
@@ -34,11 +33,6 @@ from bdbag import bdbag_utils as bdbutils
 from bdbag.fetch.auth import keychain
 from test.test_common import BaseTest
 
-if sys.version_info > (3,):
-    from io import StringIO
-else:
-    from StringIO import StringIO
-
 logger = logging.getLogger()
 
 
@@ -46,7 +40,7 @@ class TestAPI(BaseTest):
 
     def setUp(self):
         super(TestAPI, self).setUp()
-        self.stream = StringIO()
+        self.stream = io.StringIO()
         self.handler = logging.StreamHandler(self.stream)
         logger.addHandler(self.handler)
         logger.setLevel(logging.DEBUG)

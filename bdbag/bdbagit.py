@@ -13,20 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import sys
-import hashlib
+import time
 import json
 from collections import OrderedDict
-
-# monkeypatch hashlib.algorithms_guaranteed on Python < 2.7.9, before importing bagit, since bagit-1.7.0 makes a
-# direct call to it at initialization time which will cause the module to fail to load - this can be removed if
-# bagit-python fixes the underlying issue
-try:
-    algorithms_guaranteed = hashlib.algorithms_guaranteed
-except AttributeError:  # pragma: no cover
-    # Python 2.7.0-2.7.8
-    hashlib.algorithms_guaranteed = set(hashlib.algorithms)
-
 import bagit
 from bagit import *
 from bagit import (_, _can_read, _can_bag, _make_tagmanifest_file, _encode_filename, _decode_filename, _calc_hashes,
@@ -120,7 +109,16 @@ def make_bag(bag_dir,
                 os.rename(f, new_f)
 
             LOGGER.info(_('Moving %(source)s to %(destination)s'), {'source': temp_data, 'destination': 'data'})
-            os.rename(temp_data, 'data')
+            while True:
+                try:
+                    os.rename(temp_data, "data")
+                    break
+                except PermissionError as e:
+                    if hasattr(e, "winerror") and e.winerror == 5:
+                        LOGGER.warning(_("PermissionError [WinError 5] when renaming temp folder. Retrying in 10 seconds..."))
+                        time.sleep(10)
+                    else:
+                        raise
 
             # permissions for the payload directory should match those of the
             # original directory
@@ -152,7 +150,7 @@ def make_bag(bag_dir,
             for c in checksums:
                 _make_tagmanifest_file(c, bag_dir, encoding='utf-8')
     except Exception:
-        LOGGER.error(_("An error occurred creating a bag in %s"), bag_dir)
+        LOGGER.exception(_("An error occurred creating a bag in %s"), bag_dir)
         raise
     finally:
         os.chdir(old_dir)
@@ -320,7 +318,7 @@ def _make_tag_file(bag_info_path, bag_info):
                                      (bag_info_path, h, json.dumps(txt))))
                     continue
                 # strip CR, LF and CRLF so they don't mess up the tag file
-                txt = re.sub(r'\n|\r|(\r\n)', '', force_unicode(txt))
+                txt = re.sub(r"\n|\r|(\r\n)", "", str(txt))
                 f.write("%s: %s\n" % (h, txt))
 
 
@@ -338,7 +336,7 @@ class BagManifestConflict(BagError):
 
 class UnexpectedRemoteFile(ManifestErrorDetail):
     def __str__(self):
-        return _("%s exists in fetch.txt but is not in manifest") % force_unicode(self.path)
+        return _("%s exists in fetch.txt but is not in manifest") % self.path
 
 
 class BDBag(Bag):
@@ -532,16 +530,16 @@ class BDBag(Bag):
         only_in_manifests, only_on_fs, only_in_fetch = self.compare_manifests_with_fs_and_fetch()
         for path in only_in_manifests:
             e = FileMissing(path)
-            LOGGER.warning(force_unicode(e))
+            LOGGER.warning(str(e))
             errors.append(e)
         for path in only_on_fs:
             e = UnexpectedFile(path)
-            LOGGER.warning(force_unicode(e))
+            LOGGER.warning(str(e))
             errors.append(e)
         for path in only_in_fetch:
             e = UnexpectedRemoteFile(path)
             # this is non-fatal according to spec but the warning is still reasonable
-            LOGGER.warning(force_unicode(e))
+            LOGGER.warning(str(e))
 
         if errors:
             raise BagValidationError(_("Bag validation failed"), errors)
@@ -575,18 +573,13 @@ class BDBag(Bag):
                             raise BaggingInterruptedError("Bag validation interrupted!")
 
             else:  # pragma: no cover
-                pool = None
-                try:
-                    pool = multiprocessing.Pool(processes if processes else None, initializer=worker_init)
-                    hash_results = pool.map(_calc_hashes, args)
-                finally:
-                    if pool:
-                        pool.terminate()
-        except BaggingInterruptedError:
-            raise
+                pool = multiprocessing.Pool(processes if processes else None, initializer=worker_init)
+                hash_results = pool.map(_calc_hashes, args)
+                pool.close()
+                pool.join()
         # Any unhandled exceptions are probably fatal
         except:  # pragma: no cover
-            LOGGER.error(_("Unable to calculate file hashes for %s"), self)
+            LOGGER.exception(_("Unable to calculate file hashes for %s"), self)
             raise
 
         for rel_path, f_hashes, hashes in hash_results:
@@ -594,7 +587,7 @@ class BDBag(Bag):
                 stored_hash = hashes[alg]
                 if stored_hash.lower() != computed_hash:
                     e = ChecksumMismatch(rel_path, alg, stored_hash.lower(), computed_hash)
-                    LOGGER.warning(force_unicode(e))
+                    LOGGER.warning(str(e))
                     errors.append(e)
 
         if errors:

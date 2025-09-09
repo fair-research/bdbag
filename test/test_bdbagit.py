@@ -19,7 +19,6 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import platform
 import codecs
-import datetime
 import hashlib
 import logging
 import os
@@ -34,11 +33,6 @@ from os.path import join as j
 
 from bdbag import bdbagit as bagit
 import mock
-
-if sys.version_info > (3,):
-    from io import StringIO
-else:
-    from StringIO import StringIO
 
 logger = logging.getLogger()
 
@@ -57,7 +51,7 @@ class SelfCleaningTestCase(unittest.TestCase):
 
     def setUp(self):
         super(SelfCleaningTestCase, self).setUp()
-        self.stream = StringIO()
+        self.stream = io.StringIO()
         self.handler = logging.StreamHandler(self.stream)
         logger.addHandler(self.handler)
 
@@ -1069,15 +1063,6 @@ class TestUtils(unittest.TestCase):
             self.unicode_class = str
         else:
             self.unicode_class = unicode # NOQA
-
-    def test_force_unicode_str_to_unicode(self):
-        self.assertIsInstance(bagit.force_unicode('foobar'), self.unicode_class)
-
-    def test_force_unicode_pass_through(self):
-        self.assertIsInstance(bagit.force_unicode(u'foobar'), self.unicode_class)
-
-    def test_force_unicode_int(self):
-        self.assertIsInstance(bagit.force_unicode(1234), self.unicode_class)
 
 
 if __name__ == '__main__':

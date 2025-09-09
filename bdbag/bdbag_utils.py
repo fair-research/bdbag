@@ -31,7 +31,6 @@ from bdbag.fetch.transports.fetch_http import HTTPFetchTransport
 from bdbag.fetch.auth.keychain import read_keychain, DEFAULT_KEYCHAIN_FILE
 from bdbag.bdbag_config import DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_FILE_ENVAR, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG, \
     read_config
-from bdbag.bdbagit import force_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -69,11 +68,11 @@ def create_rfm_from_filesystem(args):
 
                 if args.streaming_json:
                     rfm_file.writelines(''.join(
-                        [force_unicode(json.dumps(rfm_entry, sort_keys=True, ensure_ascii=False)), '\n']))
+                        [json.dumps(rfm_entry, sort_keys=True, ensure_ascii=False), '\n']))
                 else:
                     rfm.append(rfm_entry)
         if not args.streaming_json:
-            rfm_file.write(force_unicode(json.dumps(rfm, sort_keys=True, indent=2, ensure_ascii=False)))
+            rfm_file.write(json.dumps(rfm, sort_keys=True, indent=2, ensure_ascii=False))
         logger.info("Successfully created remote file manifest: %s" % args.output_file)
 
 
@@ -154,12 +153,12 @@ def create_rfm_from_url_list(args):
 
             if args.streaming_json:
                 rfm_file.writelines(''.join([
-                    force_unicode(json.dumps(rfm_entry, sort_keys=True, ensure_ascii=False)), '\n']))
+                    json.dumps(rfm_entry, sort_keys=True, ensure_ascii=False), '\n']))
             else:
                 rfm.append(rfm_entry)
         if not args.streaming_json:
             rfm_file.write(
-                force_unicode(json.dumps(deduplicate_rfm_entries(rfm), sort_keys=True, indent=2, ensure_ascii=False)))
+                json.dumps(deduplicate_rfm_entries(rfm), sort_keys=True, indent=2, ensure_ascii=False))
         logger.info("Successfully created remote file manifest: %s" % args.output_file)
 
 
@@ -199,12 +198,12 @@ def create_rfm_from_file(args):
 
             if args.streaming_json:
                 rfm_file.writelines(''.join(
-                    [force_unicode(json.dumps(rfm_entry, sort_keys=True, ensure_ascii=False)), '\n']))
+                    [json.dumps(rfm_entry, sort_keys=True, ensure_ascii=False), '\n']))
             else:
                 rfm.append(rfm_entry)
         if not args.streaming_json:
             entries = deduplicate_rfm_entries(rfm)
-            rfm_file.write(force_unicode(json.dumps(entries, sort_keys=True, indent=2, ensure_ascii=False)))
+            rfm_file.write(json.dumps(entries, sort_keys=True, indent=2, ensure_ascii=False))
 
         logger.info("Successfully created remote file manifest: %s" % args.output_file)
 

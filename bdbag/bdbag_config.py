@@ -24,10 +24,8 @@ from bdbag import get_typed_exception, safe_move, \
     DEFAULT_CONFIG_PATH, BAG_PROFILE_TAG, BDBAG_PROFILE_ID, VERSION, __version__
 from bdbag.fetch import Megabyte
 from bdbag.fetch.auth.keychain import DEFAULT_KEYCHAIN_FILE, write_keychain
-if sys.version_info >= (3, 8):
-    from importlib.metadata import distribution, PackageNotFoundError
-else:
-    from importlib_metadata import distribution, PackageNotFoundError
+from importlib.metadata import distribution, PackageNotFoundError
+
 logger = logging.getLogger(__name__)
 
 BAG_CONFIG_TAG = "bag_config"
