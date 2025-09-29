@@ -13,7 +13,7 @@ maintainers = [
   { name = "USC Information Sciences Institute, Informatics Systems Research Division", email = "isrd-support@isi.edu" }
 ]
 # license = "Apache-2.0"
-license-files = ["LICENSE"]
+# license-files = ["LICENSE"]
 requires-python = ">=3.8,<4"
 classifiers = [
   "Intended Audience :: Science/Research",
@@ -51,6 +51,7 @@ bdbag = "bdbag.bdbag_cli:main"
 
 [tool.setuptools]
 packages = { find = { exclude = ["test"] } }
+license-files = ["LICENSE"]
 
 [tool.setuptools.package-data]
 bdbag = ["profiles/*.*"]
