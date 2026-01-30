@@ -99,9 +99,7 @@ def parse_cli():
              "directory will be deleted.")
 
     archiver_arg = "--archiver"
-    choices = ['zip', 'tar', 'tgz', 'bz2']
-    if sys.version_info >= (3, 3):
-        choices.append("xz")
+    choices = ['zip', 'tar', 'tgz', 'bz2', 'xz']
     standard_args.add_argument(
         archiver_arg, choices=choices, help="Archive a bag using the specified format.")
 

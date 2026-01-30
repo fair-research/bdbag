@@ -1,5 +1,13 @@
 # CHANGE LOG
 
+## 1.9.0
+
+* Dropped support for Python < 3.9.
+* Fixed SSL certificate verification bypass whitelist matching to use origin-based comparison instead of substring matching, preventing unintended domain matches.
+* Fixed keychain authentication entry matching to use URL prefix comparison instead of substring matching, preventing credential leakage to unintended hosts.
+* Replaced use of `eval()` for numeric filter comparisons with `operator` module functions.
+* Removed obsolete Python version checks throughout the codebase.
+
 ## 1.8.0
 
 * Dropped support for `Python<3.8`, including Python 2.

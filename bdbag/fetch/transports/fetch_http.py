@@ -20,7 +20,7 @@ import requests
 from requests.utils import default_user_agent
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-from bdbag import urlsplit, stob, get_typed_exception, VERSION
+from bdbag import urlsplit, urlunsplit, stob, get_typed_exception, VERSION
 from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG, \
     FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_SESSION_CONFIG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES
 from bdbag.fetch import *
@@ -64,8 +64,12 @@ class HTTPFetchTransport(BaseFetchTransport):
                            "Disabling all SSL certificate verification in this way is NOT recommended.")
             return True
         elif isinstance(bypass, list):
+            url_parts = urlsplit(url)
+            url_origin = urlunsplit((url_parts.scheme, url_parts.netloc, "", "", ""))
             for uri in bypass:
-                if uri in url:
+                uri_parts = urlsplit(uri if "://" in uri else "https://" + uri)
+                uri_origin = urlunsplit((uri_parts.scheme, uri_parts.netloc, "", "", ""))
+                if url_origin == uri_origin:
                     logger.warning(
                         "Bypassing SSL certificate validation for URL %s due to matching whitelist entry: [%s]" %
                         (url, uri))
