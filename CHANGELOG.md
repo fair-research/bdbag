@@ -2,11 +2,31 @@
 
 ## 1.9.0
 
+#### New feature: Fetch Parallelism
+* Added support for concurrent/parallel file fetching via `ThreadPoolExecutor`. Opt-in via CLI `--fetch-concurrency N`
+  argument or API `fetch_concurrency=N` parameter on `resolve_fetch()` and `materialize()`. Default remains serial
+  (concurrency=1) for full backward compatibility.
+* New configuration keys in `bdbag.json`:
+  * `max_concurrent_fetches` (default `8`): ceiling for the effective concurrency. The requested concurrency is clamped
+    to this value.
+  * `concurrent_fetch_exclude_schemes` (default `["globus"]`): transport schemes that are always fetched serially, even
+    when concurrent fetching is enabled.
+* Thread-safety improvements:
+  * `os.makedirs` in `fetch/__init__.py` now uses `exist_ok=True` to avoid race conditions.
+  * HTTP session creation in `fetch_http.py` is now protected by a `threading.Lock`.
+  * Fetcher instance creation uses double-checked locking to prevent duplicate transport instantiation.
+* Ctrl+C (SIGINT) handling during concurrent fetches: a custom signal handler sets a cancellation event that causes
+  in-flight workers to abort promptly, with clean shutdown and `KeyboardInterrupt` re-raised to the caller.
+* CLI now catches `KeyboardInterrupt` and exits cleanly with an "Interrupted by user." message instead of a traceback.
+
+#### Significant changes
 * Dropped support for Python < 3.9.
+* Removed obsolete Python version checks throughout the codebase.
+
+#### Bugfixes
 * Fixed SSL certificate verification bypass whitelist matching to use origin-based comparison instead of substring matching, preventing unintended domain matches.
 * Fixed keychain authentication entry matching to use URL prefix comparison instead of substring matching, preventing credential leakage to unintended hosts.
 * Replaced use of `eval()` for numeric filter comparisons with `operator` module functions.
-* Removed obsolete Python version checks throughout the codebase.
 
 ## 1.8.0
 

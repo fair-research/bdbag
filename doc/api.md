@@ -225,6 +225,7 @@ materialize(input_path,
             config_file=None,
             filter_expr=None,
             force=False,
+            fetch_concurrency=None,
             **kwargs)
 ```
 The `materialize` function is a bag bootstrapper. When invoked,
@@ -256,6 +257,7 @@ these steps fail, an error is raised.
 | config_file         | `string`                   | A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.                                                                                                                                                                       |
 | filter_expr         | `string`                   | A [selective fetch filter](#resolve_fetch_filter). NOTE: if a selective fetch filter is used to materialize an incomplete bag, a `BagValidationException` will be thrown during validation. This may be an acceptable error in some cases.                                     |
 | force               | `boolean`                  | A boolean indicating that _all_ files listed in `fetch.txt` should be retrieved, regardless of whether they already exist in the payload directory or not. Otherwise, only missing or incomplete files will be retrieved.                                                      |
+| fetch_concurrency   | `int`                      | The requested number of concurrent file fetch workers. Defaults to `None` (serial, equivalent to `1`). The effective concurrency is clamped to the `max_concurrent_fetches` value in the configuration file. Transport schemes listed in `concurrent_fetch_exclude_schemes` are always fetched serially. |
 | **kwargs            | `dict`                     | Unpacked keyword arguments in dictionary format.                                                                                                                                                                                                                               |
 
 **Raises**: `BagValidationError`, `RuntimeError` if the bag could not be materialized and validated successfully.
@@ -288,6 +290,7 @@ resolve_fetch(bag_path,
               keychain_file=DEFAULT_KEYCHAIN_FILE,
               config_file=None,
               filter_expr=None,
+              fetch_concurrency=None,
               **kwargs)
 ```
 Attempt to download files listed in the bag's `fetch.txt` file.  The method of transfer is dependent on the protocol
@@ -326,7 +329,8 @@ You can also use `length` and the integer relation operators to easily limit the
 | callback      | `function(current, total)` | A callback function where the `current` parameter is the current item being _fetched_ out of the `total` number of items to be _fetched_. The callback function should return a `boolean` indicating whether the calling function should continue processing or interrupt. |
 | keychain_file | `string`                   | A normalized, absolute path to a keychain file. Defaults to the expansion of `~/.bdbag/keychain.json`.                                                                                                                                                                     |
 | config_file   | `string`                   | A normalized, absolute path to a configuration file. Defaults to the expansion of `~/.bdbag/bdbag.json`.                                                                                                                                                                   |
-| filter_expr   | `string`                   | A string of the form: `<column><operator><value>`. See syntax [below](#filter_dict_syntax).                                                                                                                                                                                |
+| filter_expr       | `string`                   | A string of the form: `<column><operator><value>`. See syntax [below](#filter_dict_syntax).                                                                                                                                                                                |
+| fetch_concurrency | `int`                      | The requested number of concurrent file fetch workers. Defaults to `None` (serial, equivalent to `1`). The effective concurrency is clamped to the `max_concurrent_fetches` value in the configuration file. Transport schemes listed in `concurrent_fetch_exclude_schemes` are always fetched serially. |
 
 **Returns**: `boolean` - If all remote files were resolved successfully or not. Also returns `True` if the function invocation resulted in a NOOP.
 

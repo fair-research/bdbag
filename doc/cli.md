@@ -27,6 +27,7 @@ usage: bdbag
 [--prune-manifests]
 [--materialize]
 [--resolve-fetch {all,missing}]
+[--fetch-concurrency <int>]
 [--fetch-filter <column><operator><value>]
 [--validate {fast,full,structure,completeness}]
 [--validate-profile [{bag-only,full}]]
@@ -147,24 +148,38 @@ already exist in the bag payload directory. Additionally, files that do exist bu
 already exist in the bag payload directory.
 
 ----
+#### `--fetch-concurrency <int>`
+Number of concurrent file fetch operations to perform. Defaults to `1` (serial). The effective concurrency is
+clamped to the `max_concurrent_fetches` ceiling value in the [configuration file](./config.md#bdbag.json), which
+defaults to `8`. For example, `--fetch-concurrency 4` will fetch up to 4 files in parallel using a thread pool.
+
+Certain transport schemes can be excluded from parallel fetching via the `concurrent_fetch_exclude_schemes`
+configuration parameter (defaults to `["globus"]`). Entries using excluded schemes are always fetched serially,
+after the parallel batch completes.
+
+This argument is compatible with both `--resolve-fetch` and `--materialize`.
+
+Pressing Ctrl+C during a concurrent fetch will signal all in-flight workers to abort and cleanly shut down.
+
+----
 #### `--fetch-filter <column><operator><value>`
 Selectively fetch files where entries in `fetch.txt` match the filter expression `<column><operator><value>` where:
 *  `column` is one of the following literal values corresponding to the field names in `fetch.txt`: `url`, `length`, or `filename`
 * `<operator>` is one of the following predefined tokens:
 
-	| Operator | Description |
-	| --- | --- |
-	|==| equal |
-	|!=| not equal |
-	|=*| wildcard substring equal |
-	|!*| wildcard substring not equal |
-	|^*| wildcard starts with |
-	|$*| wildcard ends with |
-	|=~| regexpression matches |
-	|>| greater than |
-	|>=| greater than or equal to |
-	|<| less than |
-	|<=| less than or equal to |
+	| Operator | Description                  |
+	|----------|------------------------------|
+	| ==       | equal                        |
+	| !=       | not equal                    |
+	| =*       | wildcard substring equal     |
+	| !*       | wildcard substring not equal |
+	| ^*       | wildcard starts with         |
+	| $*       | wildcard ends with           |
+	| =~       | regexpression matches        |
+	| >        | greater than                 |
+	| >=       | greater than or equal to     |
+	| <        | less than                    |
+	| <=       | less than or equal to        |
 
 * `value` is a string or integer
 
@@ -266,8 +281,9 @@ This following table enumerates the various arguments and compatibility modes.
 |             `--checksum` |                        bag dir only                         | A checksum manifest cannot be added to an existing bag archive. The bag must be extracted, updated, and re-archived.                                                                                                                          |
 |      `--prune-manifests` |                  bag dir only, update only                  | Unused manifests may only be pruned from an existing bag during an update operation.                                                                                                                                                          |
 |       `--skip-manifests` |                  bag dir only, update only                  | Skipping the recalculation of payload checksums may only be performed on an existing bag during an update operation.                                                                                                                          |
-|          `--materialize` |       bag archive, bag dir, or actionable bag URL/URI       | The `--materialze` argument cannot be combined with any other arguments except for `--config-file`, `--keychain-file`, and `--fetch-filter`.                                                                                                  |
+|          `--materialize` |       bag archive, bag dir, or actionable bag URL/URI       | The `--materialze` argument cannot be combined with any other arguments except for `--config-file`, `--keychain-file`, `--fetch-filter`, and `--fetch-concurrency`.                                                                           |
 |        `--resolve-fetch` |              bag dir only, no create or update              | The resolution (download) of files listed in fetch.txt cannot be executed when creating or updating a bag.                                                                                                                                    |
+|    `--fetch-concurrency` |           bag dir only, fetch or materialize only           | Controls the number of concurrent file fetch workers. Only meaningful during `--resolve-fetch` or `--materialize`.                                                                                                                            |
 |         `--fetch-filter` |                  bag dir only, fetch only                   | A fetch filter is only relevant during a `--resolve-fetch`.                                                                                                                                                                                   |
 |             `--validate` |                             all                             | A bag directory or a bag archive can be validated.  If a bag archive is to be validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.                              |
 |     `--validate-profile` |                             all                             | A bag directory or a bag archive can have its profile validated.  If a bag archive is to have its profile validated, it is first extracted from the archive to a temporary directory and validated, then the temporary directory is removed.  |

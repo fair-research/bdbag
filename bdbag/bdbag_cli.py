@@ -150,6 +150,12 @@ def parse_cli():
              "The \"all\" option causes all fetch files to be re-acquired,"
              " even if they already exist in the bag payload directory.")
 
+    fetch_concurrency_arg = "--fetch-concurrency"
+    standard_args.add_argument(
+        fetch_concurrency_arg, type=int, default=1, metavar='<int>',
+        help="Number of concurrent fetch operations to perform. Defaults to 1 (serial). "
+             "Clamped to the max_concurrent_fetches value in the configuration file.")
+
     fetch_filter_arg = "--fetch-filter"
     standard_args.add_argument(
         fetch_filter_arg, metavar="<column><operator><value>",
@@ -348,7 +354,8 @@ def main():
                             validation_callback=None,
                             keychain_file=args.keychain_file,
                             config_file=args.config_file,
-                            filter_expr=args.fetch_filter)
+                            filter_expr=args.fetch_filter,
+                            fetch_concurrency=args.fetch_concurrency)
             return result
 
         if is_uri:
@@ -398,7 +405,8 @@ def main():
                               force=True if args.resolve_fetch == 'all' else False,
                               keychain_file=args.keychain_file,
                               config_file=args.config_file,
-                              filter_expr=args.fetch_filter)
+                              filter_expr=args.fetch_filter,
+                              fetch_concurrency=args.fetch_concurrency)
 
         if args.validate_profile:
             if not is_file:
@@ -432,6 +440,10 @@ def main():
 
         if args.revert:
             bdb.revert_bag(path)
+
+    except KeyboardInterrupt:
+        result = 1
+        error = "Interrupted by user."
 
     except Exception as e:
         result = 1

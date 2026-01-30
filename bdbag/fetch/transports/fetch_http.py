@@ -16,6 +16,7 @@
 import os
 import datetime
 import logging
+import threading
 import requests
 from requests.utils import default_user_agent
 from requests.adapters import HTTPAdapter
@@ -41,6 +42,7 @@ class HTTPFetchTransport(BaseFetchTransport):
         self.config = config or DEFAULT_FETCH_CONFIG[SCHEME_HTTP]
         self.cookies = get_request_cookies(self.config) if kwargs.get("cookie_scan", True) else None
         self.sessions = dict()
+        self._sessions_lock = threading.Lock()
 
     @staticmethod
     def validate_auth_config(auth):
@@ -89,96 +91,102 @@ class HTTPFetchTransport(BaseFetchTransport):
         return session
 
     def get_session(self, url):
-        session = None
-        response = None
+        with self._sessions_lock:
+            session = None
+            response = None
 
-        for auth in kc.get_auth_entries(url, self.keychain):
-            try:
-                if not self.validate_auth_config(auth):
-                    continue
+            for auth in kc.get_auth_entries(url, self.keychain):
+                try:
+                    if not self.validate_auth_config(auth):
+                        continue
 
-                uri = auth.get("uri")
-                if uri in self.sessions:
-                    session = self.sessions[uri]
-                    break
-                else:
+                    uri = auth.get("uri")
+                    if uri in self.sessions:
+                        session = self.sessions[uri]
+                        break
+                    else:
+                        session = self.init_new_session(
+                            self.config.get("session_config", DEFAULT_FETCH_HTTP_SESSION_CONFIG))
+
+                    auth_type = auth.get("auth_type")
+                    auth_params = auth.get("auth_params", {})
+
+                    if auth_type == "cookie":
+                        if auth_params:
+                            cookies = auth_params.get("cookies", [])
+                            if cookies:
+                                for cookie in cookies:
+                                    name, value = cookie.split("=", 1)
+                                    session.cookies.set(name, value, domain=urlsplit(uri).hostname, path="/")
+                            session.headers.update(auth_params.get("additional_request_headers", {}))
+                            self.sessions[uri] = session
+                            break
+
+                    if auth_type == "bearer-token":
+                        token = auth_params.get("token")
+                        if token:
+                            session.headers.update({"Authorization": "Bearer " + token})
+                            session.headers.update(auth_params.get("additional_request_headers", {}))
+                            self.sessions[uri] = session
+                            break
+                        else:
+                            logger.warning(
+                                "Missing required parameters [token] for auth_type [%s] for keychain entry [%s]"
+                                % (auth_type, uri))
+
+                    # if we get here the assumption is that the auth_type is either http-basic or http-form and that an
+                    # actual session "login" request is necessary
+                    auth_uri = auth.get("auth_uri", uri)
+                    username = auth_params.get("username")
+                    password = auth_params.get("password")
+                    if not (username and password):
+                        logger.warning(
+                            "Missing required parameters [username, password] for auth_type [%s] "
+                            "for keychain entry [%s]" % (auth_type, uri))
+                        continue
+
+                    session.headers.update(auth_params.get("additional_request_headers", {}))
+
+                    auth_method = auth_params.get("auth_method", "post")
+                    if auth_type == "http-basic":
+                        session.auth = (username, password)
+                        if auth_method:
+                            auth_method = auth_method.lower()
+                        if auth_method == "post":
+                            response = session.post(auth_uri, auth=session.auth)
+                        elif auth_method == "get":
+                            response = session.get(auth_uri, auth=session.auth)
+                        else:
+                            logger.warning(
+                                "Unsupported auth_method [%s] for auth_type [%s] for keychain entry [%s]" %
+                                (auth_method, auth_type, uri))
+                    elif auth_type == "http-form":
+                        username_field = auth_params.get("username_field", "username")
+                        password_field = auth_params.get("password_field", "password")
+                        response = session.post(auth_uri, {username_field: username, password_field: password})
+                    if response.status_code > 203:
+                        logger.warning(
+                            "Authentication failed with Status Code: %s %s\n" %
+                            (response.status_code, response.text))
+                    else:
+                        logger.info("Session established: %s", uri)
+                        self.sessions[uri] = session
+                        break
+
+                except Exception as e:  # pragma: no cover
+                    logger.warning(
+                        "Unhandled exception during HTTP(S) authentication: %s" % get_typed_exception(e))
+
+            if not session:
+                url_parts = urlsplit(url)
+                base_url = str("%s://%s" % (url_parts.scheme, url_parts.netloc))
+                session = self.sessions.get(base_url, None)
+                if not session:
                     session = self.init_new_session(
                         self.config.get("session_config", DEFAULT_FETCH_HTTP_SESSION_CONFIG))
+                    self.sessions[base_url] = session
 
-                auth_type = auth.get("auth_type")
-                auth_params = auth.get("auth_params", {})
-
-                if auth_type == "cookie":
-                    if auth_params:
-                        cookies = auth_params.get("cookies", [])
-                        if cookies:
-                            for cookie in cookies:
-                                name, value = cookie.split("=", 1)
-                                session.cookies.set(name, value, domain=urlsplit(uri).hostname, path="/")
-                        session.headers.update(auth_params.get("additional_request_headers", {}))
-                        self.sessions[uri] = session
-                        break
-
-                if auth_type == "bearer-token":
-                    token = auth_params.get("token")
-                    if token:
-                        session.headers.update({"Authorization": "Bearer " + token})
-                        session.headers.update(auth_params.get("additional_request_headers", {}))
-                        self.sessions[uri] = session
-                        break
-                    else:
-                        logger.warning("Missing required parameters [token] for auth_type [%s] for keychain entry [%s]"
-                                       % (auth_type, uri))
-
-                # if we get here the assumption is that the auth_type is either http-basic or http-form and that an
-                # actual session "login" request is necessary
-                auth_uri = auth.get("auth_uri", uri)
-                username = auth_params.get("username")
-                password = auth_params.get("password")
-                if not (username and password):
-                    logger.warning(
-                        "Missing required parameters [username, password] for auth_type [%s] for keychain entry [%s]" %
-                        (auth_type, uri))
-                    continue
-
-                session.headers.update(auth_params.get("additional_request_headers", {}))
-
-                auth_method = auth_params.get("auth_method", "post")
-                if auth_type == "http-basic":
-                    session.auth = (username, password)
-                    if auth_method:
-                        auth_method = auth_method.lower()
-                    if auth_method == "post":
-                        response = session.post(auth_uri, auth=session.auth)
-                    elif auth_method == "get":
-                        response = session.get(auth_uri, auth=session.auth)
-                    else:
-                        logger.warning("Unsupported auth_method [%s] for auth_type [%s] for keychain entry [%s]" %
-                                       (auth_method, auth_type, uri))
-                elif auth_type == "http-form":
-                    username_field = auth_params.get("username_field", "username")
-                    password_field = auth_params.get("password_field", "password")
-                    response = session.post(auth_uri, {username_field: username, password_field: password})
-                if response.status_code > 203:
-                    logger.warning(
-                        "Authentication failed with Status Code: %s %s\n" % (response.status_code, response.text))
-                else:
-                    logger.info("Session established: %s", uri)
-                    self.sessions[uri] = session
-                    break
-
-            except Exception as e:  # pragma: no cover
-                logger.warning("Unhandled exception during HTTP(S) authentication: %s" % get_typed_exception(e))
-
-        if not session:
-            url_parts = urlsplit(url)
-            base_url = str("%s://%s" % (url_parts.scheme, url_parts.netloc))
-            session = self.sessions.get(base_url, None)
-            if not session:
-                session = self.init_new_session(self.config.get("session_config", DEFAULT_FETCH_HTTP_SESSION_CONFIG))
-                self.sessions[base_url] = session
-
-        return session
+            return session
 
     def fetch(self, url, output_path, **kwargs):
         try:

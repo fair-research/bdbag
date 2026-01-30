@@ -718,6 +718,7 @@ def resolve_fetch(bag_path,
                   keychain_file=DEFAULT_KEYCHAIN_FILE,
                   config_file=None,
                   filter_expr=None,
+                  fetch_concurrency=None,
                   **kwargs):
     bag = bdbagit.BDBag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=kwargs.get("quiet", True)):
@@ -731,6 +732,7 @@ def resolve_fetch(bag_path,
                                config_file=config_file,
                                callback=callback,
                                filter_expr=filter_expr,
+                               fetch_concurrency=fetch_concurrency,
                                **kwargs)
     else:
         return True
@@ -744,6 +746,7 @@ def materialize(input_path,
                 config_file=None,
                 filter_expr=None,
                 force=False,
+                fetch_concurrency=None,
                 **kwargs):
 
     bag_file = bag_path = None
@@ -779,6 +782,7 @@ def materialize(input_path,
                              keychain_file=keychain_file,
                              config_file=config_file,
                              filter_expr=filter_expr,
+                             fetch_concurrency=fetch_concurrency,
                              **kwargs):
             logger.warning("One or more bag files were not fetched successfully.")
 

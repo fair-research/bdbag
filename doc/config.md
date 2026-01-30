@@ -21,25 +21,27 @@ configuration sub-sections) which control various default behaviors of the softw
 ##### Object: `root`
 This is the parent object for the entire configuration.
 
-| Parameter              | Description                                                                                                                                                                        |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `bdbag_config_version` | The version number of the configuration file. In general, it matches the release version number of `bdbag`                                                                         |
-| `bag_config`           | This object contains all bag-related configuration parameters.                                                                                                                     |
-| `fetch_config`         | This object contains all fetch-related configuration parameters.                                                                                                                   |
-| `resolver_config`      | This object contains all implementation-specific resolver configuration parameters.                                                                                                |
-| `identifier_resolvers` | This is a global list of identifier "meta" resolvers. It can be overridden on a per-resolver basis via the individual configuration blocks for each resolver in `resolver_config`. |
+| Parameter                          | Description                                                                                                                                                                                          |
+|------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bdbag_config_version`             | The version number of the configuration file. In general, it matches the release version number of `bdbag`                                                                                           |
+| `bag_config`                       | This object contains all bag-related configuration parameters.                                                                                                                                       |
+| `fetch_config`                     | This object contains all fetch-related configuration parameters.                                                                                                                                     |
+| `max_concurrent_fetches`           | The maximum number of concurrent file fetch operations allowed. This is a ceiling that the CLI `--fetch-concurrency` argument and API `fetch_concurrency` parameter are clamped to. Defaults to `8`. |
+| `concurrent_fetch_exclude_schemes` | An array of URL scheme strings that should always be fetched serially, even when concurrent fetching is enabled. Defaults to `["globus"]`.                                                           |
+| `resolver_config`                  | This object contains all implementation-specific resolver configuration parameters.                                                                                                                  |
+| `identifier_resolvers`             | This is a global list of identifier "meta" resolvers. It can be overridden on a per-resolver basis via the individual configuration blocks for each resolver in `resolver_config`.                   |
 
 ##### Object: `bag_config`
 This object contains all bag-related configuration parameters.
 
-| Parameter            | Description                                                                                                                                                                            |
-|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `bag_algorithms`     | This is an array of strings representing the default checksum algorithms to use for bag manifests, if not otherwise specified.  Valid values are "md5", "sha1", "sha256", and "sha512". |
-| `bag_archiver`       | This is a string representing the default archiving format to use if not otherwise specified.  Valid values are "zip", "tar", and "tgz".                                               |
-| `bag_metadata`       | This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.                                                                                              |
-| `bag_processes`      | This is a numeric value representing the default number of concurrent processes to use when calculating checksums.                                                                     |
-| `bagit_spec_version` | The version of the `bagit` specification that created bags will conform to. Valid values are "0.97" or "1.0".                                                                          |
-| `bag_archive_idempotent` | A boolean value indicating that `idempotent` mode should be used by default when creating and archiving new bags.                                                                  |
+| Parameter                | Description                                                                                                                                                                             |
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bag_algorithms`         | This is an array of strings representing the default checksum algorithms to use for bag manifests, if not otherwise specified.  Valid values are "md5", "sha1", "sha256", and "sha512". |
+| `bag_archiver`           | This is a string representing the default archiving format to use if not otherwise specified.  Valid values are "zip", "tar", and "tgz".                                                |
+| `bag_metadata`           | This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.                                                                                               |
+| `bag_processes`          | This is a numeric value representing the default number of concurrent processes to use when calculating checksums.                                                                      |
+| `bagit_spec_version`     | The version of the `bagit` specification that created bags will conform to. Valid values are "0.97" or "1.0".                                                                           |
+| `bag_archive_idempotent` | A boolean value indicating that `idempotent` mode should be used by default when creating and archiving new bags.                                                                       |
 
 ##### Object: `fetch_config`
 The `fetch_config` object contains a set of child objects each keyed by the scheme of the transport protocol that contains the transport handler configuration parameters.
@@ -203,6 +205,8 @@ Below is a sample `bdbag.json` file:
     "bagit_spec_version": "0.97"
   },
   "bdbag_config_version": "1.5.0",
+  "max_concurrent_fetches": 8,
+  "concurrent_fetch_exclude_schemes": ["globus"],
   "fetch_config": {
     "http": {
       "session_config": {
