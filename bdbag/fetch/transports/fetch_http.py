@@ -41,8 +41,21 @@ class HTTPFetchTransport(BaseFetchTransport):
         super(HTTPFetchTransport, self).__init__(config, keychain, **kwargs)
         self.config = config or DEFAULT_FETCH_CONFIG[SCHEME_HTTP]
         self.cookies = get_request_cookies(self.config) if kwargs.get("cookie_scan", True) else None
-        self.sessions = dict()
+        # Per-thread session caches. Each worker thread gets its own session dict so that
+        # concurrent fetches do not share a requests.Session (which is not thread-safe).
+        self._local = threading.local()
         self._sessions_lock = threading.Lock()
+        # All per-thread session dicts, collected so cleanup() can close every session
+        # regardless of which thread created it.
+        self._all_thread_session_dicts = []
+
+    def _get_local_sessions(self):
+        """Return the calling thread's session cache, creating it on first access."""
+        if not hasattr(self._local, "sessions"):
+            self._local.sessions = {}
+            with self._sessions_lock:
+                self._all_thread_session_dicts.append(self._local.sessions)
+        return self._local.sessions
 
     @staticmethod
     def validate_auth_config(auth):
@@ -91,6 +104,7 @@ class HTTPFetchTransport(BaseFetchTransport):
         return session
 
     def get_session(self, url):
+        sessions = self._get_local_sessions()
         with self._sessions_lock:
             session = None
             response = None
@@ -101,8 +115,8 @@ class HTTPFetchTransport(BaseFetchTransport):
                         continue
 
                     uri = auth.get("uri")
-                    if uri in self.sessions:
-                        session = self.sessions[uri]
+                    if uri in sessions:
+                        session = sessions[uri]
                         break
                     else:
                         session = self.init_new_session(
@@ -119,7 +133,7 @@ class HTTPFetchTransport(BaseFetchTransport):
                                     name, value = cookie.split("=", 1)
                                     session.cookies.set(name, value, domain=urlsplit(uri).hostname, path="/")
                             session.headers.update(auth_params.get("additional_request_headers", {}))
-                            self.sessions[uri] = session
+                            sessions[uri] = session
                             break
 
                     if auth_type == "bearer-token":
@@ -127,7 +141,7 @@ class HTTPFetchTransport(BaseFetchTransport):
                         if token:
                             session.headers.update({"Authorization": "Bearer " + token})
                             session.headers.update(auth_params.get("additional_request_headers", {}))
-                            self.sessions[uri] = session
+                            sessions[uri] = session
                             break
                         else:
                             logger.warning(
@@ -170,7 +184,7 @@ class HTTPFetchTransport(BaseFetchTransport):
                             (response.status_code, response.text))
                     else:
                         logger.info("Session established: %s", uri)
-                        self.sessions[uri] = session
+                        sessions[uri] = session
                         break
 
                 except Exception as e:  # pragma: no cover
@@ -180,11 +194,11 @@ class HTTPFetchTransport(BaseFetchTransport):
             if not session:
                 url_parts = urlsplit(url)
                 base_url = str("%s://%s" % (url_parts.scheme, url_parts.netloc))
-                session = self.sessions.get(base_url, None)
+                session = sessions.get(base_url, None)
                 if not session:
                     session = self.init_new_session(
                         self.config.get("session_config", DEFAULT_FETCH_HTTP_SESSION_CONFIG))
-                    self.sessions[base_url] = session
+                    sessions[base_url] = session
 
             return session
 
@@ -270,6 +284,9 @@ class HTTPFetchTransport(BaseFetchTransport):
         return None
 
     def cleanup(self):
-        for session in self.sessions.values():
-            session.close()
-        self.sessions.clear()
+        with self._sessions_lock:
+            for sessions in self._all_thread_session_dicts:
+                for session in sessions.values():
+                    session.close()
+                sessions.clear()
+            self._all_thread_session_dicts.clear()

@@ -19,6 +19,7 @@ import unittest
 import mock
 import bdbag.bdbagit as bdbagit
 from bdbag.fetch.fetcher import fetch_bag_files
+from bdbag.fetch.transports.fetch_http import HTTPFetchTransport
 from test.test_common import BaseTest
 
 logger = logging.getLogger()
@@ -94,6 +95,31 @@ class TestConcurrentFetch(BaseTest):
         # Result should be False because one fetch failed, but all should have been attempted
         self.assertFalse(result)
         self.assertGreater(call_count[0], 1)
+
+    def test_get_session_returns_per_thread_sessions(self):
+        """Each thread must receive its own requests.Session, not a shared one."""
+        transport = HTTPFetchTransport(config=None, keychain=None, cookie_scan=False)
+        sessions = {}
+        lock = threading.Lock()
+
+        def capture(url):
+            session = transport.get_session(url)
+            with lock:
+                sessions[threading.current_thread().ident] = session
+
+        threads = [
+            threading.Thread(target=capture, args=("https://example.com/file%d" % i,))
+            for i in range(4)
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        transport.cleanup()
+
+        self.assertEqual(len(sessions), 4)
+        # All four session objects must be distinct instances
+        self.assertEqual(len(set(id(s) for s in sessions.values())), 4)
 
 
 if __name__ == '__main__':
