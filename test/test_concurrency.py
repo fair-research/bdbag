@@ -99,16 +99,13 @@ class TestConcurrentFetch(BaseTest):
     def test_get_session_returns_per_thread_sessions(self):
         """Each thread must receive its own requests.Session, not a shared one."""
         transport = HTTPFetchTransport(config=None, keychain=None, cookie_scan=False)
-        sessions = {}
-        lock = threading.Lock()
+        results = [None] * 4
 
-        def capture(url):
-            session = transport.get_session(url)
-            with lock:
-                sessions[threading.current_thread().ident] = session
+        def capture(idx, url):
+            results[idx] = transport.get_session(url)
 
         threads = [
-            threading.Thread(target=capture, args=("https://example.com/file%d" % i,))
+            threading.Thread(target=capture, args=(i, "https://example.com/file%d" % i))
             for i in range(4)
         ]
         for t in threads:
@@ -117,9 +114,9 @@ class TestConcurrentFetch(BaseTest):
             t.join()
         transport.cleanup()
 
-        self.assertEqual(len(sessions), 4)
+        self.assertEqual(len(results), 4)
         # All four session objects must be distinct instances
-        self.assertEqual(len(set(id(s) for s in sessions.values())), 4)
+        self.assertEqual(len(set(id(s) for s in results)), 4)
 
 
 if __name__ == '__main__':
