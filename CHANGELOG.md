@@ -14,6 +14,7 @@
 * Thread-safety improvements:
   * `os.makedirs` in `fetch/__init__.py` now uses `exist_ok=True` to avoid race conditions.
   * HTTP session creation in `fetch_http.py` is now protected by a `threading.Lock`.
+  * HTTP fetch sessions are now isolated per worker thread, preventing concurrent fetches from corrupting shared auth state.
   * Fetcher instance creation uses double-checked locking to prevent duplicate transport instantiation.
 * Ctrl+C (SIGINT) handling during concurrent fetches: a custom signal handler sets a cancellation event that causes
   in-flight workers to abort promptly, with clean shutdown and `KeyboardInterrupt` re-raised to the caller.
