@@ -20,14 +20,30 @@
   in-flight workers to abort promptly, with clean shutdown and `KeyboardInterrupt` re-raised to the caller.
 * CLI now catches `KeyboardInterrupt` and exits cleanly with an "Interrupted by user." message instead of a traceback.
 
+#### New feature: Bearer-token redirect policy
+* The keychain `allow_redirects_with_token` parameter (for `bearer-token` auth) now accepts a regular-expression string,
+  or a list of them, in addition to the existing boolean. When a pattern is supplied, the bearer token is forwarded
+  across a redirect only to a target whose full URL matches at least one pattern, and stripped otherwise. This allows
+  cross-host forwarding to be confined to trusted hosts (for example a Globus HTTPS endpoint that redirects to its data
+  hosts, expressed as `"https://[^/]*[.]data[.]globus[.]org/.*"`) while still stripping the token for redirects to
+  pre-signed S3/GCS URLs that reject an `Authorization` header. Patterns are matched start-anchored against the entire
+  URL and must include the scheme and host; an invalid pattern is reported as an error. See `doc/config.md`.
+
 #### Significant changes
 * Dropped support for Python < 3.9.
 * Removed obsolete Python version checks throughout the codebase.
+* The HTTP fetch transport no longer force-sets the `X-Requested-With: XMLHttpRequest` header on every `bearer-token`
+  request. This header is the workaround for OIDC servers that redirect to a login flow instead of returning a `401`,
+  and it can be supplied per source via the `additional_request_headers` keychain parameter. Behavior change: a source
+  that relied on the implicit header must now set it explicitly in `additional_request_headers` (see `doc/config.md`).
 
 #### Bugfixes
 * Fixed SSL certificate verification bypass whitelist matching to use origin-based comparison instead of substring matching, preventing unintended domain matches.
 * Fixed keychain authentication entry matching to use URL prefix comparison instead of substring matching, preventing credential leakage to unintended hosts.
 * Replaced use of `eval()` for numeric filter comparisons with `operator` module functions.
+* Fixed the `bearer-token` Authorization header not being restored to the HTTP session after a multi-hop redirect chain,
+  which left the session unauthenticated for subsequent fetches. The token is now captured once and restored after the
+  redirect chain completes.
 
 ## 1.8.0
 

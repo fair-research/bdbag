@@ -397,6 +397,43 @@ Below is a sample `keychain.json` file:
 ]
 ```
 
+For `bearer-token` entries, the `allow_redirects_with_token` parameter controls whether the bearer token is forwarded
+when a request is redirected:
+
+* `false` (the default): the token is stripped before any redirect target is requested. Use this for sources that
+  redirect to a pre-signed storage URL (for example AWS S3 or Google Cloud Storage). Such URLs carry their own
+  authorization in the query string and will reject a request that also includes an `Authorization` header.
+* `true`: the token is forwarded across redirects, **including to a different host**. This is required for sources whose
+  redirect target still expects the bearer token, such as some HTTP-based Globus endpoints that redirect to a separate
+  data host. Because `true` forwards the token to whatever host the source redirects to, only use it for sources whose
+  redirect targets you fully trust. Do **not** enable this for sources that redirect to a pre-signed storage URL.
+* a regular-expression string, or a list of them: the token is forwarded **only** to a redirect target whose URL
+  matches at least one pattern, and stripped otherwise. This is the preferred way to support cross-host forwarding,
+  because it confines the token to known target hosts. For example, a Globus HTTPS endpoint that redirects to its data
+  hosts can be expressed as `"https://[^/]*[.]data[.]globus[.]org/.*"`. Patterns are matched start-anchored against the
+  entire redirect URL, so they should include the scheme and host; an unanchored pattern such as `".*globus[.]org"` is
+  unsafe because it would also match a host like `https://evil.example/?x=globus.org`. An invalid pattern is reported as
+  an error rather than silently ignored.
+
+In all cases the token is restored to the session after the redirect chain completes, so subsequent fetches in the same
+session remain authenticated.
+
+Some OIDC-protected servers respond to an unauthenticated request by redirecting to an interactive login flow instead of
+returning a `401`. If a `bearer-token` source behaves this way, add an `"X-Requested-With": "XMLHttpRequest"` entry to the
+`additional_request_headers` parameter of its keychain entry, which causes many such servers to return a `401` rather
+than a login redirect:
+
+```json
+{
+    "uri": "https://<hostname>/<path>",
+    "auth_type": "bearer-token",
+    "auth_params": {
+        "token": "<token>",
+        "additional_request_headers": {"X-Requested-With": "XMLHttpRequest"}
+    }
+}
+```
+
 <a name="remote-file-manifest"></a>
 ## `remote-file-manifest`
 A `remote-file-manifest` configuration file is used by `bdbag` during bag creation and update as a way

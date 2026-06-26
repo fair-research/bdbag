@@ -28,7 +28,7 @@ from importlib.metadata import distribution, PackageNotFoundError
 
 logger = logging.getLogger(__name__)
 
-__version__ = "1.9.0-dev1"
+__version__ = "1.9.0-dev2"
 __bagit_version__ = "1.9.0"
 __bagit_profile_version__ = "1.3.1"
 

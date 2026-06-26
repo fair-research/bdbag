@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 import os
+import re
 import datetime
 import logging
 import threading
@@ -90,6 +91,41 @@ class HTTPFetchTransport(BaseFetchTransport):
                         (url, uri))
                     return True
         return False
+
+    @staticmethod
+    def parse_redirect_token_policy(value):
+        """Interpret a keychain bearer-token "allow_redirects_with_token" value.
+
+        Returns either a bool (an all-or-nothing policy) or a list of compiled regular expressions. When a list is
+        returned, the bearer token is only propagated to a redirect target whose full URL matches at least one of the
+        patterns. Patterns are matched start-anchored against the entire redirect URL, so they should include the
+        scheme and host (e.g. "https://[^/]*[.]data[.]globus[.]org/.*"). An invalid pattern raises RuntimeError so a
+        misconfiguration fails loudly rather than silently forwarding or withholding the token.
+        """
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (list, tuple)):
+            patterns = value
+        else:
+            try:
+                return stob(value)
+            except ValueError:
+                patterns = [value]
+        compiled = []
+        for pattern in patterns:
+            try:
+                compiled.append(re.compile(pattern))
+            except re.error as e:
+                raise RuntimeError("Invalid allow_redirects_with_token pattern [%s]: %s" %
+                                   (pattern, get_typed_exception(e)))
+        return compiled
+
+    @staticmethod
+    def redirect_token_allowed(policy, url):
+        """Return True if the bearer token may be propagated to the redirect target url under the given policy."""
+        if isinstance(policy, bool):
+            return policy
+        return any(pattern.match(url) for pattern in policy)
 
     @staticmethod
     def init_new_session(session_config):
@@ -219,11 +255,9 @@ class HTTPFetchTransport(BaseFetchTransport):
             auth_params = auth.get("auth_params")
             if auth_type == "bearer-token":
                 allow_redirects = False
-                # Force setting the "X-Requested-With": "XMLHttpRequest" header is a workaround for some OIDC servers
-                # which on an unauthenticated request redirect to a login flow instead of responding with a 401.
-                headers.update({"X-Requested-With": "XMLHttpRequest"})
                 if auth_params:
-                    allow_redirects_with_token = stob(auth_params.get("allow_redirects_with_token", False))
+                    allow_redirects_with_token = self.parse_redirect_token_policy(
+                        auth_params.get("allow_redirects_with_token", False))
 
             while True:
                 logger.info("Attempting GET from URL: %s" % url)
@@ -237,21 +271,26 @@ class HTTPFetchTransport(BaseFetchTransport):
                     url = r.headers["Location"]
                     logger.info("Server responded with redirect.")
                     if auth_type == "bearer-token":
-                        # Capture the token only once. On a multi-hop redirect chain the session
-                        # Authorization header is stripped on the first hop, so re-reading it on a
-                        # later hop would clobber the captured value with None and break the restore.
                         if authorization is None:
                             authorization = session.headers.get("Authorization")
-                        if allow_redirects_with_token:
+                        if self.redirect_token_allowed(allow_redirects_with_token, url):
                             if authorization:
                                 headers.update({"Authorization": authorization})
                             else:
                                 logger.warning(
                                     "Unable to locate Authorization header in requests session headers after redirect")
                         else:
-                            logger.warning("Authorization bearer token propagation on redirect is disabled for "
-                                           "security reasons. If necessary, you can enable token propagation for this "
-                                           "URL in keychain.json.")
+                            if allow_redirects_with_token is False:
+                                logger.debug("Not propagating Authorization bearer token across redirect to [%s] "
+                                             "because token propagation is disabled (allow_redirects_with_token)." % url)
+                            else:
+                                logger.debug("Not propagating Authorization bearer token across redirect to [%s] "
+                                             "because it does not match the configured allow_redirects_with_token "
+                                             "policy." % url)
+                            # Strip the token from both the per-request and session headers so it is not sent to the
+                            # redirect target. A prior matching hop may have set it on the per-request headers.
+                            if headers.get("Authorization"):
+                                del headers["Authorization"]
                             if session.headers.get("Authorization"):
                                 del session.headers["Authorization"]
                     elif not allow_redirects:
