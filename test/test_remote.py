@@ -513,6 +513,48 @@ class TestRemoteAPI(BaseTest):
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 
+    def test_resolve_fetch_http_auth_token_get_with_multi_hop_disallowed_redirects(self):
+        logger.info(self.getTestHeader('test resolve fetch http token auth restores session header after multi-hop '
+                                       'redirect'))
+        try:
+            patched_requests_get_auth = None
+            # Track redirect hops and the session instance so we can verify the bearer token is restored to the
+            # session after a redirect chain. A faithful mock must NOT clear the session headers itself; the fetch
+            # transport is the only thing that should strip and restore the Authorization header.
+            state = {"hops": 0, "session": None}
+
+            def mocked_request_auth_token_get_redirect(*args, **kwargs):
+                state["session"] = args[0]
+                state["hops"] += 1
+                headers = {"Location": args[1]}
+                args[0].auth = None
+                # Return a redirect for the first two hops, then stop patching so the final hop performs a real GET
+                # that serves the file. This reproduces an origin -> intermediate -> signed-URL redirect chain.
+                if state["hops"] >= 2:
+                    patched_requests_get_auth.stop()
+                return BaseTest.MockResponse({}, 302, headers=headers)
+
+            patched_requests_get_auth = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+                                                            get=mocked_request_auth_token_get_redirect,
+                                                            auth=None,
+                                                            create=True)
+
+            patched_requests_get_auth.start()
+            # Filter to a single file so the redirect-hop counting is deterministic.
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              filter_expr="filename==data/test-fetch-http.txt",
+                                              keychain_file=ospj(self.test_config_dir, 'test-keychain-7.json'),
+                                              cookie_scan=False),
+                            "Fetch incomplete")
+            self.assertTrue(ospif(ospj(self.test_bag_fetch_http_dir, "data/test-fetch-http.txt")))
+            self.assertGreaterEqual(state["hops"], 2, "Expected at least two redirect hops")
+            # Regression check: on a multi-hop redirect chain the token was captured then stripped on the first hop;
+            # re-reading it on the second hop must not clobber the captured value, so it can be restored afterward.
+            self.assertEqual(state["session"].headers.get("Authorization"), "Bearer foo",
+                             "Bearer token was not restored to the session after a multi-hop redirect")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
     def test_resolve_fetch_ark(self):
         logger.info(self.getTestHeader('test resolve fetch ark'))
         try:

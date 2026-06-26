@@ -237,7 +237,11 @@ class HTTPFetchTransport(BaseFetchTransport):
                     url = r.headers["Location"]
                     logger.info("Server responded with redirect.")
                     if auth_type == "bearer-token":
-                        authorization = session.headers.get("Authorization")
+                        # Capture the token only once. On a multi-hop redirect chain the session
+                        # Authorization header is stripped on the first hop, so re-reading it on a
+                        # later hop would clobber the captured value with None and break the restore.
+                        if authorization is None:
+                            authorization = session.headers.get("Authorization")
                         if allow_redirects_with_token:
                             if authorization:
                                 headers.update({"Authorization": authorization})
