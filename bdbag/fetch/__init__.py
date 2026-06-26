@@ -59,6 +59,6 @@ def ensure_valid_output_path(url, output_path=None):
     output_path = os.path.abspath(output_path)
     output_dir = os.path.dirname(output_path)
     if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+        os.makedirs(output_dir, exist_ok=True)
 
     return output_path

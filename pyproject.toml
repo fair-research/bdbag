@@ -14,7 +14,7 @@ maintainers = [
 ]
 # license = "Apache-2.0"
 # license-files = ["LICENSE"]
-requires-python = ">=3.8,<4"
+requires-python = ">=3.10,<4"
 classifiers = [
   "Intended Audience :: Science/Research",
   "Intended Audience :: Developers",
@@ -23,11 +23,11 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 
 dependencies = [
@@ -41,7 +41,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-boto = ["boto3>=1.9.5", "botocore", "awscli"]
+boto = ["boto3", "botocore", "awscli"]
 globus = ["globus_sdk>=2,<4"]
 gcs = ["google_cloud_storage"]
 

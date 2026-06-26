@@ -42,15 +42,9 @@ logger = logging.getLogger(__name__)
 def configure_logging(level=logging.INFO, logpath=None, filemode='a', log_format=DEFAULT_LOG_FORMAT, force=False):
     logging.captureWarnings(True)
     if logpath:
-        if sys.version_info > (3, 8):
-            logging.basicConfig(filename=logpath, filemode=filemode, level=level, format=log_format, force=force)
-        else:
-            logging.basicConfig(filename=logpath, filemode=filemode, level=level, format=log_format)
+        logging.basicConfig(filename=logpath, filemode=filemode, level=level, format=log_format, force=force)
     else:
-        if sys.version_info > (3, 8):
-            logging.basicConfig(level=level, format=log_format, force=force)
-        else:
-            logging.basicConfig(level=level, format=log_format)
+        logging.basicConfig(level=level, format=log_format, force=force)
 
 
 def read_metadata(metadata_file):
@@ -377,7 +371,7 @@ def archive_bag(bag_path, bag_archiver, config_file=None, idempotent=None):
         tarmode = 'w:gz'
     elif bag_archiver == 'bz2':
         tarmode = 'w:bz2'
-    elif bag_archiver == 'xz' and sys.version_info >= (3, 3):
+    elif bag_archiver == 'xz':
         tarmode = 'w:xz'
     elif bag_archiver == 'zip':
         zfp = os.path.join(os.path.dirname(bag_path), fn)
@@ -385,7 +379,7 @@ def archive_bag(bag_path, bag_archiver, config_file=None, idempotent=None):
     else:
         raise RuntimeError("Archive format not supported for bag file: %s \n "
                            "Supported archive formats are ZIP or TAR/GZ/BZ2%s" %
-                           (bag_path,  ("/XZ" if sys.version_info >= (3, 3) else "")))
+                           (bag_path, "/XZ"))
 
     if tarmode:
         archive = tar_bag_dir(bag_path, fn, tarmode, idempotent)
@@ -447,36 +441,33 @@ def zip_bag_dir(bag_path, zip_file_path, idempotent=False):
     entries.sort()
     for e in entries:
         filepath = os.path.join(os.path.dirname(bag_path), e)
-        if sys.version_info < (3,):
-            zipfile.write(filepath, e)
+        if idempotent:
+            # a fixed mtime is a core requirement for a reproducible archive
+            date_time = (1980, 1, 1, 0, 0, 0)
         else:
-            if idempotent:
-                # a fixed mtime is a core requirement for a reproducible archive
-                date_time = (1980, 1, 1, 0, 0, 0)
-            else:
-                st = os.stat(filepath)
-                mtime = time.localtime(st.st_mtime)
-                date_time = mtime[0:6]
-            info = ZipInfo(
-                filename=e,
-                date_time=date_time
-            )
-            info.create_system = 3  # unix
-            if e.endswith(os.path.sep):
-                info.external_attr = 0o40755 << 16 | 0x010
-                info.compress_type = ZIP_STORED
-                info.CRC = 0  # unclear why necessary, maybe a bug?
-                zipfile.writestr(info, b'')
-            else:
-                info.external_attr = 0o100644 << 16
-                info.compress_type = ZIP_DEFLATED
-                with io.open(filepath, 'rb') as data, zipfile.open(info, 'w') as out:
-                    while True:
-                        chunk = data.read(io.DEFAULT_BUFFER_SIZE)
-                        if not chunk:
-                            break
-                        out.write(chunk)
-                    out.flush()
+            st = os.stat(filepath)
+            mtime = time.localtime(st.st_mtime)
+            date_time = mtime[0:6]
+        info = ZipInfo(
+            filename=e,
+            date_time=date_time
+        )
+        info.create_system = 3  # unix
+        if e.endswith(os.path.sep):
+            info.external_attr = 0o40755 << 16 | 0x010
+            info.compress_type = ZIP_STORED
+            info.CRC = 0  # unclear why necessary, maybe a bug?
+            zipfile.writestr(info, b'')
+        else:
+            info.external_attr = 0o100644 << 16
+            info.compress_type = ZIP_DEFLATED
+            with io.open(filepath, 'rb') as data, zipfile.open(info, 'w') as out:
+                while True:
+                    chunk = data.read(io.DEFAULT_BUFFER_SIZE)
+                    if not chunk:
+                        break
+                    out.write(chunk)
+                out.flush()
     zipfile.close()
     return zipfile.filename
 
@@ -506,14 +497,13 @@ def extract_bag(bag_path, output_path=None, temp=False, config_file=None):
             archive = ZipFile(bag_path)
             files = archive.namelist()
         elif tarfile.is_tarfile(bag_path):
-            logger.info("Extracting TAR/GZ/BZ2%s archived file: %s" %
-                        (("/XZ" if sys.version_info >= (3, 3) else ""), bag_path))
+            logger.info("Extracting TAR/GZ/BZ2/XZ archived file: %s" % bag_path)
             archive = tarfile.open(bag_path)
             files = archive.getnames()
         else:
             raise RuntimeError("Archive format not supported for file: %s\n"
                                "Supported archive formats are ZIP or TAR/GZ/BZ2%s" %
-                               (bag_path,  ("/XZ" if sys.version_info >= (3, 3) else "")))
+                               (bag_path, "/XZ"))
         archived_bag_dir = bag_parent_dir_from_archive(files)
         extracted_path = os.path.join(base_path, archived_bag_dir or bag_dir)
         output_path = os.path.join(output_path, extracted_path or bag_dir) if output_path else None
@@ -728,6 +718,7 @@ def resolve_fetch(bag_path,
                   keychain_file=DEFAULT_KEYCHAIN_FILE,
                   config_file=None,
                   filter_expr=None,
+                  fetch_concurrency=None,
                   **kwargs):
     bag = bdbagit.BDBag(bag_path)
     if force or not check_payload_consistency(bag, skip_remote=False, quiet=kwargs.get("quiet", True)):
@@ -741,6 +732,7 @@ def resolve_fetch(bag_path,
                                config_file=config_file,
                                callback=callback,
                                filter_expr=filter_expr,
+                               fetch_concurrency=fetch_concurrency,
                                **kwargs)
     else:
         return True
@@ -754,6 +746,7 @@ def materialize(input_path,
                 config_file=None,
                 filter_expr=None,
                 force=False,
+                fetch_concurrency=None,
                 **kwargs):
 
     bag_file = bag_path = None
@@ -789,6 +782,7 @@ def materialize(input_path,
                              keychain_file=keychain_file,
                              config_file=config_file,
                              filter_expr=filter_expr,
+                             fetch_concurrency=fetch_concurrency,
                              **kwargs):
             logger.warning("One or more bag files were not fetched successfully.")
 

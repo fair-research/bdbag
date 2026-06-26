@@ -14,13 +14,15 @@
 # limitations under the License.
 #
 import os
+import re
 import datetime
 import logging
+import threading
 import requests
 from requests.utils import default_user_agent
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-from bdbag import urlsplit, stob, get_typed_exception, VERSION
+from bdbag import urlsplit, urlunsplit, stob, get_typed_exception, VERSION
 from bdbag.bdbag_config import DEFAULT_CONFIG, DEFAULT_FETCH_CONFIG, FETCH_CONFIG_TAG, \
     FETCH_HTTP_REDIRECT_STATUS_CODES_TAG, DEFAULT_FETCH_HTTP_SESSION_CONFIG, DEFAULT_FETCH_HTTP_REDIRECT_STATUS_CODES
 from bdbag.fetch import *
@@ -40,7 +42,21 @@ class HTTPFetchTransport(BaseFetchTransport):
         super(HTTPFetchTransport, self).__init__(config, keychain, **kwargs)
         self.config = config or DEFAULT_FETCH_CONFIG[SCHEME_HTTP]
         self.cookies = get_request_cookies(self.config) if kwargs.get("cookie_scan", True) else None
-        self.sessions = dict()
+        # Per-thread session caches. Each worker thread gets its own session dict so that
+        # concurrent fetches do not share a requests.Session (which is not thread-safe).
+        self._local = threading.local()
+        self._sessions_lock = threading.Lock()
+        # All per-thread session dicts, collected so cleanup() can close every session
+        # regardless of which thread created it.
+        self._all_thread_session_dicts = []
+
+    def _get_local_sessions(self):
+        """Return the calling thread's session cache, creating it on first access."""
+        if not hasattr(self._local, "sessions"):
+            self._local.sessions = {}
+            with self._sessions_lock:
+                self._all_thread_session_dicts.append(self._local.sessions)
+        return self._local.sessions
 
     @staticmethod
     def validate_auth_config(auth):
@@ -64,13 +80,52 @@ class HTTPFetchTransport(BaseFetchTransport):
                            "Disabling all SSL certificate verification in this way is NOT recommended.")
             return True
         elif isinstance(bypass, list):
+            url_parts = urlsplit(url)
+            url_origin = urlunsplit((url_parts.scheme, url_parts.netloc, "", "", ""))
             for uri in bypass:
-                if uri in url:
+                uri_parts = urlsplit(uri if "://" in uri else "https://" + uri)
+                uri_origin = urlunsplit((uri_parts.scheme, uri_parts.netloc, "", "", ""))
+                if url_origin == uri_origin:
                     logger.warning(
                         "Bypassing SSL certificate validation for URL %s due to matching whitelist entry: [%s]" %
                         (url, uri))
                     return True
         return False
+
+    @staticmethod
+    def parse_redirect_token_policy(value):
+        """Interpret a keychain bearer-token "allow_redirects_with_token" value.
+
+        Returns either a bool (an all-or-nothing policy) or a list of compiled regular expressions. When a list is
+        returned, the bearer token is only propagated to a redirect target whose full URL matches at least one of the
+        patterns. Patterns are matched start-anchored against the entire redirect URL, so they should include the
+        scheme and host (e.g. "https://[^/]*[.]data[.]globus[.]org/.*"). An invalid pattern raises RuntimeError so a
+        misconfiguration fails loudly rather than silently forwarding or withholding the token.
+        """
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (list, tuple)):
+            patterns = value
+        else:
+            try:
+                return stob(value)
+            except ValueError:
+                patterns = [value]
+        compiled = []
+        for pattern in patterns:
+            try:
+                compiled.append(re.compile(pattern))
+            except re.error as e:
+                raise RuntimeError("Invalid allow_redirects_with_token pattern [%s]: %s" %
+                                   (pattern, get_typed_exception(e)))
+        return compiled
+
+    @staticmethod
+    def redirect_token_allowed(policy, url):
+        """Return True if the bearer token may be propagated to the redirect target url under the given policy."""
+        if isinstance(policy, bool):
+            return policy
+        return any(pattern.match(url) for pattern in policy)
 
     @staticmethod
     def init_new_session(session_config):
@@ -85,96 +140,103 @@ class HTTPFetchTransport(BaseFetchTransport):
         return session
 
     def get_session(self, url):
-        session = None
-        response = None
+        sessions = self._get_local_sessions()
+        with self._sessions_lock:
+            session = None
+            response = None
 
-        for auth in kc.get_auth_entries(url, self.keychain):
-            try:
-                if not self.validate_auth_config(auth):
-                    continue
+            for auth in kc.get_auth_entries(url, self.keychain):
+                try:
+                    if not self.validate_auth_config(auth):
+                        continue
 
-                uri = auth.get("uri")
-                if uri in self.sessions:
-                    session = self.sessions[uri]
-                    break
-                else:
+                    uri = auth.get("uri")
+                    if uri in sessions:
+                        session = sessions[uri]
+                        break
+                    else:
+                        session = self.init_new_session(
+                            self.config.get("session_config", DEFAULT_FETCH_HTTP_SESSION_CONFIG))
+
+                    auth_type = auth.get("auth_type")
+                    auth_params = auth.get("auth_params", {})
+
+                    if auth_type == "cookie":
+                        if auth_params:
+                            cookies = auth_params.get("cookies", [])
+                            if cookies:
+                                for cookie in cookies:
+                                    name, value = cookie.split("=", 1)
+                                    session.cookies.set(name, value, domain=urlsplit(uri).hostname, path="/")
+                            session.headers.update(auth_params.get("additional_request_headers", {}))
+                            sessions[uri] = session
+                            break
+
+                    if auth_type == "bearer-token":
+                        token = auth_params.get("token")
+                        if token:
+                            session.headers.update({"Authorization": "Bearer " + token})
+                            session.headers.update(auth_params.get("additional_request_headers", {}))
+                            sessions[uri] = session
+                            break
+                        else:
+                            logger.warning(
+                                "Missing required parameters [token] for auth_type [%s] for keychain entry [%s]"
+                                % (auth_type, uri))
+
+                    # if we get here the assumption is that the auth_type is either http-basic or http-form and that an
+                    # actual session "login" request is necessary
+                    auth_uri = auth.get("auth_uri", uri)
+                    username = auth_params.get("username")
+                    password = auth_params.get("password")
+                    if not (username and password):
+                        logger.warning(
+                            "Missing required parameters [username, password] for auth_type [%s] "
+                            "for keychain entry [%s]" % (auth_type, uri))
+                        continue
+
+                    session.headers.update(auth_params.get("additional_request_headers", {}))
+
+                    auth_method = auth_params.get("auth_method", "post")
+                    if auth_type == "http-basic":
+                        session.auth = (username, password)
+                        if auth_method:
+                            auth_method = auth_method.lower()
+                        if auth_method == "post":
+                            response = session.post(auth_uri, auth=session.auth)
+                        elif auth_method == "get":
+                            response = session.get(auth_uri, auth=session.auth)
+                        else:
+                            logger.warning(
+                                "Unsupported auth_method [%s] for auth_type [%s] for keychain entry [%s]" %
+                                (auth_method, auth_type, uri))
+                    elif auth_type == "http-form":
+                        username_field = auth_params.get("username_field", "username")
+                        password_field = auth_params.get("password_field", "password")
+                        response = session.post(auth_uri, {username_field: username, password_field: password})
+                    if response.status_code > 203:
+                        logger.warning(
+                            "Authentication failed with Status Code: %s %s\n" %
+                            (response.status_code, response.text))
+                    else:
+                        logger.info("Session established: %s", uri)
+                        sessions[uri] = session
+                        break
+
+                except Exception as e:  # pragma: no cover
+                    logger.warning(
+                        "Unhandled exception during HTTP(S) authentication: %s" % get_typed_exception(e))
+
+            if not session:
+                url_parts = urlsplit(url)
+                base_url = str("%s://%s" % (url_parts.scheme, url_parts.netloc))
+                session = sessions.get(base_url, None)
+                if not session:
                     session = self.init_new_session(
                         self.config.get("session_config", DEFAULT_FETCH_HTTP_SESSION_CONFIG))
+                    sessions[base_url] = session
 
-                auth_type = auth.get("auth_type")
-                auth_params = auth.get("auth_params", {})
-
-                if auth_type == "cookie":
-                    if auth_params:
-                        cookies = auth_params.get("cookies", [])
-                        if cookies:
-                            for cookie in cookies:
-                                name, value = cookie.split("=", 1)
-                                session.cookies.set(name, value, domain=urlsplit(uri).hostname, path="/")
-                        session.headers.update(auth_params.get("additional_request_headers", {}))
-                        self.sessions[uri] = session
-                        break
-
-                if auth_type == "bearer-token":
-                    token = auth_params.get("token")
-                    if token:
-                        session.headers.update({"Authorization": "Bearer " + token})
-                        session.headers.update(auth_params.get("additional_request_headers", {}))
-                        self.sessions[uri] = session
-                        break
-                    else:
-                        logger.warning("Missing required parameters [token] for auth_type [%s] for keychain entry [%s]"
-                                       % (auth_type, uri))
-
-                # if we get here the assumption is that the auth_type is either http-basic or http-form and that an
-                # actual session "login" request is necessary
-                auth_uri = auth.get("auth_uri", uri)
-                username = auth_params.get("username")
-                password = auth_params.get("password")
-                if not (username and password):
-                    logger.warning(
-                        "Missing required parameters [username, password] for auth_type [%s] for keychain entry [%s]" %
-                        (auth_type, uri))
-                    continue
-
-                session.headers.update(auth_params.get("additional_request_headers", {}))
-
-                auth_method = auth_params.get("auth_method", "post")
-                if auth_type == "http-basic":
-                    session.auth = (username, password)
-                    if auth_method:
-                        auth_method = auth_method.lower()
-                    if auth_method == "post":
-                        response = session.post(auth_uri, auth=session.auth)
-                    elif auth_method == "get":
-                        response = session.get(auth_uri, auth=session.auth)
-                    else:
-                        logger.warning("Unsupported auth_method [%s] for auth_type [%s] for keychain entry [%s]" %
-                                       (auth_method, auth_type, uri))
-                elif auth_type == "http-form":
-                    username_field = auth_params.get("username_field", "username")
-                    password_field = auth_params.get("password_field", "password")
-                    response = session.post(auth_uri, {username_field: username, password_field: password})
-                if response.status_code > 203:
-                    logger.warning(
-                        "Authentication failed with Status Code: %s %s\n" % (response.status_code, response.text))
-                else:
-                    logger.info("Session established: %s", uri)
-                    self.sessions[uri] = session
-                    break
-
-            except Exception as e:  # pragma: no cover
-                logger.warning("Unhandled exception during HTTP(S) authentication: %s" % get_typed_exception(e))
-
-        if not session:
-            url_parts = urlsplit(url)
-            base_url = str("%s://%s" % (url_parts.scheme, url_parts.netloc))
-            session = self.sessions.get(base_url, None)
-            if not session:
-                session = self.init_new_session(self.config.get("session_config", DEFAULT_FETCH_HTTP_SESSION_CONFIG))
-                self.sessions[base_url] = session
-
-        return session
+            return session
 
     def fetch(self, url, output_path, **kwargs):
         try:
@@ -193,11 +255,9 @@ class HTTPFetchTransport(BaseFetchTransport):
             auth_params = auth.get("auth_params")
             if auth_type == "bearer-token":
                 allow_redirects = False
-                # Force setting the "X-Requested-With": "XMLHttpRequest" header is a workaround for some OIDC servers
-                # which on an unauthenticated request redirect to a login flow instead of responding with a 401.
-                headers.update({"X-Requested-With": "XMLHttpRequest"})
                 if auth_params:
-                    allow_redirects_with_token = stob(auth_params.get("allow_redirects_with_token", False))
+                    allow_redirects_with_token = self.parse_redirect_token_policy(
+                        auth_params.get("allow_redirects_with_token", False))
 
             while True:
                 logger.info("Attempting GET from URL: %s" % url)
@@ -211,17 +271,26 @@ class HTTPFetchTransport(BaseFetchTransport):
                     url = r.headers["Location"]
                     logger.info("Server responded with redirect.")
                     if auth_type == "bearer-token":
-                        authorization = session.headers.get("Authorization")
-                        if allow_redirects_with_token:
+                        if authorization is None:
+                            authorization = session.headers.get("Authorization")
+                        if self.redirect_token_allowed(allow_redirects_with_token, url):
                             if authorization:
                                 headers.update({"Authorization": authorization})
                             else:
                                 logger.warning(
                                     "Unable to locate Authorization header in requests session headers after redirect")
                         else:
-                            logger.warning("Authorization bearer token propagation on redirect is disabled for "
-                                           "security reasons. If necessary, you can enable token propagation for this "
-                                           "URL in keychain.json.")
+                            if allow_redirects_with_token is False:
+                                logger.debug("Not propagating Authorization bearer token across redirect to [%s] "
+                                             "because token propagation is disabled (allow_redirects_with_token)." % url)
+                            else:
+                                logger.debug("Not propagating Authorization bearer token across redirect to [%s] "
+                                             "because it does not match the configured allow_redirects_with_token "
+                                             "policy." % url)
+                            # Strip the token from both the per-request and session headers so it is not sent to the
+                            # redirect target. A prior matching hop may have set it on the per-request headers.
+                            if headers.get("Authorization"):
+                                del headers["Authorization"]
                             if session.headers.get("Authorization"):
                                 del session.headers["Authorization"]
                     elif not allow_redirects:
@@ -258,6 +327,9 @@ class HTTPFetchTransport(BaseFetchTransport):
         return None
 
     def cleanup(self):
-        for session in self.sessions.values():
-            session.close()
-        self.sessions.clear()
+        with self._sessions_lock:
+            for sessions in self._all_thread_session_dicts:
+                for session in sessions.values():
+                    session.close()
+                sessions.clear()
+            self._all_thread_session_dicts.clear()

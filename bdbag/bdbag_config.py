@@ -28,6 +28,11 @@ from importlib.metadata import distribution, PackageNotFoundError
 
 logger = logging.getLogger(__name__)
 
+FETCH_CONCURRENCY_TAG = "max_concurrent_fetches"
+DEFAULT_FETCH_CONCURRENCY = 8
+FETCH_CONCURRENCY_EXCLUDE_TAG = "concurrent_fetch_exclude_schemes"
+DEFAULT_FETCH_CONCURRENCY_EXCLUDE = ["globus"]
+
 BAG_CONFIG_TAG = "bag_config"
 BAG_SPEC_VERSION_TAG = "bagit_spec_version"
 BAG_ALGORITHMS_TAG = "bag_algorithms"
@@ -148,6 +153,8 @@ DEFAULT_CONFIG = {
                 }
         },
     FETCH_CONFIG_TAG: DEFAULT_FETCH_CONFIG,
+    FETCH_CONCURRENCY_TAG: DEFAULT_FETCH_CONCURRENCY,
+    FETCH_CONCURRENCY_EXCLUDE_TAG: DEFAULT_FETCH_CONCURRENCY_EXCLUDE,
     ID_RESOLVER_TAG: DEFAULT_ID_RESOLVERS,
     RESOLVER_CONFIG_TAG: DEFAULT_RESOLVER_CONFIG
 }

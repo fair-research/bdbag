@@ -21,25 +21,27 @@ configuration sub-sections) which control various default behaviors of the softw
 ##### Object: `root`
 This is the parent object for the entire configuration.
 
-| Parameter              | Description                                                                                                                                                                        |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `bdbag_config_version` | The version number of the configuration file. In general, it matches the release version number of `bdbag`                                                                         |
-| `bag_config`           | This object contains all bag-related configuration parameters.                                                                                                                     |
-| `fetch_config`         | This object contains all fetch-related configuration parameters.                                                                                                                   |
-| `resolver_config`      | This object contains all implementation-specific resolver configuration parameters.                                                                                                |
-| `identifier_resolvers` | This is a global list of identifier "meta" resolvers. It can be overridden on a per-resolver basis via the individual configuration blocks for each resolver in `resolver_config`. |
+| Parameter                          | Description                                                                                                                                                                                          |
+|------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bdbag_config_version`             | The version number of the configuration file. In general, it matches the release version number of `bdbag`                                                                                           |
+| `bag_config`                       | This object contains all bag-related configuration parameters.                                                                                                                                       |
+| `fetch_config`                     | This object contains all fetch-related configuration parameters.                                                                                                                                     |
+| `max_concurrent_fetches`           | The maximum number of concurrent file fetch operations allowed. This is a ceiling that the CLI `--fetch-concurrency` argument and API `fetch_concurrency` parameter are clamped to. Defaults to `8`. |
+| `concurrent_fetch_exclude_schemes` | An array of URL scheme strings that should always be fetched serially, even when concurrent fetching is enabled. Defaults to `["globus"]`.                                                           |
+| `resolver_config`                  | This object contains all implementation-specific resolver configuration parameters.                                                                                                                  |
+| `identifier_resolvers`             | This is a global list of identifier "meta" resolvers. It can be overridden on a per-resolver basis via the individual configuration blocks for each resolver in `resolver_config`.                   |
 
 ##### Object: `bag_config`
 This object contains all bag-related configuration parameters.
 
-| Parameter            | Description                                                                                                                                                                            |
-|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `bag_algorithms`     | This is an array of strings representing the default checksum algorithms to use for bag manifests, if not otherwise specified.  Valid values are "md5", "sha1", "sha256", and "sha512". |
-| `bag_archiver`       | This is a string representing the default archiving format to use if not otherwise specified.  Valid values are "zip", "tar", and "tgz".                                               |
-| `bag_metadata`       | This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.                                                                                              |
-| `bag_processes`      | This is a numeric value representing the default number of concurrent processes to use when calculating checksums.                                                                     |
-| `bagit_spec_version` | The version of the `bagit` specification that created bags will conform to. Valid values are "0.97" or "1.0".                                                                          |
-| `bag_archive_idempotent` | A boolean value indicating that `idempotent` mode should be used by default when creating and archiving new bags.                                                                  |
+| Parameter                | Description                                                                                                                                                                             |
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bag_algorithms`         | This is an array of strings representing the default checksum algorithms to use for bag manifests, if not otherwise specified.  Valid values are "md5", "sha1", "sha256", and "sha512". |
+| `bag_archiver`           | This is a string representing the default archiving format to use if not otherwise specified.  Valid values are "zip", "tar", and "tgz".                                                |
+| `bag_metadata`           | This is a list of simple JSON key-value pairs that will be written as-is to bag-info.txt.                                                                                               |
+| `bag_processes`          | This is a numeric value representing the default number of concurrent processes to use when calculating checksums.                                                                      |
+| `bagit_spec_version`     | The version of the `bagit` specification that created bags will conform to. Valid values are "0.97" or "1.0".                                                                           |
+| `bag_archive_idempotent` | A boolean value indicating that `idempotent` mode should be used by default when creating and archiving new bags.                                                                       |
 
 ##### Object: `fetch_config`
 The `fetch_config` object contains a set of child objects each keyed by the scheme of the transport protocol that contains the transport handler configuration parameters.
@@ -203,6 +205,8 @@ Below is a sample `bdbag.json` file:
     "bagit_spec_version": "0.97"
   },
   "bdbag_config_version": "1.5.0",
+  "max_concurrent_fetches": 8,
+  "concurrent_fetch_exclude_schemes": ["globus"],
   "fetch_config": {
     "http": {
       "session_config": {
@@ -391,6 +395,43 @@ Below is a sample `keychain.json` file:
         }
     }
 ]
+```
+
+For `bearer-token` entries, the `allow_redirects_with_token` parameter controls whether the bearer token is forwarded
+when a request is redirected:
+
+* `false` (the default): the token is stripped before any redirect target is requested. Use this for sources that
+  redirect to a pre-signed storage URL (for example AWS S3 or Google Cloud Storage). Such URLs carry their own
+  authorization in the query string and will reject a request that also includes an `Authorization` header.
+* `true`: the token is forwarded across redirects, **including to a different host**. This is required for sources whose
+  redirect target still expects the bearer token, such as some HTTP-based Globus endpoints that redirect to a separate
+  data host. Because `true` forwards the token to whatever host the source redirects to, only use it for sources whose
+  redirect targets you fully trust. Do **not** enable this for sources that redirect to a pre-signed storage URL.
+* a regular-expression string, or a list of them: the token is forwarded **only** to a redirect target whose URL
+  matches at least one pattern, and stripped otherwise. This is the preferred way to support cross-host forwarding,
+  because it confines the token to known target hosts. For example, a Globus HTTPS endpoint that redirects to its data
+  hosts can be expressed as `"https://[^/]*[.]data[.]globus[.]org/.*"`. Patterns are matched start-anchored against the
+  entire redirect URL, so they should include the scheme and host; an unanchored pattern such as `".*globus[.]org"` is
+  unsafe because it would also match a host like `https://evil.example/?x=globus.org`. An invalid pattern is reported as
+  an error rather than silently ignored.
+
+In all cases the token is restored to the session after the redirect chain completes, so subsequent fetches in the same
+session remain authenticated.
+
+Some OIDC-protected servers respond to an unauthenticated request by redirecting to an interactive login flow instead of
+returning a `401`. If a `bearer-token` source behaves this way, add an `"X-Requested-With": "XMLHttpRequest"` entry to the
+`additional_request_headers` parameter of its keychain entry, which causes many such servers to return a `401` rather
+than a login redirect:
+
+```json
+{
+    "uri": "https://<hostname>/<path>",
+    "auth_type": "bearer-token",
+    "auth_params": {
+        "token": "<token>",
+        "additional_request_headers": {"X-Requested-With": "XMLHttpRequest"}
+    }
+}
 ```
 
 <a name="remote-file-manifest"></a>

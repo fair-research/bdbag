@@ -509,7 +509,157 @@ class TestRemoteAPI(BaseTest):
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=True)
             bdb.validate_bag(self.test_bag_fetch_http_dir, fast=False)
             output = self.stream.getvalue()
-            self.assertExpectedMessages(["Authorization bearer token propagation on redirect is disabled"], output)
+            self.assertExpectedMessages(["because token propagation is disabled (allow_redirects_with_token)"], output)
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_auth_token_get_with_multi_hop_disallowed_redirects(self):
+        logger.info(self.getTestHeader('test resolve fetch http token auth restores session header after multi-hop '
+                                       'redirect'))
+        try:
+            patched_requests_get_auth = None
+            # Track redirect hops and the session instance so we can verify the bearer token is restored to the
+            # session after a redirect chain. A faithful mock must NOT clear the session headers itself; the fetch
+            # transport is the only thing that should strip and restore the Authorization header.
+            state = {"hops": 0, "session": None}
+
+            def mocked_request_auth_token_get_redirect(*args, **kwargs):
+                state["session"] = args[0]
+                state["hops"] += 1
+                headers = {"Location": args[1]}
+                args[0].auth = None
+                # Return a redirect for the first two hops, then stop patching so the final hop performs a real GET
+                # that serves the file. This reproduces an origin -> intermediate -> signed-URL redirect chain.
+                if state["hops"] >= 2:
+                    patched_requests_get_auth.stop()
+                return BaseTest.MockResponse({}, 302, headers=headers)
+
+            patched_requests_get_auth = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+                                                            get=mocked_request_auth_token_get_redirect,
+                                                            auth=None,
+                                                            create=True)
+
+            patched_requests_get_auth.start()
+            # Filter to a single file so the redirect-hop counting is deterministic.
+            self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                              filter_expr="filename==data/test-fetch-http.txt",
+                                              keychain_file=ospj(self.test_config_dir, 'test-keychain-7.json'),
+                                              cookie_scan=False),
+                            "Fetch incomplete")
+            self.assertTrue(ospif(ospj(self.test_bag_fetch_http_dir, "data/test-fetch-http.txt")))
+            self.assertGreaterEqual(state["hops"], 2, "Expected at least two redirect hops")
+            # Regression check: on a multi-hop redirect chain the token was captured then stripped on the first hop;
+            # re-reading it on the second hop must not clobber the captured value, so it can be restored afterward.
+            self.assertEqual(state["session"].headers.get("Authorization"), "Bearer foo",
+                             "Bearer token was not restored to the session after a multi-hop redirect")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_parse_redirect_token_policy(self):
+        logger.info(self.getTestHeader('test parse of allow_redirects_with_token policy values'))
+        parse = HTTPFetchTransport.parse_redirect_token_policy
+        # bool and bool-like strings resolve to an all-or-nothing policy
+        self.assertIs(parse(True), True)
+        self.assertIs(parse(False), False)
+        self.assertIs(parse("True"), True)
+        self.assertIs(parse("false"), False)
+        # a non-bool string is treated as a single regex pattern; a list as several
+        single = parse("https://[^/]*[.]data[.]globus[.]org/.*")
+        self.assertEqual(len(single), 1)
+        self.assertTrue(single[0].match("https://ep.data.globus.org/file"))
+        multi = parse(["https://a[.]example[.]org/.*", "https://b[.]example[.]org/.*"])
+        self.assertEqual(len(multi), 2)
+        # an invalid pattern fails loudly rather than silently
+        with self.assertRaises(RuntimeError):
+            parse("https://[unterminated")
+
+    def test_redirect_token_allowed(self):
+        logger.info(self.getTestHeader('test allow_redirects_with_token policy evaluation'))
+        allowed = HTTPFetchTransport.redirect_token_allowed
+        self.assertTrue(allowed(True, "https://anywhere.example.com/x"))
+        self.assertFalse(allowed(False, "https://anywhere.example.com/x"))
+        policy = HTTPFetchTransport.parse_redirect_token_policy("https://[^/]*[.]data[.]globus[.]org/.*")
+        self.assertTrue(allowed(policy, "https://ep1.data.globus.org/path/file"))
+        self.assertFalse(allowed(policy, "https://storage.example-cloud.com/signed-object"))
+        # patterns are start-anchored against the full URL: a host appearing later must not match
+        self.assertFalse(allowed(policy, "https://evil.example.com/?x=https://ep.data.globus.org/"))
+
+    def test_resolve_fetch_http_auth_token_redirect_matches_pattern_forwards_token(self):
+        logger.info(self.getTestHeader('test resolve fetch http token auth forwards token on pattern-matched '
+                                       'cross-host redirect'))
+        try:
+            patched_requests_get_auth = None
+            # (url, effective Authorization header) captured per GET to verify the token follows a pattern-matched
+            # cross-host redirect (the Globus HTTPS endpoint use case).
+            captured = []
+            globus_url = "https://ep1.data.globus.org/path/test-fetch-http.txt"
+
+            def mocked_request_auth_token_get(*args, **kwargs):
+                session_obj, request_url = args[0], args[1]
+                request_headers = kwargs.get("headers") or {}
+                effective_auth = request_headers.get("Authorization") or session_obj.headers.get("Authorization")
+                captured.append((request_url, effective_auth))
+                if "data.globus.org" not in request_url:
+                    return BaseTest.MockResponse({}, 302, headers={"Location": globus_url})
+                return BaseTest.MockResponse({}, 200, content=b"globus-content")
+
+            patched_requests_get_auth = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+                                                            get=mocked_request_auth_token_get,
+                                                            auth=None,
+                                                            create=True)
+            patched_requests_get_auth.start()
+            try:
+                self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                                  filter_expr="filename==data/test-fetch-http.txt",
+                                                  keychain_file=ospj(self.test_config_dir, 'test-keychain-10.json'),
+                                                  cookie_scan=False),
+                                "Fetch incomplete")
+            finally:
+                patched_requests_get_auth.stop()
+
+            self.assertEqual(len(captured), 2, "Expected exactly two hops (source then matched redirect target)")
+            self.assertIn("data.globus.org", captured[1][0])
+            self.assertEqual(captured[1][1], "Bearer foo",
+                             "Bearer token should be forwarded to a redirect target matching the configured pattern")
+        except Exception as e:
+            self.fail(bdbag.get_typed_exception(e))
+
+    def test_resolve_fetch_http_auth_token_redirect_no_pattern_match_strips_token(self):
+        logger.info(self.getTestHeader('test resolve fetch http token auth strips token on non-matching cross-host '
+                                       'redirect'))
+        try:
+            patched_requests_get_auth = None
+            captured = []
+            foreign_url = "https://storage.example-cloud.com/signed-object?sig=abc123"
+
+            def mocked_request_auth_token_get(*args, **kwargs):
+                session_obj, request_url = args[0], args[1]
+                request_headers = kwargs.get("headers") or {}
+                effective_auth = request_headers.get("Authorization") or session_obj.headers.get("Authorization")
+                captured.append((request_url, effective_auth))
+                if "example-cloud.com" not in request_url:
+                    return BaseTest.MockResponse({}, 302, headers={"Location": foreign_url})
+                return BaseTest.MockResponse({}, 200, content=b"signed-content")
+
+            patched_requests_get_auth = mock.patch.multiple("bdbag.fetch.transports.fetch_http.requests.Session",
+                                                            get=mocked_request_auth_token_get,
+                                                            auth=None,
+                                                            create=True)
+            patched_requests_get_auth.start()
+            try:
+                # keychain-10's pattern matches only *.data.globus.org; the signed-URL host must not receive the token.
+                self.assertTrue(bdb.resolve_fetch(self.test_bag_fetch_http_dir,
+                                                  filter_expr="filename==data/test-fetch-http.txt",
+                                                  keychain_file=ospj(self.test_config_dir, 'test-keychain-10.json'),
+                                                  cookie_scan=False),
+                                "Fetch incomplete")
+            finally:
+                patched_requests_get_auth.stop()
+
+            self.assertEqual(len(captured), 2, "Expected exactly two hops (source then non-matching redirect target)")
+            self.assertIn("example-cloud.com", captured[1][0])
+            self.assertIsNone(captured[1][1],
+                              "Bearer token was leaked to a redirect target that did not match the configured pattern")
         except Exception as e:
             self.fail(bdbag.get_typed_exception(e))
 

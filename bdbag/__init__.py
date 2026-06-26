@@ -20,6 +20,7 @@ import json
 import logging
 import mimetypes
 import shutil
+import operator as op
 from datetime import datetime
 from urllib.parse import quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit, urlparse
 from urllib.request import urlretrieve, urlopen, urlcleanup
@@ -27,7 +28,7 @@ from importlib.metadata import distribution, PackageNotFoundError
 
 logger = logging.getLogger(__name__)
 
-__version__ = "1.8.0"
+__version__ = "1.9.0-dev2"
 __bagit_version__ = "1.9.0"
 __bagit_profile_version__ = "1.3.1"
 
@@ -127,12 +128,6 @@ def parse_content_disposition(value):  # pragma: no cover
     except Exception as e:
         raise ValueError('Invalid URL encoding of content-disposition filename component. %s.' % e)
 
-    try:
-        if sys.version_info < (3,):
-            n = n.decode('utf8')
-    except Exception as e:
-        raise ValueError('Invalid UTF-8 encoding of content-disposition filename component. %s.' % e)
-
     return n
 
 
@@ -203,8 +198,8 @@ def filter_dict(expr, entry):
                 result = str(value).endswith(filter_val)
             elif filter_relation:
                 try:
-                    statement = "%d%s%d" % (int(value), operator, int(filter_val))
-                    result = eval(statement)
+                    _ops = {">": op.gt, ">=": op.ge, "<": op.lt, "<=": op.le}
+                    result = _ops[operator](int(value), int(filter_val))
                 except Exception as e:
                     logger.warning("Unable to evaluate filter expression [%s]: %s" %
                                    (expr, get_typed_exception(e)))

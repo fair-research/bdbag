@@ -162,9 +162,10 @@ def has_auth_attr(auth, attr, quiet=False):
 
 def get_auth_entries(url, auth):
     entries = list()
+    url_lower = url.lower()
     for entry in auth:
         uri = entry.get("uri", "").lower().strip()
-        if uri in url.lower():
+        if url_lower.startswith(uri):
             entries.append(entry)
     return entries
 

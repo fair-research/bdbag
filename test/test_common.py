@@ -134,10 +134,11 @@ class BaseTest(unittest.TestCase):
             return f.read()
 
     class MockResponse:
-        def __init__(self, json_data, status_code, headers={}):
+        def __init__(self, json_data, status_code, headers={}, content=b""):
             self.json_data = json_data
             self.status_code = status_code
             self.headers = headers
+            self._content = content
 
         @property
         def text(self):
@@ -145,3 +146,7 @@ class BaseTest(unittest.TestCase):
 
         def json(self):
             return self.json_data
+
+        def iter_content(self, chunk_size=1):
+            for i in range(0, len(self._content), chunk_size):
+                yield self._content[i:i + chunk_size]
